@@ -63,19 +63,16 @@ public class BidService {
                             auction.getStartingPrice()));
         }
 
-        // Validation 5: User must have enough wallet balance
-        if (bidder.getWalletBalance() < amount) {
-            throw new BidTooLowException(
-                    String.format("Insufficient balance. You have $%,.2f but need $%,.2f. Get more money from your dashboard!",
-                            bidder.getWalletBalance(), amount));
-        }
-
         // Store previous highest bidder for refund + notification
         User previousHighest = auction.getHighestBidder();
         double previousBidAmount = auction.getCurrentHighestBid();
 
+        // Check if the same user is bidding again on this auction
+        boolean sameUserBiddingAgain = previousHighest != null && previousHighest.getId().equals(bidder.getId());
+
         // REFUND the previous highest bidder (their money is unlocked)
-        if (previousHighest != null && !previousHighest.getId().equals(bidder.getId())) {
+        // Only refund if it's a DIFFERENT user (not the same user increasing their bid)
+        if (previousHighest != null && !sameUserBiddingAgain) {
             previousHighest.setWalletBalance(previousHighest.getWalletBalance() + previousBidAmount);
             userRepository.save(previousHighest);
 
@@ -89,7 +86,17 @@ public class BidService {
         }
 
         // DEDUCT bid amount from current bidder's wallet
-        bidder.setWalletBalance(bidder.getWalletBalance() - amount);
+        // If same user is bidding again, only deduct the DIFFERENCE
+        double amountToDeduct = sameUserBiddingAgain ? (amount - previousBidAmount) : amount;
+
+        // Validation: User must have enough balance for the deduction
+        if (bidder.getWalletBalance() < amountToDeduct) {
+            throw new BidTooLowException(
+                    String.format("Insufficient balance. You need $%,.2f more but have $%,.2f. Get more money from your dashboard!",
+                            amountToDeduct, bidder.getWalletBalance()));
+        }
+
+        bidder.setWalletBalance(bidder.getWalletBalance() - amountToDeduct);
         userRepository.save(bidder);
 
         // Create the bid
@@ -99,7 +106,7 @@ public class BidService {
         boolean accepted = auction.acceptBid(bid);
         if (!accepted) {
             // Refund if something went wrong
-            bidder.setWalletBalance(bidder.getWalletBalance() + amount);
+            bidder.setWalletBalance(bidder.getWalletBalance() + amountToDeduct);
             userRepository.save(bidder);
             throw new BidTooLowException("Bid could not be accepted. Please try a higher amount.");
         }
@@ -108,11 +115,16 @@ public class BidService {
         Bid savedBid = bidRepository.save(bid);
 
         // Notify the bidder their bid was placed
+        String bidMessage = sameUserBiddingAgain
+                ? "✅ Your bid on \"" + auction.getTitle() + "\" increased to $" + String.format("%,.2f", amount) +
+                  "! $" + String.format("%,.2f", amountToDeduct) + " additional locked from your wallet."
+                : "✅ Your bid of $" + String.format("%,.2f", amount) +
+                  " on \"" + auction.getTitle() + "\" is now the highest! $" +
+                  String.format("%,.2f", amount) + " locked from your wallet.";
+
         notificationService.createNotification(
                 bidder,
-                "✅ Your bid of $" + String.format("%,.2f", amount) +
-                        " on \"" + auction.getTitle() + "\" is now the highest! $" +
-                        String.format("%,.2f", amount) + " locked from your wallet.",
+                bidMessage,
                 "BID_PLACED",
                 auction.getId()
         );
