@@ -17,13 +17,13 @@
     </div>
 
     <!-- Category pills -->
-    <div class="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-        <a href="/auctions" class="shrink-0 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all border"
+    <div class="flex gap-1.5 sm:gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+        <a href="/auctions" class="shrink-0 px-2.5 sm:px-4 py-1 sm:py-2 rounded-full text-[11px] sm:text-sm font-medium transition-all border whitespace-nowrap"
            th:classappend="${selectedCategory == null && searchQuery == null} ? 'bg-g-blue text-white border-g-blue' : 'bg-white text-g-text-secondary border-g-border hover:border-g-blue hover:text-g-blue'">
             All
         </a>
         <a th:each="cat : ${categories}" th:href="@{'/auctions?category=' + ${cat.name()}}"
-           class="shrink-0 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all border"
+           class="shrink-0 px-2.5 sm:px-4 py-1 sm:py-2 rounded-full text-[11px] sm:text-sm font-medium transition-all border whitespace-nowrap"
            th:classappend="${selectedCategory != null && selectedCategory.toUpperCase() == cat.name()} ? 'bg-g-blue text-white border-g-blue' : 'bg-white text-g-text-secondary border-g-border hover:border-g-blue hover:text-g-blue'"
            th:text="${cat.displayName}">Category</a>
     </div>
