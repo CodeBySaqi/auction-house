@@ -61,6 +61,10 @@ public abstract class Auction {
     @Column(name = "bid_count")
     private int bidCount = 0;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private User createdBy;
+
     public Auction() {
         this.createdAt = LocalDateTime.now();
         this.currentHighestBid = 0;
@@ -198,6 +202,9 @@ public abstract class Auction {
 
     public int getBidCount() { return bidCount; }
     public void setBidCount(int bidCount) { this.bidCount = bidCount; }
+
+    public User getCreatedBy() { return createdBy; }
+    public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
 
     /**
      * Get display price - either current highest bid or starting price.

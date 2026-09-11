@@ -113,4 +113,11 @@ public class AuctionService {
     public List<Auction> getAllAuctions() {
         return auctionRepository.findAll();
     }
+
+    /**
+     * Get auctions created by a specific user.
+     */
+    public List<Auction> getAuctionsByCreator(User user) {
+        return auctionRepository.findByCreatedByOrderByCreatedAtDesc(user);
+    }
 }

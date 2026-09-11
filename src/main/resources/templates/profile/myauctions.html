@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('My Auctions — AuctionHouse')}"></head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen flex flex-col">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="font-gsans text-3xl font-medium text-g-text">My auctions</h1>
+            <p class="text-sm text-g-text-secondary mt-1">Items you've listed for auction</p>
+        </div>
+        <a href="/auctions/create" class="inline-flex items-center gap-2 px-5 py-2.5 bg-g-blue text-white font-medium rounded-full text-sm hover:bg-g-blue-hover transition-colors no-underline shadow-g-sm">
+            <span class="material-icons-outlined text-lg">add</span> New Auction
+        </a>
+    </div>
+
+    <!-- Empty state -->
+    <div th:if="${userAuctions == null or userAuctions.isEmpty()}" class="bg-white rounded-3xl border border-g-border p-12 text-center">
+        <div class="w-20 h-20 mx-auto mb-4 bg-g-blue-light rounded-full flex items-center justify-center">
+            <span class="material-icons-outlined text-g-blue text-4xl">storefront</span>
+        </div>
+        <h3 class="font-gsans text-xl font-medium text-g-text mb-2">No auctions listed yet</h3>
+        <p class="text-sm text-g-text-secondary mb-6">Create your first auction and start receiving bids!</p>
+        <a href="/auctions/create" class="inline-flex items-center gap-2 px-6 py-3 bg-g-blue text-white font-medium rounded-full text-sm hover:bg-g-blue-hover transition-colors no-underline">
+            <span class="material-icons-outlined text-lg">add_circle</span> Create Your First Auction
+        </a>
+    </div>
+
+    <!-- User's Auctions -->
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" th:if="${userAuctions != null and !userAuctions.isEmpty()}">
+        <a th:each="auction : ${userAuctions}" th:href="@{'/auctions/detail/' + ${auction.id}}" class="group bg-white rounded-2xl border border-g-border overflow-hidden hover:shadow-g-md hover:border-transparent transition-all no-underline flex flex-col">
+            <div class="relative h-44 overflow-hidden bg-gray-100">
+                <img th:src="${auction.imageUrl}" th:alt="${auction.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.style.display='none'">
+                <div class="absolute top-3 left-3">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-medium shadow-sm"
+                          th:classappend="${auction.status.name() == 'ACTIVE'} ? 'bg-green-100 text-g-green' : 'bg-g-bg text-g-text-secondary'"
+                          th:text="${auction.status.name()}">Status</span>
+                </div>
+                <div class="absolute bottom-3 right-3">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-black/60 backdrop-blur-sm rounded-full text-xs font-medium text-white">
+                        <span class="material-icons-outlined text-xs">schedule</span>
+                        <span th:text="${auction.timeRemaining}">Time</span>
+                    </span>
+                </div>
+            </div>
+            <div class="p-4 flex-1 flex flex-col">
+                <span class="px-2 py-0.5 bg-g-bg rounded-md text-xs font-medium text-g-text-secondary w-fit mb-2" th:text="${auction.category.displayName}">Cat</span>
+                <h3 class="font-gsans font-medium text-g-text text-sm mb-1 line-clamp-1" th:text="${auction.title}">Title</h3>
+                <p class="text-xs text-g-text-secondary mb-3 line-clamp-1" th:text="${auction.categoryDetails}">Details</p>
+                <div class="mt-auto flex justify-between items-end pt-3 border-t border-g-border">
+                    <div>
+                        <p class="text-[10px] uppercase tracking-wider text-g-text-secondary font-medium">Current bid</p>
+                        <p class="font-gsans font-medium text-base text-g-text" th:text="'$' + ${#numbers.formatDecimal(auction.displayPrice, 1, 'COMMA', 0, 'POINT')}">$0</p>
+                    </div>
+                    <span class="text-xs text-g-text-secondary" th:text="${auction.bidCount} + ' bids'">0 bids</span>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -21,6 +21,30 @@
         <span class="text-sm text-red-800" th:text="${error}">Error</span>
     </div>
 
+    <!-- Demo Money -->
+    <div class="bg-white rounded-3xl border border-g-border p-6 sm:p-8 mb-6">
+        <h2 class="font-gsans font-medium text-g-text mb-2 flex items-center gap-2">
+            <span class="material-icons-outlined text-g-text-secondary">account_balance_wallet</span> Wallet & Demo Money
+        </h2>
+        <p class="text-sm text-g-text-secondary mb-4">Your current balance: <strong class="text-g-text" th:text="'$' + ${#numbers.formatDecimal(user.walletBalance, 1, 'COMMA', 2, 'POINT')}">$100,000.00</strong></p>
+        <div class="flex flex-wrap gap-3">
+            <form th:action="@{/profile/add-money}" method="post">
+                <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 bg-g-green text-white font-medium rounded-full hover:bg-green-600 text-sm transition-colors shadow-g-sm">
+                    <span class="material-icons-outlined text-lg">monetization_on</span>
+                    Get $50,000 Demo Money
+                </button>
+            </form>
+            <a href="/auctions/create" class="inline-flex items-center gap-2 px-6 py-3 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover text-sm transition-colors shadow-g-sm no-underline">
+                <span class="material-icons-outlined text-lg">add_circle</span>
+                Create an Auction
+            </a>
+            <a href="/my-auctions" class="inline-flex items-center gap-2 px-6 py-3 bg-white text-g-text font-medium rounded-full border border-g-border hover:bg-g-hover text-sm transition-colors no-underline">
+                <span class="material-icons-outlined text-lg">storefront</span>
+                My Auctions
+            </a>
+        </div>
+    </div>
+
     <!-- Profile Picture -->
     <div class="bg-white rounded-3xl border border-g-border p-6 sm:p-8 mb-6">
         <h2 class="font-gsans font-medium text-g-text mb-6 flex items-center gap-2">

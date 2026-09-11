@@ -3,6 +3,7 @@ package com.auctionhouse.repository;
 import com.auctionhouse.model.Auction;
 import com.auctionhouse.model.AuctionCategory;
 import com.auctionhouse.model.AuctionStatus;
+import com.auctionhouse.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -32,4 +33,6 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     long countByStatus(AuctionStatus status);
 
     List<Auction> findTop6ByStatusOrderByEndTimeAsc(AuctionStatus status);
+
+    List<Auction> findByCreatedByOrderByCreatedAtDesc(User createdBy);
 }

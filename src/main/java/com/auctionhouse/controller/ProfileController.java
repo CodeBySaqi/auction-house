@@ -135,4 +135,29 @@ public class ProfileController {
         model.addAttribute("user", user);
         return "profile/mywins";
     }
+
+    /**
+     * Add $50,000 demo money to user's wallet.
+     */
+    @PostMapping("/profile/add-money")
+    public String addDemoMoney(@AuthenticationPrincipal UserDetails userDetails,
+                               RedirectAttributes redirectAttributes) {
+        User user = userService.getCurrentUser(userDetails.getUsername());
+        user.setWalletBalance(user.getWalletBalance() + 50000.0);
+        userService.updateProfile(user);
+        redirectAttributes.addFlashAttribute("success", "💰 $50,000 added to your wallet! Go bid on something awesome.");
+        return "redirect:/profile/edit";
+    }
+
+    /**
+     * My Auctions — auctions created by the user.
+     */
+    @GetMapping("/my-auctions")
+    public String myAuctions(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        User user = userService.getCurrentUser(userDetails.getUsername());
+        List<Auction> userAuctions = auctionService.getAuctionsByCreator(user);
+        model.addAttribute("userAuctions", userAuctions);
+        model.addAttribute("user", user);
+        return "profile/myauctions";
+    }
 }

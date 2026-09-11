@@ -75,6 +75,10 @@
                     <span class="material-icons-outlined text-lg">storefront</span>
                     <span>Auctions</span>
                 </a>
+                <a href="/auctions/create" th:if="${currentUser != null}" class="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-g-blue text-white rounded-full text-sm font-medium hover:bg-g-blue-hover transition-colors no-underline shadow-g-sm">
+                    <span class="material-icons-outlined text-lg">sell</span>
+                    <span>Sell</span>
+                </a>
 
                 <!-- Authenticated User Section -->
                 <div th:if="${currentUser != null}" class="flex items-center gap-1">
