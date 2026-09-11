@@ -140,13 +140,19 @@
 <footer th:fragment="footer" class="bg-white border-t border-g-border mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-2">
-                <div class="w-7 h-7 bg-g-blue rounded-lg flex items-center justify-center">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-g-blue rounded-lg flex items-center justify-center">
                     <span class="material-icons-outlined text-white text-sm">gavel</span>
                 </div>
-                <span class="font-gsans text-sm text-g-text-secondary">AuctionHouse Simulator</span>
+                <div>
+                    <span class="font-gsans font-medium text-sm text-g-text">AuctionHouse</span>
+                    <p class="text-[10px] text-g-text-secondary">Modern auction platform</p>
+                </div>
             </div>
-            <p class="text-xs text-g-text-secondary font-roboto">Demo project — All auctions and items are fictional. Built with Java OOP + Spring Boot.</p>
+            <div class="text-center md:text-right">
+                <p class="text-xs font-medium text-g-text">Designed & Developed by <span class="text-g-blue font-semibold">Saqlain</span></p>
+                <p class="text-[10px] text-g-text-secondary mt-0.5">Built with Spring Boot · Java OOP · Thymeleaf</p>
+            </div>
         </div>
     </div>
 </footer>
