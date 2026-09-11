@@ -146,7 +146,7 @@ public class ProfileController {
         user.setWalletBalance(user.getWalletBalance() + 50000.0);
         userService.updateProfile(user);
         redirectAttributes.addFlashAttribute("success", "💰 $50,000 added to your wallet! Go bid on something awesome.");
-        return "redirect:/profile/edit";
+        return "redirect:/dashboard";
     }
 
     /**
