@@ -8,6 +8,18 @@ html {
     scroll-behavior: smooth;
 }
 
+/* Prevent horizontal overflow on all pages */
+html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+/* Ensure all images are responsive */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
     width: 8px;

@@ -47,15 +47,15 @@
 </head>
 
 <!-- Navbar Fragment -->
-<nav th:fragment="navbar" class="bg-white border-b border-g-border sticky top-0 z-50">
+<nav th:fragment="navbar" class="bg-white border-b border-g-border sticky top-0 z-50 w-full">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
             <!-- Logo -->
-            <a href="/" class="flex items-center gap-2 no-underline">
-                <div class="w-9 h-9 bg-g-blue rounded-xl flex items-center justify-center">
-                    <span class="material-icons-outlined text-white text-xl">gavel</span>
+            <a href="/" class="flex items-center gap-2 no-underline shrink-0">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 bg-g-blue rounded-xl flex items-center justify-center">
+                    <span class="material-icons-outlined text-white text-lg sm:text-xl">gavel</span>
                 </div>
-                <span class="font-gsans font-medium text-xl text-g-text tracking-tight">Auction<span class="text-g-blue">House</span></span>
+                <span class="font-gsans font-medium text-lg sm:text-xl text-g-text tracking-tight">Auction<span class="text-g-blue">House</span></span>
             </a>
 
             <!-- Center: Search -->
@@ -127,9 +127,9 @@
                 </div>
 
                 <!-- Not Authenticated -->
-                <div th:if="${currentUser == null}" class="flex items-center gap-2">
-                    <a href="/login" class="px-4 py-2 text-sm font-medium text-g-blue hover:bg-g-blue-light rounded-full transition-colors">Sign in</a>
-                    <a href="/register" class="px-5 py-2.5 text-sm font-medium text-white bg-g-blue hover:bg-g-blue-hover rounded-full transition-colors shadow-g-sm">Get started</a>
+                <div th:if="${currentUser == null}" class="flex items-center gap-1.5 sm:gap-2">
+                    <a href="/login" class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-g-blue hover:bg-g-blue-light rounded-full transition-colors whitespace-nowrap">Sign in</a>
+                    <a href="/register" class="hidden sm:inline-flex px-5 py-2.5 text-sm font-medium text-white bg-g-blue hover:bg-g-blue-hover rounded-full transition-colors shadow-g-sm">Get started</a>
                 </div>
             </div>
         </div>

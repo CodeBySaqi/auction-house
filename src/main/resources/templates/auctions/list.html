@@ -1,23 +1,23 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head('Browse Auctions — AuctionHouse')}"></head>
-<body class="bg-g-bg font-roboto text-g-text min-h-screen flex flex-col">
+<body class="bg-g-bg font-roboto text-g-text min-h-screen flex flex-col overflow-x-hidden">
 
 <nav th:replace="~{fragments/layout :: navbar}"></nav>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
     <!-- Header -->
-    <div class="mb-8">
-        <h1 class="font-gsans text-3xl font-medium text-g-text">
+    <div class="mb-6 sm:mb-8">
+        <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">
             <span th:if="${searchQuery != null}">Results for "<span th:text="${searchQuery}">query</span>"</span>
             <span th:if="${searchQuery == null && selectedCategory == null}">All auctions</span>
             <span th:if="${selectedCategory != null}" th:text="${selectedCategory}">Category</span>
         </h1>
-        <p class="text-sm text-g-text-secondary mt-1" th:text="${auctions.size()} + ' auctions available'">0 auctions</p>
+        <p class="text-xs sm:text-sm text-g-text-secondary mt-1" th:text="${auctions.size()} + ' auctions available'">0 auctions</p>
     </div>
 
     <!-- Category pills -->
-    <div class="flex gap-1.5 sm:gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+    <div class="flex gap-1.5 sm:gap-2 mb-6 sm:mb-8 overflow-x-auto pb-2 scrollbar-hide w-full">
         <a href="/auctions" class="shrink-0 px-2.5 sm:px-4 py-1 sm:py-2 rounded-full text-[11px] sm:text-sm font-medium transition-all border whitespace-nowrap"
            th:classappend="${selectedCategory == null && searchQuery == null} ? 'bg-g-blue text-white border-g-blue' : 'bg-white text-g-text-secondary border-g-border hover:border-g-blue hover:text-g-blue'">
             All
@@ -41,9 +41,9 @@
     </div>
 
     <!-- Auction Grid -->
-    <div class="max-w-md sm:max-w-none mx-auto grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" th:if="${!auctions.isEmpty()}">
-        <a th:each="auction : ${auctions}" th:href="@{'/auctions/detail/' + ${auction.id}}" class="group bg-white rounded-2xl border border-g-border overflow-hidden hover:shadow-g-md hover:border-transparent transition-all no-underline flex flex-col">
-            <div class="relative h-48 overflow-hidden bg-gray-100">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5" th:if="${!auctions.isEmpty()}">
+        <a th:each="auction : ${auctions}" th:href="@{'/auctions/detail/' + ${auction.id}}" class="group bg-white rounded-xl sm:rounded-2xl border border-g-border overflow-hidden hover:shadow-g-md hover:border-transparent transition-all no-underline flex flex-col">
+            <div class="relative aspect-video overflow-hidden bg-gray-100">
                 <img th:src="${auction.imageUrl}" th:alt="${auction.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                      onerror="this.style.display='none'">
                 <!-- Status badge -->
