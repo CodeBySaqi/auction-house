@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Dashboard — AuctionHouse')}"></head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen flex flex-col">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+    <!-- Profile Header -->
+    <div class="bg-white rounded-3xl border border-g-border p-6 sm:p-8 mb-6">
+        <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-full bg-g-blue flex items-center justify-center text-white text-2xl font-medium overflow-hidden shrink-0">
+                <img th:if="${user.hasProfilePic()}" th:src="@{'/uploads/' + ${user.profilePicPath}}" class="w-full h-full object-cover" alt="Profile">
+                <span th:unless="${user.hasProfilePic()}" th:text="${#strings.substring(user.username, 0, 1).toUpperCase()}">U</span>
+            </div>
+            <div>
+                <h1 class="font-gsans text-2xl font-medium text-g-text">Welcome, <span th:text="${user.username}">User</span></h1>
+                <p class="text-sm text-g-text-secondary">Member since <span th:text="${#temporals.format(user.createdAt, 'MMMM yyyy')}">Date</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-2xl border border-g-border p-5">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                    <span class="material-icons-outlined text-g-blue text-xl">account_balance_wallet</span>
+                </div>
+            </div>
+            <p class="font-gsans text-xl font-medium text-g-text" th:text="'$' + ${#numbers.formatDecimal(user.walletBalance, 1, 'COMMA', 0, 'POINT')}">$100,000</p>
+            <p class="text-xs text-g-text-secondary mt-0.5">Wallet balance</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-g-border p-5">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center">
+                    <span class="material-icons-outlined text-purple-600 text-xl">payments</span>
+                </div>
+            </div>
+            <p class="font-gsans text-xl font-medium text-g-text" th:text="${totalBids}">0</p>
+            <p class="text-xs text-g-text-secondary mt-0.5">Total bids</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-g-border p-5">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
+                    <span class="material-icons-outlined text-g-green text-xl">trending_up</span>
+                </div>
+            </div>
+            <p class="font-gsans text-xl font-medium text-g-text" th:text="${activeBids}">0</p>
+            <p class="text-xs text-g-text-secondary mt-0.5">Active bids</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-g-border p-5">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                    <span class="material-icons-outlined text-amber-600 text-xl">emoji_events</span>
+                </div>
+            </div>
+            <p class="font-gsans text-xl font-medium text-g-text" th:text="${wonAuctions.size()}">0</p>
+            <p class="text-xs text-g-text-secondary mt-0.5">Items won</p>
+        </div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+        <!-- Quick Actions -->
+        <div class="space-y-4">
+            <div class="bg-white rounded-2xl border border-g-border p-5">
+                <h2 class="font-gsans font-medium text-g-text mb-4 flex items-center gap-2">
+                    <span class="material-icons-outlined text-g-text-secondary text-xl">bolt</span> Quick Actions
+                </h2>
+                <div class="space-y-2">
+                    <a href="/auctions" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
+                        <span class="material-icons-outlined text-g-blue text-xl">storefront</span> Browse Auctions
+                    </a>
+                    <a href="/my-bids" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
+                        <span class="material-icons-outlined text-purple-600 text-xl">payments</span> My Bids
+                    </a>
+                    <a href="/my-wins" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
+                        <span class="material-icons-outlined text-amber-600 text-xl">emoji_events</span> My Wins
+                    </a>
+                    <a href="/profile/edit" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
+                        <span class="material-icons-outlined text-g-text-secondary text-xl">settings</span> Edit Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Notifications Preview -->
+            <div class="bg-white rounded-2xl border border-g-border overflow-hidden">
+                <div class="px-5 py-4 border-b border-g-border flex items-center justify-between">
+                    <h2 class="font-gsans font-medium text-g-text flex items-center gap-2">
+                        <span class="material-icons-outlined text-g-text-secondary text-xl">notifications</span> Notifications
+                    </h2>
+                    <span th:if="${unreadCount > 0}" class="px-2 py-0.5 bg-g-red rounded-full text-xs font-medium text-white" th:text="${unreadCount}">0</span>
+                </div>
+                <div th:if="${notifications.isEmpty()}" class="p-6 text-center">
+                    <p class="text-sm text-g-text-secondary">No notifications yet</p>
+                </div>
+                <div class="divide-y divide-g-border">
+                    <div th:each="notif, stat : ${notifications}" th:if="${stat.index < 4}" class="px-5 py-3">
+                        <p class="text-xs leading-relaxed" th:classappend="${!notif.isRead()} ? 'font-medium text-g-text' : 'text-g-text-secondary'" th:text="${notif.message}">Notification</p>
+                        <p class="text-[10px] text-g-text-secondary mt-1" th:text="${notif.timeAgo}">Time</p>
+                    </div>
+                </div>
+                <div th:if="${notifications.size() > 4}" class="px-5 py-3 border-t border-g-border text-center">
+                    <a href="/notifications" class="text-xs text-g-blue font-medium hover:underline">View all</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Won Auctions -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-2xl border border-g-border overflow-hidden">
+                <div class="px-6 py-4 border-b border-g-border">
+                    <h2 class="font-gsans font-medium text-g-text flex items-center gap-2">
+                        <span class="material-icons-outlined text-amber-600 text-xl">emoji_events</span> Auctions Won
+                    </h2>
+                </div>
+                <div th:if="${wonAuctions.isEmpty()}" class="p-12 text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-amber-50 rounded-full flex items-center justify-center">
+                        <span class="material-icons-outlined text-amber-600 text-3xl">emoji_events</span>
+                    </div>
+                    <h3 class="font-gsans font-medium text-g-text mb-1">No wins yet</h3>
+                    <p class="text-sm text-g-text-secondary mb-4">Start bidding to win amazing items!</p>
+                    <a href="/auctions" class="inline-flex items-center gap-2 px-5 py-2.5 bg-g-blue text-white font-medium rounded-full text-sm hover:bg-g-blue-hover transition-colors">
+                        Browse Auctions
+                    </a>
+                </div>
+                <div class="divide-y divide-g-border">
+                    <a th:each="auction : ${wonAuctions}" th:href="@{'/auctions/detail/' + ${auction.id}}" class="flex items-center gap-4 p-4 hover:bg-g-bg/50 transition-colors no-underline">
+                        <img th:src="${auction.imageUrl}" th:alt="${auction.title}" class="w-20 h-16 rounded-xl object-cover bg-gray-100 shrink-0"
+                             onerror="this.style.display='none'">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-gsans font-medium text-g-text text-sm line-clamp-1" th:text="${auction.title}">Item</h3>
+                            <p class="text-xs text-g-text-secondary mt-0.5 line-clamp-1" th:text="${auction.categoryDetails}">Details</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="font-gsans font-medium text-g-text" th:text="'$' + ${#numbers.formatDecimal(auction.currentHighestBid, 1, 'COMMA', 2, 'POINT')}">$0</p>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 rounded-full text-[10px] font-medium text-g-green">
+                                <span class="material-icons-outlined text-xs">check_circle</span> Won
+                            </span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('My Wins — AuctionHouse')}"></head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen flex flex-col">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+    <div class="mb-6">
+        <h1 class="font-gsans text-3xl font-medium text-g-text">My wins</h1>
+        <p class="text-sm text-g-text-secondary mt-1" th:text="${wonAuctions.size()} + ' items won'">0 items</p>
+    </div>
+
+    <div th:if="${wonAuctions.isEmpty()}" class="bg-white rounded-3xl border border-g-border p-12 text-center">
+        <div class="w-20 h-20 mx-auto mb-4 bg-amber-50 rounded-full flex items-center justify-center">
+            <span class="material-icons-outlined text-amber-600 text-4xl">emoji_events</span>
+        </div>
+        <h3 class="font-gsans text-xl font-medium text-g-text mb-2">No wins yet</h3>
+        <p class="text-sm text-g-text-secondary mb-6">Keep bidding — your first win is just around the corner!</p>
+        <a href="/auctions" class="inline-flex items-center gap-2 px-6 py-3 bg-g-blue text-white font-medium rounded-full text-sm hover:bg-g-blue-hover transition-colors">
+            Browse Auctions
+        </a>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" th:if="${!wonAuctions.isEmpty()}">
+        <a th:each="auction : ${wonAuctions}" th:href="@{'/auctions/detail/' + ${auction.id}}" class="group bg-white rounded-2xl border border-g-border overflow-hidden hover:shadow-g-md hover:border-transparent transition-all no-underline">
+            <div class="relative h-44 overflow-hidden bg-gray-100">
+                <img th:src="${auction.imageUrl}" th:alt="${auction.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                     onerror="this.style.display='none'">
+                <div class="absolute top-3 left-3">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-g-green/90 backdrop-blur-sm rounded-full text-xs font-medium text-white shadow-sm">
+                        <span class="material-icons-outlined text-xs">emoji_events</span> Won!
+                    </span>
+                </div>
+            </div>
+            <div class="p-4">
+                <h3 class="font-gsans font-medium text-g-text text-sm mb-1 line-clamp-1" th:text="${auction.title}">Item</h3>
+                <p class="text-xs text-g-text-secondary mb-3 line-clamp-1" th:text="${auction.categoryDetails}">Details</p>
+                <div class="pt-3 border-t border-g-border flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] uppercase tracking-wider text-g-text-secondary font-medium">Winning bid</p>
+                        <p class="font-gsans font-medium text-base text-g-text" th:text="'$' + ${#numbers.formatDecimal(auction.currentHighestBid, 1, 'COMMA', 2, 'POINT')}">$0</p>
+                    </div>
+                    <span class="material-icons-outlined text-g-text-secondary group-hover:text-g-blue transition-colors">arrow_forward</span>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Edit Profile — AuctionHouse')}"></head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen flex flex-col">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+    <div class="mb-6">
+        <h1 class="font-gsans text-3xl font-medium text-g-text">Edit profile</h1>
+        <p class="text-sm text-g-text-secondary mt-1">Manage your account settings and profile picture</p>
+    </div>
+
+    <!-- Flash Messages -->
+    <div th:if="${success}" class="flex items-center gap-3 p-4 mb-6 bg-green-50 rounded-2xl border border-green-200">
+        <span class="material-icons-outlined text-g-green">check_circle</span>
+        <span class="text-sm text-green-800" th:text="${success}">Success</span>
+    </div>
+    <div th:if="${error}" class="flex items-center gap-3 p-4 mb-6 bg-red-50 rounded-2xl border border-red-200">
+        <span class="material-icons-outlined text-g-red">error</span>
+        <span class="text-sm text-red-800" th:text="${error}">Error</span>
+    </div>
+
+    <!-- Profile Picture -->
+    <div class="bg-white rounded-3xl border border-g-border p-6 sm:p-8 mb-6">
+        <h2 class="font-gsans font-medium text-g-text mb-6 flex items-center gap-2">
+            <span class="material-icons-outlined text-g-text-secondary">photo_camera</span> Profile picture
+        </h2>
+        <div class="flex items-center gap-6 mb-6">
+            <div class="w-24 h-24 rounded-full bg-g-blue flex items-center justify-center text-white text-3xl font-medium overflow-hidden shrink-0 border-4 border-white shadow-g-sm">
+                <img th:if="${user.hasProfilePic()}" th:src="@{'/uploads/' + ${user.profilePicPath}}" class="w-full h-full object-cover" alt="Profile">
+                <span th:unless="${user.hasProfilePic()}" th:text="${#strings.substring(user.username, 0, 1).toUpperCase()}">U</span>
+            </div>
+            <div>
+                <h3 class="font-gsans font-medium text-g-text text-lg" th:text="${user.username}">Username</h3>
+                <p class="text-sm text-g-text-secondary" th:text="${user.email}">email@example.com</p>
+            </div>
+        </div>
+        <form th:action="@{/profile/upload-pic}" method="post" enctype="multipart/form-data" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-g-text mb-1.5">Upload new picture</label>
+                <input type="file" name="profilePic" accept="image/jpeg,image/png,image/gif,image/webp" required
+                       class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-g-blue-light file:text-g-blue hover:file:bg-blue-100 transition-all">
+                <p class="text-xs text-g-text-secondary mt-1.5">JPEG, PNG, GIF, or WebP. Max 5MB.</p>
+            </div>
+            <button type="submit" class="px-6 py-2.5 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover text-sm transition-colors">
+                Upload picture
+            </button>
+        </form>
+    </div>
+
+    <!-- Account Info -->
+    <div class="bg-white rounded-3xl border border-g-border p-6 sm:p-8 mb-6">
+        <h2 class="font-gsans font-medium text-g-text mb-6 flex items-center gap-2">
+            <span class="material-icons-outlined text-g-text-secondary">info</span> Account information
+        </h2>
+        <div class="grid sm:grid-cols-2 gap-5">
+            <div>
+                <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Username</label>
+                <input type="text" th:value="${user.username}" disabled class="w-full px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Email</label>
+                <input type="text" th:value="${user.email}" disabled class="w-full px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Member since</label>
+                <input type="text" th:value="${#temporals.format(user.createdAt, 'MMMM dd, yyyy')}" disabled class="w-full px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Wallet balance</label>
+                <input type="text" th:value="'$' + ${#numbers.formatDecimal(user.walletBalance, 1, 'COMMA', 2, 'POINT')}" disabled class="w-full px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm font-medium text-g-text">
+            </div>
+        </div>
+    </div>
+
+    <a href="/dashboard" class="inline-flex items-center gap-2 text-sm text-g-blue font-medium hover:underline">
+        <span class="material-icons-outlined text-lg">arrow_back</span> Back to dashboard
+    </a>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

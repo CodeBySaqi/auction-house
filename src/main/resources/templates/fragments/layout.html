@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<!-- Head Fragment -->
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">Auction House</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'g-blue': '#1a73e8',
+                    'g-blue-hover': '#1765cc',
+                    'g-blue-light': '#e8f0fe',
+                    'g-red': '#ea4335',
+                    'g-yellow': '#fbbc04',
+                    'g-green': '#34a853',
+                    'g-surface': '#ffffff',
+                    'g-bg': '#f8f9fa',
+                    'g-text': '#202124',
+                    'g-text-secondary': '#5f6368',
+                    'g-border': '#dadce0',
+                    'g-hover': '#f1f3f4',
+                },
+                fontFamily: {
+                    'gsans': ['"Google Sans"', 'Roboto', 'system-ui', 'sans-serif'],
+                    'roboto': ['Roboto', 'system-ui', 'sans-serif'],
+                },
+                boxShadow: {
+                    'g-sm': '0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15)',
+                    'g-md': '0 1px 3px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15)',
+                    'g-lg': '0 1px 3px 0 rgba(60,64,67,.3), 0 8px 16px 6px rgba(60,64,67,.15)',
+                    'g-xl': '0 2px 6px 2px rgba(60,64,67,.3), 0 12px 28px 8px rgba(60,64,67,.15)',
+                }
+            }
+        }
+    }
+    </script>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+
+<!-- Navbar Fragment -->
+<nav th:fragment="navbar" class="bg-white border-b border-g-border sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <!-- Logo -->
+            <a href="/" class="flex items-center gap-2 no-underline">
+                <div class="w-9 h-9 bg-g-blue rounded-xl flex items-center justify-center">
+                    <span class="material-icons-outlined text-white text-xl">gavel</span>
+                </div>
+                <span class="font-gsans font-medium text-xl text-g-text tracking-tight">Auction<span class="text-g-blue">House</span></span>
+            </a>
+
+            <!-- Center: Search -->
+            <div class="hidden md:flex flex-1 max-w-xl mx-8">
+                <form action="/auctions" method="get" class="w-full relative">
+                    <div class="relative">
+                        <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-g-text-secondary text-xl">search</span>
+                        <input type="text" name="search" placeholder="Search auctions..."
+                               class="w-full pl-11 pr-4 py-2.5 bg-g-bg border border-g-border rounded-full text-sm font-roboto text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white focus:shadow-g-sm transition-all">
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right: Nav Links -->
+            <div class="flex items-center gap-1">
+                <a href="/auctions" class="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium text-g-text-secondary hover:bg-g-hover transition-colors">
+                    <span class="material-icons-outlined text-lg">storefront</span>
+                    <span>Auctions</span>
+                </a>
+
+                <!-- Authenticated User Section -->
+                <div th:if="${currentUser != null}" class="flex items-center gap-1">
+                    <a href="/notifications" class="relative p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined">notifications</span>
+                        <span th:if="${unreadCount > 0}" class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-g-red rounded-full text-[10px] text-white font-medium flex items-center justify-center" th:text="${unreadCount}">0</span>
+                    </a>
+
+                    <!-- Profile Dropdown -->
+                    <div class="relative" id="profileDropdown">
+                        <button onclick="document.getElementById('dropdownMenu').classList.toggle('hidden')"
+                                class="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-g-hover transition-colors">
+                            <div class="w-8 h-8 rounded-full bg-g-blue flex items-center justify-center overflow-hidden">
+                                <img th:if="${currentUser != null and currentUser.hasProfilePic()}" th:src="@{'/uploads/' + ${currentUser.profilePicPath}}" class="w-full h-full object-cover" alt="">
+                                <span th:unless="${currentUser != null and currentUser.hasProfilePic()}" class="text-white text-sm font-medium" th:text="${currentUser != null ? #strings.substring(currentUser.username, 0, 1).toUpperCase() : 'U'}">U</span>
+                            </div>
+                        </button>
+                        <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-g-lg border border-g-border py-2 z-50">
+                            <div class="px-4 py-3 border-b border-g-border">
+                                <p class="font-gsans font-medium text-g-text" th:text="${currentUser != null ? currentUser.username : 'User'}">Username</p>
+                                <p class="text-xs text-g-text-secondary mt-0.5" th:text="${currentUser != null ? currentUser.email : ''}">email</p>
+                            </div>
+                            <div class="py-1">
+                                <a href="/dashboard" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                    <span class="material-icons-outlined text-g-text-secondary text-xl">dashboard</span> Dashboard
+                                </a>
+                                <a href="/my-bids" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                    <span class="material-icons-outlined text-g-text-secondary text-xl">payments</span> My Bids
+                                </a>
+                                <a href="/my-wins" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                    <span class="material-icons-outlined text-g-text-secondary text-xl">emoji_events</span> My Wins
+                                </a>
+                                <a href="/profile/edit" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                    <span class="material-icons-outlined text-g-text-secondary text-xl">settings</span> Edit Profile
+                                </a>
+                            </div>
+                            <div class="border-t border-g-border pt-1">
+                                <form th:action="@{/logout}" method="post">
+                                    <button type="submit" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-red hover:bg-red-50 w-full transition-colors">
+                                        <span class="material-icons-outlined text-xl">logout</span> Sign out
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Not Authenticated -->
+                <div th:if="${currentUser == null}" class="flex items-center gap-2">
+                    <a href="/login" class="px-4 py-2 text-sm font-medium text-g-blue hover:bg-g-blue-light rounded-full transition-colors">Sign in</a>
+                    <a href="/register" class="px-5 py-2.5 text-sm font-medium text-white bg-g-blue hover:bg-g-blue-hover rounded-full transition-colors shadow-g-sm">Get started</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Footer Fragment -->
+<footer th:fragment="footer" class="bg-white border-t border-g-border mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2">
+                <div class="w-7 h-7 bg-g-blue rounded-lg flex items-center justify-center">
+                    <span class="material-icons-outlined text-white text-sm">gavel</span>
+                </div>
+                <span class="font-gsans text-sm text-g-text-secondary">AuctionHouse Simulator</span>
+            </div>
+            <p class="text-xs text-g-text-secondary font-roboto">Demo project — All auctions and items are fictional. Built with Java OOP + Spring Boot.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Scripts Fragment -->
+<div th:fragment="scripts">
+    <script th:src="@{/js/main.js}"></script>
+    <script>
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('profileDropdown');
+            const menu = document.getElementById('dropdownMenu');
+            if (dropdown && menu && !dropdown.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+    </script>
+</div>
+
+</html>

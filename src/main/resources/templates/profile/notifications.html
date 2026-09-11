@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Notifications — AuctionHouse')}"></head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen flex flex-col">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="font-gsans text-3xl font-medium text-g-text">Notifications</h1>
+            <p class="text-sm text-g-text-secondary mt-1" th:text="${notifications.size()} + ' total'">0 notifications</p>
+        </div>
+        <form th:action="@{/notifications/mark-read}" method="post" th:if="${!notifications.isEmpty()}">
+            <button type="submit" class="px-4 py-2 text-sm font-medium text-g-blue bg-g-blue-light rounded-full hover:bg-blue-100 transition-colors">
+                Mark all read
+            </button>
+        </form>
+    </div>
+
+    <div th:if="${notifications.isEmpty()}" class="bg-white rounded-3xl border border-g-border p-12 text-center">
+        <div class="w-20 h-20 mx-auto mb-4 bg-g-bg rounded-full flex items-center justify-center border border-g-border">
+            <span class="material-icons-outlined text-g-text-secondary text-4xl">notifications_none</span>
+        </div>
+        <h3 class="font-gsans text-xl font-medium text-g-text mb-2">All caught up!</h3>
+        <p class="text-sm text-g-text-secondary">You'll be notified when you're outbid or win an auction.</p>
+    </div>
+
+    <div class="space-y-2" th:if="${!notifications.isEmpty()}">
+        <div th:each="notif : ${notifications}"
+             class="bg-white rounded-2xl border p-4 flex items-start gap-3 transition-all"
+             th:classappend="${!notif.isRead()} ? 'border-g-blue/30 bg-blue-50/30' : 'border-g-border'">
+            <div class="w-9 h-9 rounded-full shrink-0 flex items-center justify-center"
+                 th:classappend="${notif.type == 'WON'} ? 'bg-green-100' : (${notif.type == 'OUTBID'} ? 'bg-red-100' : 'bg-blue-100')">
+                <span class="material-icons-outlined text-lg"
+                      th:classappend="${notif.type == 'WON'} ? 'text-g-green' : (${notif.type == 'OUTBID'} ? 'text-g-red' : 'text-g-blue')"
+                      th:text="${notif.type == 'WON'} ? 'emoji_events' : (${notif.type == 'OUTBID'} ? 'trending_down' : 'gavel')">icon</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm leading-relaxed" th:classappend="${!notif.isRead()} ? 'font-medium text-g-text' : 'text-g-text-secondary'" th:text="${notif.message}">Notification</p>
+                <p class="text-xs text-g-text-secondary mt-1" th:text="${notif.timeAgo}">Time</p>
+            </div>
+            <a th:if="${notif.auctionId != null}" th:href="@{'/auctions/detail/' + ${notif.auctionId}}"
+               class="shrink-0 p-1.5 rounded-full hover:bg-g-hover transition-colors">
+                <span class="material-icons-outlined text-g-text-secondary text-lg">open_in_new</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

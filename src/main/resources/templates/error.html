@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Error — AuctionHouse')}"></head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen flex flex-col">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="flex-1 flex items-center justify-center px-4 py-12">
+    <div class="text-center">
+        <div class="w-24 h-24 mx-auto mb-6 bg-red-50 rounded-full flex items-center justify-center">
+            <span class="material-icons-outlined text-g-red text-5xl">error_outline</span>
+        </div>
+        <h1 class="font-gsans text-3xl font-medium text-g-text mb-2">Something went wrong</h1>
+        <p class="text-sm text-g-text-secondary mb-6" th:text="${error}">An unexpected error occurred.</p>
+        <a href="/" class="inline-flex items-center gap-2 px-6 py-3 bg-g-blue text-white font-medium rounded-full text-sm hover:bg-g-blue-hover transition-colors">
+            <span class="material-icons-outlined text-lg">home</span> Back to home
+        </a>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

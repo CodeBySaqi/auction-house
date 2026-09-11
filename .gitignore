@@ -1,0 +1,28 @@
+# Build output
+target/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Database files (H2)
+data/
+
+# Uploads
+uploads/
+
+# Maven wrapper
+!.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+*.log

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('My Bids — AuctionHouse')}"></head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen flex flex-col">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+    <div class="mb-6">
+        <h1 class="font-gsans text-3xl font-medium text-g-text">My bids</h1>
+        <p class="text-sm text-g-text-secondary mt-1" th:text="${bids.size()} + ' total bids placed'">0 bids</p>
+    </div>
+
+    <div th:if="${bids.isEmpty()}" class="bg-white rounded-3xl border border-g-border p-12 text-center">
+        <div class="w-20 h-20 mx-auto mb-4 bg-blue-50 rounded-full flex items-center justify-center">
+            <span class="material-icons-outlined text-g-blue text-4xl">payments</span>
+        </div>
+        <h3 class="font-gsans text-xl font-medium text-g-text mb-2">No bids yet</h3>
+        <p class="text-sm text-g-text-secondary mb-6">Browse auctions and place your first bid!</p>
+        <a href="/auctions" class="inline-flex items-center gap-2 px-6 py-3 bg-g-blue text-white font-medium rounded-full text-sm hover:bg-g-blue-hover transition-colors">
+            Browse Auctions
+        </a>
+    </div>
+
+    <div class="space-y-3" th:if="${!bids.isEmpty()}">
+        <a th:each="bid : ${bids}" th:href="@{'/auctions/detail/' + ${bid.auction.id}}" class="flex items-center gap-4 bg-white rounded-2xl border border-g-border p-4 hover:shadow-g-sm hover:border-transparent transition-all no-underline">
+            <img th:src="${bid.auction.imageUrl}" th:alt="${bid.auction.title}" class="w-20 h-16 rounded-xl object-cover bg-gray-100 shrink-0"
+                 onerror="this.style.display='none'">
+            <div class="flex-1 min-w-0">
+                <h3 class="font-gsans font-medium text-g-text text-sm line-clamp-1" th:text="${bid.auction.title}">Auction</h3>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-medium"
+                          th:classappend="${bid.auction.status.name() == 'ACTIVE'} ? 'bg-green-50 text-g-green' : 'bg-g-bg text-g-text-secondary'"
+                          th:text="${bid.auction.status.name()}">Status</span>
+                    <span class="text-xs text-g-text-secondary" th:text="${bid.timeAgo}">Time</span>
+                </div>
+            </div>
+            <div class="text-right shrink-0">
+                <p class="font-gsans font-medium text-g-text" th:text="'$' + ${#numbers.formatDecimal(bid.amount, 1, 'COMMA', 2, 'POINT')}">$0</p>
+                <span th:if="${bid.auction.highestBidder != null && bid.auction.highestBidder.id == user.id}"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 rounded-full text-[10px] font-medium text-g-green">
+                    <span class="material-icons-outlined text-xs">star</span> Leading
+                </span>
+                <span th:if="${bid.auction.highestBidder == null || bid.auction.highestBidder.id != user.id}"
+                      class="px-2 py-0.5 bg-g-bg rounded-full text-[10px] font-medium text-g-text-secondary">Outbid</span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Sign In — AuctionHouse')}"></head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen flex flex-col">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="flex-1 flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-3xl shadow-g-sm border border-g-border p-8 sm:p-10">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="w-12 h-12 mx-auto mb-4 bg-g-blue rounded-2xl flex items-center justify-center">
+                    <span class="material-icons-outlined text-white text-2xl">gavel</span>
+                </div>
+                <h1 class="font-gsans text-2xl font-medium text-g-text">Welcome back</h1>
+                <p class="text-sm text-g-text-secondary mt-1">Sign in to your AuctionHouse account</p>
+            </div>
+
+            <!-- Alerts -->
+            <div th:if="${param.registered}" class="flex items-center gap-3 p-4 mb-6 bg-green-50 rounded-2xl border border-green-200">
+                <span class="material-icons-outlined text-g-green text-xl">check_circle</span>
+                <span class="text-sm text-green-800">Registration successful! Please sign in.</span>
+            </div>
+            <div th:if="${param.logout}" class="flex items-center gap-3 p-4 mb-6 bg-blue-50 rounded-2xl border border-blue-200">
+                <span class="material-icons-outlined text-g-blue text-xl">info</span>
+                <span class="text-sm text-blue-800">You have been signed out.</span>
+            </div>
+            <div th:if="${param.error}" class="flex items-center gap-3 p-4 mb-6 bg-red-50 rounded-2xl border border-red-200">
+                <span class="material-icons-outlined text-g-red text-xl">error</span>
+                <span class="text-sm text-red-800">Invalid username or password.</span>
+            </div>
+
+            <!-- Form -->
+            <form th:action="@{/login}" method="post" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-g-text mb-1.5">Username</label>
+                    <input type="text" name="username" required autofocus
+                           class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
+                           placeholder="Enter your username">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-g-text mb-1.5">Password</label>
+                    <input type="password" name="password" required
+                           class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
+                           placeholder="Enter your password">
+                </div>
+                <button type="submit" class="w-full py-3.5 bg-g-blue text-white font-medium rounded-xl hover:bg-g-blue-hover shadow-g-sm hover:shadow-g-md transition-all text-sm">
+                    Sign in
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-sm text-g-text-secondary">Don't have an account? <a href="/register" class="text-g-blue font-medium hover:underline">Create one</a></p>
+            </div>
+
+            <!-- Demo credentials -->
+            <div class="mt-6 pt-6 border-t border-g-border">
+                <p class="text-xs text-g-text-secondary text-center mb-3">Demo credentials</p>
+                <div class="flex items-center justify-center gap-2 p-3 bg-g-bg rounded-xl">
+                    <code class="text-xs bg-white px-2 py-1 rounded-lg border border-g-border font-mono text-g-text">johndoe</code>
+                    <span class="text-xs text-g-text-secondary">/</span>
+                    <code class="text-xs bg-white px-2 py-1 rounded-lg border border-g-border font-mono text-g-text">password123</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
