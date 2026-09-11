@@ -67,7 +67,7 @@ public class SecurityConfig {
             .and()
             .headers().frameOptions().sameOrigin()
             .and()
-            .csrf().ignoringAntMatchers("/h2-console/**", "/api/**", "/login", "/register", "/bid/**", "/profile/**", "/notifications/**", "/logout");
+            .csrf().ignoringAntMatchers("/h2-console/**", "/api/**", "/login", "/register", "/bid/**", "/profile/**", "/notifications/**", "/logout", "/auctions/create");
 
         return http.build();
     }
