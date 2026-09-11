@@ -20,6 +20,36 @@
         </div>
     </div>
 
+    <!-- Wallet & Actions Section -->
+    <div class="bg-white rounded-3xl border border-g-border p-6 sm:p-8 mb-6">
+        <h2 class="font-gsans font-medium text-g-text mb-4 flex items-center gap-2">
+            <span class="material-icons-outlined text-g-text-secondary text-xl">account_balance_wallet</span>
+            Wallet & Actions
+        </h2>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div class="flex-1">
+                <p class="text-xs uppercase tracking-wider text-g-text-secondary font-medium mb-1">Your Balance</p>
+                <p class="font-gsans text-2xl font-medium text-g-text" th:text="'$' + ${#numbers.formatDecimal(user.walletBalance, 1, 'COMMA', 2, 'POINT')}">$100,000.00</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <form th:action="@{/profile/add-money}" method="post">
+                    <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-g-green text-white font-medium rounded-full hover:bg-green-600 text-sm transition-colors shadow-g-sm">
+                        <span class="material-icons-outlined text-lg">monetization_on</span>
+                        Get $50,000
+                    </button>
+                </form>
+                <a href="/auctions/create" class="inline-flex items-center gap-2 px-5 py-2.5 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover text-sm transition-colors shadow-g-sm no-underline">
+                    <span class="material-icons-outlined text-lg">add_circle</span>
+                    Create Auction
+                </a>
+                <a href="/my-auctions" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-g-text font-medium rounded-full border border-g-border hover:bg-g-hover text-sm transition-colors no-underline">
+                    <span class="material-icons-outlined text-lg">storefront</span>
+                    My Auctions
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Stats Grid -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="bg-white rounded-2xl border border-g-border p-5">

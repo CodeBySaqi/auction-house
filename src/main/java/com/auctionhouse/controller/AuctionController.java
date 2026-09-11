@@ -7,6 +7,7 @@ import com.auctionhouse.model.CollectibleAuction;
 import com.auctionhouse.model.User;
 import com.auctionhouse.service.AuctionService;
 import com.auctionhouse.service.BidService;
+import com.auctionhouse.service.FileStorageService;
 import com.auctionhouse.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
@@ -33,12 +35,14 @@ public class AuctionController {
     private final AuctionService auctionService;
     private final BidService bidService;
     private final UserService userService;
+    private final FileStorageService fileStorageService;
 
     @Autowired
-    public AuctionController(AuctionService auctionService, BidService bidService, UserService userService) {
+    public AuctionController(AuctionService auctionService, BidService bidService, UserService userService, FileStorageService fileStorageService) {
         this.auctionService = auctionService;
         this.bidService = bidService;
         this.userService = userService;
+        this.fileStorageService = fileStorageService;
     }
 
     @GetMapping
@@ -97,7 +101,8 @@ public class AuctionController {
                                 @RequestParam String description,
                                 @RequestParam double startingPrice,
                                 @RequestParam String category,
-                                @RequestParam String imageUrl,
+                                @RequestParam(required = false) String imageUrl,
+                                @RequestParam(required = false) MultipartFile auctionImage,
                                 @RequestParam int durationMinutes,
                                 @AuthenticationPrincipal UserDetails userDetails,
                                 RedirectAttributes redirectAttributes) {
@@ -105,12 +110,24 @@ public class AuctionController {
             User creator = userService.getCurrentUser(userDetails.getUsername());
             AuctionCategory cat = AuctionCategory.valueOf(category.toUpperCase());
 
-            // Create a generic CollectibleAuction for user-created items (simplest approach)
+            // Determine image URL: uploaded file takes priority over URL
+            String finalImageUrl = imageUrl;
+            if (auctionImage != null && !auctionImage.isEmpty()) {
+                String filename = fileStorageService.storeAuctionImage(auctionImage);
+                finalImageUrl = "/uploads/auctions/" + filename;
+            }
+
+            // Fallback image if neither provided
+            if (finalImageUrl == null || finalImageUrl.trim().isEmpty()) {
+                finalImageUrl = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800";
+            }
+
+            // Create a CollectibleAuction for user-created items
             CollectibleAuction auction = new CollectibleAuction();
             auction.setTitle(title);
             auction.setDescription(description);
             auction.setStartingPrice(startingPrice);
-            auction.setImageUrl(imageUrl);
+            auction.setImageUrl(finalImageUrl);
             auction.setCategory(cat);
             auction.setEndTime(LocalDateTime.now().plusMinutes(durationMinutes));
             auction.setCreatedBy(creator);

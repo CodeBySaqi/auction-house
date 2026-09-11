@@ -12,7 +12,7 @@ import java.nio.file.Paths;
 import java.util.UUID;
 
 /**
- * FileStorageService - handles profile picture uploads.
+ * FileStorageService - handles profile picture and auction image uploads.
  */
 @Service
 public class FileStorageService {
@@ -21,12 +21,15 @@ public class FileStorageService {
     private String uploadDir;
 
     private Path uploadPath;
+    private Path auctionUploadPath;
 
     @PostConstruct
     public void init() {
         uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+        auctionUploadPath = Paths.get("./uploads/auctions").toAbsolutePath().normalize();
         try {
             Files.createDirectories(uploadPath);
+            Files.createDirectories(auctionUploadPath);
         } catch (IOException e) {
             throw new RuntimeException("Could not create upload directory", e);
         }
@@ -36,11 +39,32 @@ public class FileStorageService {
      * Store a profile picture and return the filename.
      */
     public String storeProfilePic(MultipartFile file) throws IOException {
+        validateImage(file);
+        String filename = generateFilename(file);
+        Path targetPath = uploadPath.resolve(filename);
+        Files.copy(file.getInputStream(), targetPath);
+        return filename;
+    }
+
+    /**
+     * Store an auction image and return the filename.
+     */
+    public String storeAuctionImage(MultipartFile file) throws IOException {
+        validateImage(file);
+        String filename = generateFilename(file);
+        Path targetPath = auctionUploadPath.resolve(filename);
+        Files.copy(file.getInputStream(), targetPath);
+        return filename;
+    }
+
+    /**
+     * Validate uploaded image file.
+     */
+    private void validateImage(MultipartFile file) throws IOException {
         if (file.isEmpty()) {
             throw new IOException("File is empty");
         }
 
-        // Validate file type
         String contentType = file.getContentType();
         if (contentType == null || (!contentType.equals("image/jpeg") &&
                 !contentType.equals("image/png") && !contentType.equals("image/gif") &&
@@ -48,24 +72,21 @@ public class FileStorageService {
             throw new IOException("Only JPEG, PNG, GIF, and WebP images are allowed");
         }
 
-        // Validate file size (5MB max)
         if (file.getSize() > 5 * 1024 * 1024) {
             throw new IOException("File size must be less than 5MB");
         }
+    }
 
-        // Generate unique filename
+    /**
+     * Generate a unique filename preserving the extension.
+     */
+    private String generateFilename(MultipartFile file) {
         String originalFilename = file.getOriginalFilename();
         String extension = "";
         if (originalFilename != null && originalFilename.contains(".")) {
             extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-        String filename = UUID.randomUUID().toString() + extension;
-
-        // Save file
-        Path targetPath = uploadPath.resolve(filename);
-        Files.copy(file.getInputStream(), targetPath);
-
-        return filename;
+        return UUID.randomUUID().toString() + extension;
     }
 
     /**

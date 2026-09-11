@@ -1,6 +1,5 @@
 package com.auctionhouse.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -8,18 +7,21 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.nio.file.Paths;
 
 /**
- * Web MVC configuration - serves uploaded files.
+ * Web MVC configuration - serves uploaded files (profiles + auction images).
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Value("${app.upload.dir}")
-    private String uploadDir;
-
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String absolutePath = Paths.get(uploadDir).toAbsolutePath().normalize().toUri().toString();
+        // Profile pictures
+        String profilePath = Paths.get("./uploads/profiles").toAbsolutePath().normalize().toUri().toString();
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(absolutePath);
+                .addResourceLocations(profilePath);
+
+        // Auction images
+        String auctionPath = Paths.get("./uploads/auctions").toAbsolutePath().normalize().toUri().toString();
+        registry.addResourceHandler("/uploads/auctions/**")
+                .addResourceLocations(auctionPath);
     }
 }
