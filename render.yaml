@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: auction-house-simulator
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: JAVA_OPTS
+        value: -Xmx512m
