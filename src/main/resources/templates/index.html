@@ -6,99 +6,95 @@
 <nav th:replace="~{fragments/layout :: navbar}"></nav>
 
 <!-- Hero Slider -->
-<div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
-    <div class="relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-g-md bg-white" id="heroSlider">
+<div class="w-full px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
+    <div class="max-w-7xl mx-auto relative overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-g-md bg-white" id="heroSlider">
         <!-- Slides Container -->
         <div class="flex transition-transform duration-500 ease-in-out" id="slidesContainer">
             
             <!-- Slide 1: Welcome Hero -->
             <div class="w-full flex-shrink-0">
-                <div class="flex flex-row h-[320px] sm:h-[400px] lg:h-[500px]">
-                    <!-- Text Side (55% on mobile, 50% on desktop) -->
-                    <div class="w-[55%] sm:w-1/2 bg-gradient-to-br from-blue-600 to-purple-600 p-4 sm:p-6 lg:p-12 flex items-center">
+                <div class="flex flex-row aspect-[16/9] sm:aspect-[21/9]">
+                    <!-- Text Side -->
+                    <div class="w-1/2 bg-gradient-to-br from-blue-600 to-purple-600 flex items-center" style="padding: clamp(12px, 3vw, 48px);">
                         <div class="text-white w-full">
-                            <h2 class="font-gsans text-lg sm:text-2xl lg:text-4xl xl:text-5xl font-bold mb-2 sm:mb-3 lg:mb-4 leading-tight">Welcome to AuctionHouse</h2>
-                            <p class="text-xs sm:text-sm lg:text-lg mb-3 sm:mb-4 lg:mb-6 opacity-90 hidden sm:block">Bid on luxury cars, watches, art & more</p>
-                            <p class="text-xs mb-3 opacity-90 sm:hidden">Luxury items auction</p>
-                            <a href="/auctions" class="inline-block px-3 sm:px-5 lg:px-8 py-2 sm:py-2.5 lg:py-3 bg-white text-gray-900 rounded-full font-semibold hover:bg-gray-100 transition-colors shadow-lg text-[10px] sm:text-sm lg:text-base">
+                            <h2 class="font-gsans font-bold leading-tight mb-2" style="font-size: clamp(14px, 2.5vw, 48px);">Welcome to AuctionHouse</h2>
+                            <p class="opacity-90" style="font-size: clamp(9px, 1.2vw, 18px); margin-bottom: clamp(8px, 1.5vw, 24px);">Bid on luxury cars, watches, art & more</p>
+                            <a href="/auctions" class="inline-block bg-white text-gray-900 rounded-full font-semibold hover:bg-gray-100 transition-colors shadow-lg" style="font-size: clamp(8px, 1vw, 16px); padding: clamp(6px, 1vw, 12px) clamp(12px, 2vw, 32px);">
                                 Browse Auctions
                             </a>
                         </div>
                     </div>
-                    <!-- Image Side (45% on mobile, 50% on desktop) -->
-                    <div class="w-[45%] sm:w-1/2 bg-gradient-to-br from-blue-100 to-purple-100 p-3 sm:p-6 lg:p-12 flex items-center justify-center">
+                    <!-- Image Side -->
+                    <div class="w-1/2 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center" style="padding: clamp(8px, 2vw, 48px);">
                         <img src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=600&q=80" 
                              alt="Luxury auction items" 
-                             class="w-full h-auto max-h-[280px] sm:max-h-none rounded-[40%_60%_70%_30%/40%_50%_60%_50%] shadow-2xl object-cover aspect-square">
+                             class="w-full h-auto rounded-[40%_60%_70%_30%/40%_50%_60%_50%] shadow-2xl object-cover aspect-square">
                     </div>
                 </div>
             </div>
 
             <!-- Slide 2: Luxury Cars -->
             <div class="w-full flex-shrink-0">
-                <div class="flex flex-row h-[320px] sm:h-[400px] lg:h-[500px]">
+                <div class="flex flex-row aspect-[16/9] sm:aspect-[21/9]">
                     <!-- Text Side -->
-                    <div class="w-[55%] sm:w-1/2 bg-gradient-to-br from-green-600 to-teal-600 p-4 sm:p-6 lg:p-12 flex items-center">
+                    <div class="w-1/2 bg-gradient-to-br from-green-600 to-teal-600 flex items-center" style="padding: clamp(12px, 3vw, 48px);">
                         <div class="text-white w-full">
-                            <h2 class="font-gsans text-lg sm:text-2xl lg:text-4xl xl:text-5xl font-bold mb-2 sm:mb-3 lg:mb-4 leading-tight">Luxury Cars Auction</h2>
-                            <p class="text-xs sm:text-sm lg:text-lg mb-3 sm:mb-4 lg:mb-6 opacity-90 hidden sm:block">Ferrari, Lamborghini, Porsche & more</p>
-                            <p class="text-xs mb-3 opacity-90 sm:hidden">Starting at $50K</p>
-                            <a href="/auctions?category=CARS" class="inline-block px-3 sm:px-5 lg:px-8 py-2 sm:py-2.5 lg:py-3 bg-white text-gray-900 rounded-full font-semibold hover:bg-gray-100 transition-colors shadow-lg text-[10px] sm:text-sm lg:text-base">
+                            <h2 class="font-gsans font-bold leading-tight mb-2" style="font-size: clamp(14px, 2.5vw, 48px);">Luxury Cars Auction</h2>
+                            <p class="opacity-90" style="font-size: clamp(9px, 1.2vw, 18px); margin-bottom: clamp(8px, 1.5vw, 24px);">Ferrari, Lamborghini, Porsche & more - Starting at $50K</p>
+                            <a href="/auctions?category=CARS" class="inline-block bg-white text-gray-900 rounded-full font-semibold hover:bg-gray-100 transition-colors shadow-lg" style="font-size: clamp(8px, 1vw, 16px); padding: clamp(6px, 1vw, 12px) clamp(12px, 2vw, 32px);">
                                 View Cars
                             </a>
                         </div>
                     </div>
                     <!-- Image Side -->
-                    <div class="w-[45%] sm:w-1/2 bg-gradient-to-br from-green-100 to-teal-100 p-3 sm:p-6 lg:p-12 flex items-center justify-center">
+                    <div class="w-1/2 bg-gradient-to-br from-green-100 to-teal-100 flex items-center justify-center" style="padding: clamp(8px, 2vw, 48px);">
                         <img src="https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&q=80" 
                              alt="Luxury car" 
-                             class="w-full h-auto max-h-[280px] sm:max-h-none rounded-[60%_40%_30%_70%/60%_30%_70%_40%] shadow-2xl object-cover aspect-square">
+                             class="w-full h-auto rounded-[60%_40%_30%_70%/60%_30%_70%_40%] shadow-2xl object-cover aspect-square">
                     </div>
                 </div>
             </div>
 
             <!-- Slide 3: Urgency -->
             <div class="w-full flex-shrink-0">
-                <div class="flex flex-row h-[320px] sm:h-[400px] lg:h-[500px]">
+                <div class="flex flex-row aspect-[16/9] sm:aspect-[21/9]">
                     <!-- Text Side -->
-                    <div class="w-[55%] sm:w-1/2 bg-gradient-to-br from-orange-600 to-red-600 p-4 sm:p-6 lg:p-12 flex items-center">
+                    <div class="w-1/2 bg-gradient-to-br from-orange-600 to-red-600 flex items-center" style="padding: clamp(12px, 3vw, 48px);">
                         <div class="text-white w-full">
-                            <h2 class="font-gsans text-lg sm:text-2xl lg:text-4xl xl:text-5xl font-bold mb-2 sm:mb-3 lg:mb-4 leading-tight">⚡ Ending Soon!</h2>
-                            <p class="text-xs sm:text-sm lg:text-lg mb-3 sm:mb-4 lg:mb-6 opacity-90 hidden sm:block">Some items ending in less than 1 hour</p>
-                            <p class="text-xs mb-3 opacity-90 sm:hidden">Bid before it's gone</p>
-                            <a href="/auctions" class="inline-block px-3 sm:px-5 lg:px-8 py-2 sm:py-2.5 lg:py-3 bg-white text-gray-900 rounded-full font-semibold hover:bg-gray-100 transition-colors shadow-lg text-[10px] sm:text-sm lg:text-base">
+                            <h2 class="font-gsans font-bold leading-tight mb-2" style="font-size: clamp(14px, 2.5vw, 48px);">⚡ Ending Soon!</h2>
+                            <p class="opacity-90" style="font-size: clamp(9px, 1.2vw, 18px); margin-bottom: clamp(8px, 1.5vw, 24px);">Don't miss out - items ending in less than 1 hour</p>
+                            <a href="/auctions" class="inline-block bg-white text-gray-900 rounded-full font-semibold hover:bg-gray-100 transition-colors shadow-lg" style="font-size: clamp(8px, 1vw, 16px); padding: clamp(6px, 1vw, 12px) clamp(12px, 2vw, 32px);">
                                 Bid Now
                             </a>
                         </div>
                     </div>
                     <!-- Image Side -->
-                    <div class="w-[45%] sm:w-1/2 bg-gradient-to-br from-orange-100 to-red-100 p-3 sm:p-6 lg:p-12 flex items-center justify-center">
+                    <div class="w-1/2 bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center" style="padding: clamp(8px, 2vw, 48px);">
                         <img src="https://images.unsplash.com/photo-1501139083538-0139583c060f?w=600&q=80" 
                              alt="Auction timer" 
-                             class="w-full h-auto max-h-[280px] sm:max-h-none rounded-[30%_70%_70%_30%/50%_40%_60%_50%] shadow-2xl object-cover aspect-square">
+                             class="w-full h-auto rounded-[30%_70%_70%_30%/50%_40%_60%_50%] shadow-2xl object-cover aspect-square">
                     </div>
                 </div>
             </div>
 
             <!-- Slide 4: Get Started -->
             <div class="w-full flex-shrink-0">
-                <div class="flex flex-row h-[320px] sm:h-[400px] lg:h-[500px]">
+                <div class="flex flex-row aspect-[16/9] sm:aspect-[21/9]">
                     <!-- Text Side -->
-                    <div class="w-[55%] sm:w-1/2 bg-gradient-to-br from-pink-600 to-rose-600 p-4 sm:p-6 lg:p-12 flex items-center">
+                    <div class="w-1/2 bg-gradient-to-br from-pink-600 to-rose-600 flex items-center" style="padding: clamp(12px, 3vw, 48px);">
                         <div class="text-white w-full">
-                            <h2 class="font-gsans text-lg sm:text-2xl lg:text-4xl xl:text-5xl font-bold mb-2 sm:mb-3 lg:mb-4 leading-tight">Start with $50K</h2>
-                            <p class="text-xs sm:text-sm lg:text-lg mb-3 sm:mb-4 lg:mb-6 opacity-90 hidden sm:block">Create account and get instant demo funds</p>
-                            <p class="text-xs mb-3 opacity-90 sm:hidden">Free demo funds</p>
-                            <a href="/register" class="inline-block px-3 sm:px-5 lg:px-8 py-2 sm:py-2.5 lg:py-3 bg-white text-gray-900 rounded-full font-semibold hover:bg-gray-100 transition-colors shadow-lg text-[10px] sm:text-sm lg:text-base">
+                            <h2 class="font-gsans font-bold leading-tight mb-2" style="font-size: clamp(14px, 2.5vw, 48px);">Start with $50K</h2>
+                            <p class="opacity-90" style="font-size: clamp(9px, 1.2vw, 18px); margin-bottom: clamp(8px, 1.5vw, 24px);">Create your account and get instant demo funds</p>
+                            <a href="/register" class="inline-block bg-white text-gray-900 rounded-full font-semibold hover:bg-gray-100 transition-colors shadow-lg" style="font-size: clamp(8px, 1vw, 16px); padding: clamp(6px, 1vw, 12px) clamp(12px, 2vw, 32px);">
                                 Sign Up Free
                             </a>
                         </div>
                     </div>
                     <!-- Image Side -->
-                    <div class="w-[45%] sm:w-1/2 bg-gradient-to-br from-pink-100 to-rose-100 p-3 sm:p-6 lg:p-12 flex items-center justify-center">
+                    <div class="w-1/2 bg-gradient-to-br from-pink-100 to-rose-100 flex items-center justify-center" style="padding: clamp(8px, 2vw, 48px);">
                         <img src="https://images.unsplash.com/photo-1579621970588-a35d0e7ab9b6?w=600&q=80" 
                              alt="Money and wallet" 
-                             class="w-full h-auto max-h-[280px] sm:max-h-none rounded-[70%_30%_50%_50%/40%_60%_40%_60%] shadow-2xl object-cover aspect-square">
+                             class="w-full h-auto rounded-[70%_30%_50%_50%/40%_60%_40%_60%] shadow-2xl object-cover aspect-square">
                     </div>
                 </div>
             </div>
@@ -106,23 +102,23 @@
         </div>
 
         <!-- Navigation Arrows -->
-        <button id="sliderPrevBtn" class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110">
-            <span class="material-icons-outlined text-g-text text-xl sm:text-2xl">chevron_left</span>
+        <button id="sliderPrevBtn" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110" style="width: clamp(28px, 4vw, 48px); height: clamp(28px, 4vw, 48px);">
+            <span class="material-icons-outlined text-g-text" style="font-size: clamp(16px, 2vw, 24px);">chevron_left</span>
         </button>
-        <button id="sliderNextBtn" class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110">
-            <span class="material-icons-outlined text-g-text text-xl sm:text-2xl">chevron_right</span>
+        <button id="sliderNextBtn" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110" style="width: clamp(28px, 4vw, 48px); height: clamp(28px, 4vw, 48px);">
+            <span class="material-icons-outlined text-g-text" style="font-size: clamp(16px, 2vw, 24px);">chevron_right</span>
         </button>
 
         <!-- Dots Indicator -->
-        <div class="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2" id="sliderDots">
-            <button class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white/80 transition-all" data-index="0"></button>
-            <button class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white/80 transition-all" data-index="1"></button>
-            <button class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white/80 transition-all" data-index="2"></button>
-            <button class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white/80 transition-all" data-index="3"></button>
+        <div class="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2" id="sliderDots">
+            <button class="slider-dot rounded-full bg-white/50 hover:bg-white/80 transition-all" style="width: clamp(8px, 1.2vw, 12px); height: clamp(8px, 1.2vw, 12px);" data-index="0"></button>
+            <button class="slider-dot rounded-full bg-white/50 hover:bg-white/80 transition-all" style="width: clamp(8px, 1.2vw, 12px); height: clamp(8px, 1.2vw, 12px);" data-index="1"></button>
+            <button class="slider-dot rounded-full bg-white/50 hover:bg-white/80 transition-all" style="width: clamp(8px, 1.2vw, 12px); height: clamp(8px, 1.2vw, 12px);" data-index="2"></button>
+            <button class="slider-dot rounded-full bg-white/50 hover:bg-white/80 transition-all" style="width: clamp(8px, 1.2vw, 12px); height: clamp(8px, 1.2vw, 12px);" data-index="3"></button>
         </div>
 
         <!-- Slide Counter -->
-        <div class="absolute top-3 sm:top-4 right-3 sm:right-4 bg-black/50 text-white px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
+        <div class="absolute top-2 sm:top-4 right-2 sm:right-4 bg-black/50 text-white rounded-full font-medium" style="font-size: clamp(9px, 1vw, 14px); padding: clamp(2px, 0.5vw, 4px) clamp(8px, 1.2vw, 12px);">
             <span id="sliderCurrentSlide">1</span> / <span id="sliderTotalSlides">4</span>
         </div>
     </div>
