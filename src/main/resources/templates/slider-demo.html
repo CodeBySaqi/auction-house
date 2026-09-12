@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Slider Demo — AuctionHouse')}"></head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="py-8">
+    <!-- Slider Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="relative overflow-hidden rounded-3xl shadow-g-md bg-white" id="slider">
+            <!-- Slides -->
+            <div class="flex transition-transform duration-500 ease-in-out" id="slides">
+                <!-- Slide 1 -->
+                <div class="w-full flex-shrink-0 relative">
+                    <div class="aspect-[21/9] bg-gradient-to-r from-blue-600 to-purple-600 flex items-center">
+                        <div class="px-8 sm:px-16 text-white max-w-2xl">
+                            <h2 class="font-gsans text-3xl sm:text-5xl font-bold mb-4">Welcome to AuctionHouse</h2>
+                            <p class="text-lg sm:text-xl mb-6 opacity-90">Bid on exclusive items from around the world</p>
+                            <a href="/auctions" class="inline-block px-8 py-3 bg-white text-blue-600 rounded-full font-semibold hover:bg-gray-100 transition-colors">
+                                Browse Auctions
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 2 -->
+                <div class="w-full flex-shrink-0 relative">
+                    <div class="aspect-[21/9] bg-gradient-to-r from-green-600 to-teal-600 flex items-center">
+                        <div class="px-8 sm:px-16 text-white max-w-2xl">
+                            <h2 class="font-gsans text-3xl sm:text-5xl font-bold mb-4">Start Bidding Today</h2>
+                            <p class="text-lg sm:text-xl mb-6 opacity-90">Create your account and get $50,000 in demo funds</p>
+                            <a href="/register" class="inline-block px-8 py-3 bg-white text-green-600 rounded-full font-semibold hover:bg-gray-100 transition-colors">
+                                Sign Up Free
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 3 -->
+                <div class="w-full flex-shrink-0 relative">
+                    <div class="aspect-[21/9] bg-gradient-to-r from-orange-600 to-red-600 flex items-center">
+                        <div class="px-8 sm:px-16 text-white max-w-2xl">
+                            <h2 class="font-gsans text-3xl sm:text-5xl font-bold mb-4">Sell Your Items</h2>
+                            <p class="text-lg sm:text-xl mb-6 opacity-90">List your items and watch the bids roll in</p>
+                            <a href="/auctions/create" class="inline-block px-8 py-3 bg-white text-orange-600 rounded-full font-semibold hover:bg-gray-100 transition-colors">
+                                Create Auction
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Arrows -->
+            <button id="prevBtn" class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110">
+                <span class="material-icons-outlined text-g-text">chevron_left</span>
+            </button>
+            <button id="nextBtn" class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110">
+                <span class="material-icons-outlined text-g-text">chevron_right</span>
+            </button>
+
+            <!-- Dots Indicator -->
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2" id="dots">
+                <button class="dot w-3 h-3 rounded-full bg-white/50 hover:bg-white/80 transition-colors" data-index="0"></button>
+                <button class="dot w-3 h-3 rounded-full bg-white/50 hover:bg-white/80 transition-colors" data-index="1"></button>
+                <button class="dot w-3 h-3 rounded-full bg-white/50 hover:bg-white/80 transition-colors" data-index="2"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const slides = document.getElementById('slides');
+    const dots = document.querySelectorAll('.dot');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    
+    let currentSlide = 0;
+    const totalSlides = 3;
+    let autoPlayInterval;
+
+    function updateSlider() {
+        slides.style.transform = `translateX(-${currentSlide * 100}%)`;
+        
+        // Update dots
+        dots.forEach((dot, index) => {
+            if (index === currentSlide) {
+                dot.classList.remove('bg-white/50');
+                dot.classList.add('bg-white');
+            } else {
+                dot.classList.remove('bg-white');
+                dot.classList.add('bg-white/50');
+            }
+        });
+    }
+
+    function nextSlide() {
+        currentSlide = (currentSlide + 1) % totalSlides;
+        updateSlider();
+    }
+
+    function prevSlide() {
+        currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+        updateSlider();
+    }
+
+    function startAutoPlay() {
+        autoPlayInterval = setInterval(nextSlide, 5000); // Auto-advance every 5 seconds
+    }
+
+    function stopAutoPlay() {
+        clearInterval(autoPlayInterval);
+    }
+
+    // Event listeners
+    nextBtn.addEventListener('click', () => {
+        nextSlide();
+        stopAutoPlay();
+        startAutoPlay(); // Reset timer
+    });
+
+    prevBtn.addEventListener('click', () => {
+        prevSlide();
+        stopAutoPlay();
+        startAutoPlay(); // Reset timer
+    });
+
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+            currentSlide = index;
+            updateSlider();
+            stopAutoPlay();
+            startAutoPlay(); // Reset timer
+        });
+    });
+
+    // Pause on hover
+    const slider = document.getElementById('slider');
+    slider.addEventListener('mouseenter', stopAutoPlay);
+    slider.addEventListener('mouseleave', startAutoPlay);
+
+    // Initialize
+    updateSlider();
+    startAutoPlay();
+});
+</script>
+
+</body>
+</html>
