@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.security.Principal;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -37,7 +38,8 @@ public class AdminController {
     @GetMapping("/dashboard")
     public String adminDashboard(Model model, Principal principal) {
         // Get current admin user
-        User admin = userService.findByUsername(principal.getName());
+        User admin = userService.findByUsername(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Admin user not found"));
         model.addAttribute("admin", admin);
 
         // Get statistics
@@ -48,31 +50,15 @@ public class AdminController {
         model.addAttribute("totalAuctions", auctionService.getAllAuctions().size());
         model.addAttribute("activeAuctions", auctionService.getActiveAuctions().size());
 
-        // Get recent activity (last 5 users)
+        // Get recent activity (last 5 users) with formatted dates
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy");
         List<User> recentUsers = allUsers.stream()
                 .sorted((u1, u2) -> u2.getCreatedAt().compareTo(u1.getCreatedAt()))
                 .limit(5)
                 .collect(java.util.stream.Collectors.toList());
         model.addAttribute("recentUsers", recentUsers);
+        model.addAttribute("dateFormatter", formatter);
 
         return "admin-dashboard";
-    }
-
-    /**
-     * Manage auctions page
-     */
-    @GetMapping("/auctions")
-    public String manageAuctions(Model model) {
-        model.addAttribute("auctions", auctionService.getAllAuctions());
-        return "admin-auctions";
-    }
-
-    /**
-     * Manage users page
-     */
-    @GetMapping("/users")
-    public String manageUsers(Model model) {
-        model.addAttribute("users", userService.findAllUsers());
-        return "admin-users";
     }
 }

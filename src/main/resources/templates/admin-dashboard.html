@@ -133,7 +133,7 @@
                                 <p class="font-semibold text-gray-800" th:text="${user.username}">Username</p>
                                 <p class="text-sm text-gray-600" th:text="${user.email}">email@example.com</p>
                             </div>
-                            <span class="text-xs text-gray-500" th:text="${#temporals.format(user.createdAt, 'MMM dd, yyyy')}">Jan 15, 2026</span>
+                            <span class="text-xs text-gray-500" th:text="${dateFormatter.format(user.createdAt)}">Jan 15, 2026</span>
                         </div>
                     </div>
                 </div>
