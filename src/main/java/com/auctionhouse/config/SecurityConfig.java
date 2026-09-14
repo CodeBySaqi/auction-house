@@ -21,11 +21,14 @@ public class SecurityConfig {
 
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final CustomAuthenticationSuccessHandler successHandler;
 
     @Autowired
-    public SecurityConfig(UserService userService, PasswordEncoder passwordEncoder) {
+    public SecurityConfig(UserService userService, PasswordEncoder passwordEncoder, 
+                         CustomAuthenticationSuccessHandler successHandler) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
+        this.successHandler = successHandler;
     }
 
     @Bean
@@ -49,12 +52,13 @@ public class SecurityConfig {
                 .antMatchers("/", "/home", "/register", "/login", "/css/**", "/js/**", "/images/**",
                         "/uploads/**", "/h2-console/**", "/auctions", "/auctions/detail/**",
                         "/auctions/search", "/api/auctions/**").permitAll()
+                .antMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             .and()
             .formLogin()
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
-                .defaultSuccessUrl("/dashboard", true)
+                .successHandler(successHandler)
                 .failureUrl("/login?error=true")
                 .permitAll()
             .and()

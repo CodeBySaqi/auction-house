@@ -107,4 +107,11 @@ public class UserService implements UserDetailsService {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
+
+    /**
+     * Find all users (for admin purposes).
+     */
+    public java.util.List<User> findAllUsers() {
+        return userRepository.findAll();
+    }
 }
