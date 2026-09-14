@@ -120,4 +120,12 @@ public class AuctionService {
     public List<Auction> getAuctionsByCreator(User user) {
         return auctionRepository.findByCreatedByOrderByCreatedAtDesc(user);
     }
+
+    /**
+     * Delete auction by ID.
+     */
+    @Transactional
+    public void deleteById(Long id) {
+        auctionRepository.deleteById(id);
+    }
 }

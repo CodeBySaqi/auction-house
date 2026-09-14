@@ -114,4 +114,12 @@ public class UserService implements UserDetailsService {
     public java.util.List<User> findAllUsers() {
         return userRepository.findAll();
     }
+
+    /**
+     * Delete user by ID.
+     */
+    @Transactional
+    public void deleteById(Long id) {
+        userRepository.deleteById(id);
+    }
 }
