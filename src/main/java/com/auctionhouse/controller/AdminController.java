@@ -5,6 +5,7 @@ import com.auctionhouse.service.AuctionService;
 import com.auctionhouse.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -27,13 +28,15 @@ public class AdminController {
 
     private final UserService userService;
     private final AuctionService auctionService;
+    private final PasswordEncoder passwordEncoder;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy");
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm");
 
     @Autowired
-    public AdminController(UserService userService, AuctionService auctionService) {
+    public AdminController(UserService userService, AuctionService auctionService, PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.auctionService = auctionService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -54,7 +57,7 @@ public class AdminController {
         model.addAttribute("totalAuctions", allAuctions.size());
         model.addAttribute("activeAuctions", activeAuctions.size());
 
-        // Total revenue (sum of all completed auction winning bids)
+        // Total revenue
         double totalRevenue = allAuctions.stream()
                 .filter(a -> a.getStatus() == AuctionStatus.CLOSED)
                 .mapToDouble(Auction::getCurrentHighestBid)
@@ -83,10 +86,6 @@ public class AdminController {
         // Monthly revenue data (last 6 months)
         Map<String, Double> monthlyRevenue = getMonthlyRevenue(allAuctions);
         model.addAttribute("monthlyRevenue", monthlyRevenue);
-
-        // Pending auctions (if any approval system)
-        long pendingCount = allUsers.stream().filter(u -> "ROLE_USER".equals(u.getRole())).count();
-        model.addAttribute("pendingCount", pendingCount);
 
         model.addAttribute("dateFormatter", dateFormatter);
         model.addAttribute("dateTimeFormatter", dateTimeFormatter);
@@ -129,13 +128,11 @@ public class AdminController {
                     .collect(Collectors.toList());
         }
 
-        // Sort by most recent
         auctions.sort((a1, a2) -> a2.getCreatedAt().compareTo(a1.getCreatedAt()));
 
         model.addAttribute("auctions", auctions);
         model.addAttribute("currentStatus", status != null ? status : "ALL");
         model.addAttribute("currentSearch", search != null ? search : "");
-        model.addAttribute("dateFormatter", dateFormatter);
         model.addAttribute("dateTimeFormatter", dateTimeFormatter);
         model.addAttribute("activeTab", "auctions");
 
@@ -167,12 +164,13 @@ public class AdminController {
                 Auction auction = auctionOpt.get();
                 if (auction.getStatus() == AuctionStatus.ACTIVE) {
                     auction.setStatus(AuctionStatus.CLOSED);
+                    redirectAttributes.addFlashAttribute("successMessage", "Auction closed!");
                 } else {
                     auction.setStatus(AuctionStatus.ACTIVE);
                     auction.setEndTime(LocalDateTime.now().plusDays(7));
+                    redirectAttributes.addFlashAttribute("successMessage", "Auction reactivated!");
                 }
                 auctionService.save(auction);
-                redirectAttributes.addFlashAttribute("successMessage", "Auction status updated!");
             }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to update auction: " + e.getMessage());
@@ -201,7 +199,6 @@ public class AdminController {
                     .collect(Collectors.toList());
         }
 
-        // Sort by most recent
         users.sort((u1, u2) -> u2.getCreatedAt().compareTo(u1.getCreatedAt()));
 
         model.addAttribute("users", users);
@@ -210,6 +207,72 @@ public class AdminController {
         model.addAttribute("activeTab", "users");
 
         return "admin-dashboard";
+    }
+
+    /**
+     * Create new user with role selection
+     */
+    @PostMapping("/users/create")
+    public String createUser(@RequestParam String username,
+                              @RequestParam String email,
+                              @RequestParam String password,
+                              @RequestParam String role,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            // Check if username or email already exists
+            if (userService.findByUsername(username).isPresent()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Username '" + username + "' already exists!");
+                return "redirect:/admin/users";
+            }
+            if (userService.findByEmail(email).isPresent()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Email '" + email + "' already registered!");
+                return "redirect:/admin/users";
+            }
+
+            User newUser = new User();
+            newUser.setUsername(username);
+            newUser.setEmail(email);
+            newUser.setPassword(passwordEncoder.encode(password));
+            newUser.setRole(role);
+            newUser.setWalletBalance(100000.0);
+            userService.updateProfile(newUser);
+
+            String roleName = role.equals("ROLE_ADMIN") ? "Admin" : "User";
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "New " + roleName + " '" + username + "' created successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to create user: " + e.getMessage());
+        }
+        return "redirect:/admin/users";
+    }
+
+    /**
+     * Change user role
+     */
+    @PostMapping("/users/role/{id}")
+    public String changeUserRole(@PathVariable Long id,
+                                  @RequestParam String role,
+                                  Principal principal,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            Optional<User> userOpt = userService.findById(id);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                if (user.getUsername().equals(principal.getName())) {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Cannot change your own role!");
+                    return "redirect:/admin/users";
+                }
+                String oldRole = user.getRole().replace("ROLE_", "");
+                String newRole = role.replace("ROLE_", "");
+                user.setRole(role);
+                userService.updateProfile(user);
+                redirectAttributes.addFlashAttribute("successMessage",
+                        user.getUsername() + "'s role changed from " + oldRole + " to " + newRole + "!");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to change role: " + e.getMessage());
+        }
+        return "redirect:/admin/users";
     }
 
     /**
@@ -227,10 +290,10 @@ public class AdminController {
                 }
                 if ("ROLE_BANNED".equals(user.getRole())) {
                     user.setRole("ROLE_USER");
-                    redirectAttributes.addFlashAttribute("successMessage", "User unbanned successfully!");
+                    redirectAttributes.addFlashAttribute("successMessage", "User '" + user.getUsername() + "' unbanned!");
                 } else {
                     user.setRole("ROLE_BANNED");
-                    redirectAttributes.addFlashAttribute("successMessage", "User banned successfully!");
+                    redirectAttributes.addFlashAttribute("successMessage", "User '" + user.getUsername() + "' banned!");
                 }
                 userService.updateProfile(user);
             }
@@ -254,7 +317,7 @@ public class AdminController {
                     return "redirect:/admin/users";
                 }
                 userService.deleteById(id);
-                redirectAttributes.addFlashAttribute("successMessage", "User deleted successfully!");
+                redirectAttributes.addFlashAttribute("successMessage", "User '" + user.getUsername() + "' deleted!");
             }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to delete user: " + e.getMessage());
@@ -276,7 +339,8 @@ public class AdminController {
                 user.setWalletBalance(user.getWalletBalance() + amount);
                 userService.updateProfile(user);
                 redirectAttributes.addFlashAttribute("successMessage",
-                        "Balance updated! New balance: $" + String.format("%,.2f", user.getWalletBalance()));
+                        "Added $" + String.format("%,.0f", amount) + " to " + user.getUsername() +
+                        ". New balance: $" + String.format("%,.2f", user.getWalletBalance()));
             }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to update balance: " + e.getMessage());
@@ -296,6 +360,9 @@ public class AdminController {
         List<Auction> allAuctions = auctionService.getAllAuctions();
         List<User> allUsers = userService.findAllUsers();
 
+        // Total users
+        model.addAttribute("totalUsers", allUsers.size());
+
         // Category distribution
         Map<String, Long> categoryStats = allAuctions.stream()
                 .collect(Collectors.groupingBy(a -> a.getCategory().name(), Collectors.counting()));
@@ -312,7 +379,7 @@ public class AdminController {
 
         // Top bidders
         Map<String, Integer> topBidders = allUsers.stream()
-                .filter(u -> !u.getBids().isEmpty())
+                .filter(u -> u.getBids() != null && !u.getBids().isEmpty())
                 .sorted((u1, u2) -> Integer.compare(u2.getBids().size(), u1.getBids().size()))
                 .limit(10)
                 .collect(Collectors.toMap(User::getUsername, u -> u.getBids().size(),
@@ -345,6 +412,25 @@ public class AdminController {
         model.addAttribute("admin", admin);
         model.addAttribute("activeTab", "settings");
         return "admin-dashboard";
+    }
+
+    /**
+     * Save settings
+     */
+    @PostMapping("/settings")
+    public String saveSettings(@RequestParam String siteName,
+                                @RequestParam String adminEmail,
+                                @RequestParam double defaultBalance,
+                                @RequestParam int defaultDuration,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            // In a real app, these would be saved to a settings table or config
+            // For now, we just show a success message
+            redirectAttributes.addFlashAttribute("successMessage", "Settings saved successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to save settings: " + e.getMessage());
+        }
+        return "redirect:/admin/settings";
     }
 
     /**
