@@ -242,7 +242,7 @@
                                     <td class="px-4 py-4">
                                         <div class="flex flex-col">
                                             <span class="text-sm text-g-text" th:text="${auction.timeRemaining}">2h 15m</span>
-                                            <span class="text-xs text-g-text-secondary" th:text="${#temporals.format(auction.endTime, 'MMM dd, yyyy')}">Sep 15, 2026</span>
+                                            <span class="text-xs text-g-text-secondary" th:text="${auction.endTime != null} ? ${#temporals.format(auction.endTime, 'MMM dd, yyyy')} : 'No end date'">Sep 15, 2026</span>
                                         </div>
                                     </td>
                                     <td class="px-4 py-4 text-right">
