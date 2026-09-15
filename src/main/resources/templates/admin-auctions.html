@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Auctions - AuctionHouse Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script th:replace="~{fragments/layout :: tailwindConfig}"></script>
+    <style>
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen">
+
+    <!-- Flash Messages -->
+    <div th:if="${successMessage}" class="fixed top-20 right-4 z-50 bg-green-50 border border-green-200 text-green-800 px-6 py-3 rounded-2xl shadow-g-md flex items-center gap-3 animate-slide-in">
+        <span class="material-icons-outlined text-g-green">check_circle</span>
+        <span class="text-sm font-medium" th:text="${successMessage}">Success</span>
+    </div>
+    <div th:if="${errorMessage}" class="fixed top-20 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-6 py-3 rounded-2xl shadow-g-md flex items-center gap-3 animate-slide-in">
+        <span class="material-icons-outlined text-g-red">error</span>
+        <span class="text-sm font-medium" th:text="${errorMessage}">Error</span>
+    </div>
+
+    <!-- App Bar -->
+    <nav class="bg-white border-b border-g-border sticky top-0 z-40">
+        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-g-blue rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-white text-xl">gavel</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-gsans font-medium text-xl text-g-text">Auction<span class="text-g-blue">House</span></span>
+                        <span class="px-2.5 py-1 bg-g-text text-white text-[10px] font-bold uppercase tracking-wider rounded-md">Admin</span>
+                    </div>
+                </div>
+
+                <div class="hidden md:flex flex-1 max-w-xl mx-8">
+                    <form th:action="@{/admin/auctions}" method="get" class="relative w-full">
+                        <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-g-text-secondary">search</span>
+                        <input type="text" name="search" th:value="${currentSearch}" placeholder="Search auctions..." 
+                               class="w-full pl-11 pr-4 py-2.5 bg-g-bg border border-g-border rounded-full text-sm placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white focus:shadow-g-sm transition-all">
+                    </form>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <a th:href="@{/notifications}" class="relative p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined">notifications</span>
+                        <span th:if="${unreadCount > 0}" class="absolute top-1 right-1 w-4 h-4 bg-g-red rounded-full text-[10px] text-white font-bold flex items-center justify-center" th:text="${unreadCount}">3</span>
+                    </a>
+                    <a th:href="@{/admin/settings}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined">settings</span>
+                    </a>
+                    <div class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm">
+                        A
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div class="max-w-[1680px] mx-auto flex">
+        
+        <!-- Sidebar -->
+        <aside class="hidden lg:block w-64 flex-shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-hide py-6 pr-4">
+            <nav class="space-y-1">
+                <div class="px-3 mb-2">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Main</span>
+                </div>
+                <a th:href="@{/admin/console}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">dashboard</span>
+                    Dashboard
+                </a>
+                <a th:href="@{/admin/auctions}" class="flex items-center gap-3 px-4 py-2.5 rounded-full bg-g-blue-light text-g-blue font-medium text-sm">
+                    <span class="material-icons-outlined text-xl">storefront</span>
+                    Auctions
+                    <span class="ml-auto px-2 py-0.5 bg-white rounded-full text-xs font-semibold text-g-blue" th:text="${countAll}">150</span>
+                </a>
+                <a th:href="@{/admin/users}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">people</span>
+                    Users
+                    <span class="ml-auto px-2 py-0.5 bg-g-bg rounded-full text-xs font-semibold text-g-text-secondary" th:text="${totalUsers}">100</span>
+                </a>
+                <a th:href="@{/admin/bids}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">gavel</span>
+                    Bids
+                </a>
+                
+                <div class="px-3 mt-6 mb-2">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Analytics</span>
+                </div>
+                <a th:href="@{/admin/analytics}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">analytics</span>
+                    Reports
+                </a>
+                
+                <div class="px-3 mt-6 mb-2">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Tools</span>
+                </div>
+                <a th:href="@{/admin/settings}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">settings</span>
+                    Settings
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+            
+            <!-- Page Header -->
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">Manage Auctions</h1>
+                    <p class="text-sm text-g-text-secondary mt-1">View, filter, and manage all auctions on the platform.</p>
+                </div>
+                <a th:href="@{/auctions/create}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-g-blue text-white rounded-full text-sm font-medium hover:bg-g-blue-hover transition-colors shadow-g-sm">
+                    <span class="material-icons-outlined text-lg">add</span>
+                    Create Auction
+                </a>
+            </div>
+
+            <!-- Filters & Search -->
+            <div class="bg-white rounded-2xl border border-g-border p-4 mb-6">
+                <form th:action="@{/admin/auctions}" method="get" class="flex flex-wrap items-center gap-3">
+                    <div class="flex-1 min-w-[200px]">
+                        <div class="relative">
+                            <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">search</span>
+                            <input type="text" name="search" th:value="${currentSearch}" placeholder="Search by title or description..." 
+                                   class="w-full pl-10 pr-4 py-2 bg-g-bg border border-g-border rounded-lg text-sm placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all">
+                        </div>
+                    </div>
+                    <select name="status" class="px-4 py-2 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue transition-all">
+                        <option value="ALL" th:selected="${currentStatus == 'ALL'}">All Statuses</option>
+                        <option value="ACTIVE" th:selected="${currentStatus == 'ACTIVE'}">Active</option>
+                        <option value="CLOSED" th:selected="${currentStatus == 'CLOSED'}">Closed</option>
+                        <option value="CANCELLED" th:selected="${currentStatus == 'CANCELLED'}">Cancelled</option>
+                    </select>
+                    <select name="category" class="px-4 py-2 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue transition-all">
+                        <option value="ALL" th:selected="${currentCategory == 'ALL'}">All Categories</option>
+                        <option th:each="cat : ${allCategories}" th:value="${cat.name()}" th:text="${cat.displayName}" th:selected="${currentCategory == cat.name()}">Category</option>
+                    </select>
+                    <button type="submit" class="px-4 py-2 bg-white border border-g-border rounded-lg text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined text-lg align-middle">filter_list</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Bulk Actions Bar -->
+            <form th:action="@{/admin/auctions/bulk}" method="post" id="bulkForm">
+                <div class="bg-g-blue-light rounded-2xl border border-g-blue/20 p-4 mb-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" id="selectAll" class="w-4 h-4 text-g-blue rounded border-g-border focus:ring-g-blue">
+                        <label for="selectAll" class="text-sm font-medium text-g-blue cursor-pointer">Select all <span th:text="${auctions.size()}">150</span> auctions</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="submit" name="action" value="close" class="px-3 py-1.5 bg-white border border-g-border rounded-lg text-xs font-medium text-g-text hover:bg-g-hover transition-colors">
+                            Close Selected
+                        </button>
+                        <button type="submit" name="action" value="reopen" class="px-3 py-1.5 bg-white border border-g-border rounded-lg text-xs font-medium text-g-text hover:bg-g-hover transition-colors">
+                            Reopen Selected
+                        </button>
+                        <button type="submit" name="action" value="cancel" class="px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg text-xs font-medium text-g-red hover:bg-red-100 transition-colors">
+                            Cancel Selected
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Auctions Table -->
+                <div class="bg-white rounded-2xl border border-g-border overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-g-bg border-b border-g-border">
+                                <tr>
+                                    <th class="px-4 py-3 text-left">
+                                        <input type="checkbox" class="w-4 h-4 text-g-blue rounded border-g-border focus:ring-g-blue">
+                                    </th>
+                                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Auction</th>
+                                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Category</th>
+                                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Status</th>
+                                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Current Bid</th>
+                                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Bids</th>
+                                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Ends</th>
+                                    <th class="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-g-border">
+                                <tr th:each="auction : ${auctions}" class="hover:bg-g-bg/50 transition-colors">
+                                    <td class="px-4 py-4">
+                                        <input type="checkbox" name="ids" th:value="${auction.id}" class="w-4 h-4 text-g-blue rounded border-g-border focus:ring-g-blue auction-checkbox">
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
+                                                <img th:src="${auction.imageUrl != null} ? @{${auction.imageUrl}} : @{/images/default-auction.png}" th:alt="${auction.title}" class="w-full h-full object-cover">
+                                            </div>
+                                            <div class="min-w-0">
+                                                <p class="text-sm font-medium text-g-text truncate max-w-[200px]" th:text="${auction.title}">Auction Title</p>
+                                                <p class="text-xs text-g-text-secondary">ID: #<span th:text="${auction.id}">1001</span></p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full"
+                                              th:classappend="${auction.category.name() == 'CARS'} ? 'bg-blue-50 text-g-blue' : 
+                                                              (${auction.category.name() == 'WATCHES'} ? 'bg-amber-50 text-amber-700' : 
+                                                              (${auction.category.name() == 'ART'} ? 'bg-purple-50 text-purple-700' : 
+                                                              (${auction.category.name() == 'JEWELRY'} ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700')))">
+                                            <span class="material-icons-outlined text-xs"
+                                                  th:text="${auction.category.name() == 'CARS'} ? 'directions_car' : 
+                                                          (${auction.category.name() == 'WATCHES'} ? 'watch' : 
+                                                          (${auction.category.name() == 'ART'} ? 'palette' : 
+                                                          (${auction.category.name() == 'JEWELRY'} ? 'diamond' : 'museum')))">icon</span>
+                                            <span th:text="${auction.category.displayName}">Category</span>
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full"
+                                              th:classappend="${auction.status.name() == 'ACTIVE'} ? 'bg-green-50 text-g-green' : 
+                                                              (${auction.status.name() == 'CLOSED'} ? 'bg-gray-100 text-g-text-secondary' : 'bg-red-50 text-g-red')">
+                                            <span class="w-1.5 h-1.5 rounded-full"
+                                                  th:classappend="${auction.status.name() == 'ACTIVE'} ? 'bg-g-green' : 
+                                                                  (${auction.status.name() == 'CLOSED'} ? 'bg-g-text-secondary' : 'bg-g-red')"></span>
+                                            <span th:text="${auction.status.name()}">Status</span>
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <p class="text-sm font-medium text-g-text tabular-nums">$<span th:text="${#numbers.formatDecimal(auction.displayPrice, 1, 'COMMA', 0, 'POINT')}">185,000</span></p>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <span class="text-sm text-g-text tabular-nums" th:text="${auction.bidCount}">24</span>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm text-g-text" th:text="${auction.timeRemaining}">2h 15m</span>
+                                            <span class="text-xs text-g-text-secondary" th:text="${#temporals.format(auction.endTime, 'MMM dd, yyyy')}">Sep 15, 2026</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-4 text-right">
+                                        <div class="flex items-center justify-end gap-1">
+                                            <a th:href="@{'/auctions/detail/' + ${auction.id}}" class="p-2 rounded-lg text-g-text-secondary hover:bg-g-hover transition-colors" title="View">
+                                                <span class="material-icons-outlined text-lg">visibility</span>
+                                            </a>
+                                            <form th:if="${auction.status.name() == 'ACTIVE'}" th:action="@{'/admin/auctions/extend/' + ${auction.id}}" method="post" class="inline">
+                                                <button type="submit" class="p-2 rounded-lg text-g-text-secondary hover:bg-g-hover transition-colors" title="Extend">
+                                                    <span class="material-icons-outlined text-lg">schedule</span>
+                                                </button>
+                                            </form>
+                                            <form th:if="${auction.status.name() == 'ACTIVE'}" th:action="@{'/admin/auctions/toggle/' + ${auction.id}}" method="post" class="inline">
+                                                <button type="submit" class="p-2 rounded-lg text-g-text-secondary hover:bg-g-hover transition-colors" title="Close">
+                                                    <span class="material-icons-outlined text-lg">stop_circle</span>
+                                                </button>
+                                            </form>
+                                            <form th:if="${auction.status.name() == 'ACTIVE'}" th:action="@{'/admin/auctions/cancel/' + ${auction.id}}" method="post" class="inline" onsubmit="return confirm('Are you sure you want to cancel this auction?');">
+                                                <button type="submit" class="p-2 rounded-lg text-g-red hover:bg-red-50 transition-colors" title="Cancel">
+                                                    <span class="material-icons-outlined text-lg">cancel</span>
+                                                </button>
+                                            </form>
+                                            <form th:if="${auction.status.name() != 'ACTIVE'}" th:action="@{'/admin/auctions/delete/' + ${auction.id}}" method="post" class="inline" onsubmit="return confirm('Are you sure you want to delete this auction?');">
+                                                <button type="submit" class="p-2 rounded-lg text-g-red hover:bg-red-50 transition-colors" title="Delete">
+                                                    <span class="material-icons-outlined text-lg">delete</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination Info -->
+                    <div class="px-6 py-4 border-t border-g-border flex items-center justify-between">
+                        <div class="text-sm text-g-text-secondary">
+                            Showing <span class="font-medium text-g-text" th:text="${auctions.size()}">5</span> auctions
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+        </main>
+    </div>
+
+    <script>
+        // Select all checkbox functionality
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.auction-checkbox');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+        });
+
+        // Auto-hide flash messages after 5 seconds
+        setTimeout(() => {
+            const flashMessages = document.querySelectorAll('[th\\:if="${successMessage}"], [th\\:if="${errorMessage}"]');
+            flashMessages.forEach(msg => {
+                msg.style.transition = 'opacity 0.3s ease';
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 300);
+            });
+        }, 5000);
+    </script>
+
+</body>
+</html>

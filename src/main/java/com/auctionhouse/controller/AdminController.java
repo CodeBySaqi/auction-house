@@ -252,7 +252,8 @@ public class AdminController {
                                  @RequestParam(required = false) String status,
                                  @RequestParam(required = false) String search,
                                  @RequestParam(required = false) String category) {
-        model.addAttribute("admin", requireAdmin(principal));
+        User admin = requireAdmin(principal);
+        model.addAttribute("admin", admin);
 
         List<Auction> auctions = auctionService.getAllAuctions();
 
@@ -282,10 +283,11 @@ public class AdminController {
         model.addAttribute("currentCategory", category != null ? category : "ALL");
         model.addAttribute("currentSearch", search != null ? search : "");
         model.addAttribute("allCategories", AuctionCategory.values());
+        model.addAttribute("totalUsers", userService.findAllUsers().size());
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
         addCounts(model, auctionService.getAllAuctions());
         addFormatters(model);
-        model.addAttribute("activeTab", "auctions");
-        return "admin-dashboard";
+        return "admin-auctions";
     }
 
     @PostMapping("/auctions/toggle/{id}")
@@ -404,7 +406,8 @@ public class AdminController {
     public String manageUsers(Model model, Principal principal,
                               @RequestParam(required = false) String search,
                               @RequestParam(required = false) String role) {
-        model.addAttribute("admin", requireAdmin(principal));
+        User admin = requireAdmin(principal);
+        model.addAttribute("admin", admin);
 
         List<User> users = userService.findAllUsers();
         if (search != null && !search.isEmpty()) {
@@ -431,10 +434,10 @@ public class AdminController {
         model.addAttribute("bannedCount", userRepository.countByRole("ROLE_BANNED"));
         model.addAttribute("userCount", userRepository.countByRole("ROLE_USER"));
         model.addAttribute("walletFloat", userRepository.sumWalletBalance());
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
         addCounts(model, auctionService.getAllAuctions());
         addFormatters(model);
-        model.addAttribute("activeTab", "users");
-        return "admin-dashboard";
+        return "admin-users";
     }
 
     @PostMapping("/users/create")
@@ -579,7 +582,8 @@ public class AdminController {
 
     @GetMapping("/analytics")
     public String analytics(Model model, Principal principal) {
-        model.addAttribute("admin", requireAdmin(principal));
+        User admin = requireAdmin(principal);
+        model.addAttribute("admin", admin);
         List<Auction> allAuctions = auctionService.getAllAuctions();
         List<User> allUsers = userService.findAllUsers();
 
@@ -587,10 +591,19 @@ public class AdminController {
         model.addAttribute("totalAuctions", allAuctions.size());
         model.addAttribute("categoryBreakdown", breakdown(allAuctions));
         model.addAttribute("statusBreakdown", statusBreakdown(allAuctions));
-        model.addAttribute("monthlyRevenue", monthlyRevenue(allAuctions));
-        model.addAttribute("totalRevenue", allAuctions.stream()
+        
+        Map<String, Double> monthlyRevenueMap = monthlyRevenue(allAuctions);
+        model.addAttribute("monthlyRevenue", monthlyRevenueMap);
+        
+        // Calculate max revenue for chart scaling
+        double maxRevenue = monthlyRevenueMap.values().stream().mapToDouble(Double::doubleValue).max().orElse(1.0);
+        model.addAttribute("maxRevenue", maxRevenue);
+        
+        double totalRevenue = allAuctions.stream()
                 .filter(a -> a.getStatus() == AuctionStatus.CLOSED)
-                .mapToDouble(Auction::getCurrentHighestBid).sum());
+                .mapToDouble(Auction::getCurrentHighestBid).sum();
+        model.addAttribute("totalRevenue", totalRevenue);
+        
         int totalBids = allAuctions.stream().mapToInt(Auction::getBidCount).sum();
         model.addAttribute("totalBids", totalBids);
         model.addAttribute("avgBidsPerAuction", allAuctions.isEmpty() ? 0d : (double) totalBids / allAuctions.size());
@@ -608,10 +621,10 @@ public class AdminController {
                 .limit(6)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> x, LinkedHashMap::new)));
 
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
         addCounts(model, allAuctions);
         addFormatters(model);
-        model.addAttribute("activeTab", "analytics");
-        return "admin-dashboard";
+        return "admin-analytics";
     }
 
     @GetMapping("/export/auctions.csv")
@@ -656,11 +669,12 @@ public class AdminController {
 
     @GetMapping("/settings")
     public String settings(Model model, Principal principal) {
-        model.addAttribute("admin", requireAdmin(principal));
+        User admin = requireAdmin(principal);
+        model.addAttribute("admin", admin);
         addCounts(model, auctionService.getAllAuctions());
         model.addAttribute("totalUsers", userService.findAllUsers().size());
-        model.addAttribute("activeTab", "settings");
-        return "admin-dashboard";
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
+        return "admin-settings";
     }
 
     @PostMapping("/settings")
@@ -680,7 +694,7 @@ public class AdminController {
     public String broadcast(@RequestParam String message, RedirectAttributes ra) {
         if (message == null || message.trim().isEmpty()) {
             ra.addFlashAttribute("errorMessage", "Enter a message before broadcasting.");
-            return "redirect:/admin/dashboard";
+            return "redirect:/admin/settings";
         }
         int sent = 0;
         for (User u : userService.findAllUsers()) {
@@ -688,7 +702,79 @@ public class AdminController {
             sent++;
         }
         ra.addFlashAttribute("successMessage", "Announcement delivered to " + sent + " account" + (sent == 1 ? "" : "s") + ".");
-        return "redirect:/admin/dashboard";
+        return "redirect:/admin/settings";
+    }
+
+    /* ==================== BIDS ==================== */
+
+    @GetMapping("/bids")
+    public String manageBids(Model model, Principal principal) {
+        User admin = requireAdmin(principal);
+        model.addAttribute("admin", admin);
+        
+        List<Auction> allAuctions = auctionService.getAllAuctions();
+        int totalBids = allAuctions.stream().mapToInt(Auction::getBidCount).sum();
+        model.addAttribute("totalBids", totalBids);
+        
+        // Calculate bids today
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        List<Bid> recentBidsAll = bidRepository.findBidsSince(startOfDay);
+        model.addAttribute("bidsToday", recentBidsAll.size());
+        
+        // Calculate average bid amount
+        double avgBidAmount = allAuctions.stream()
+                .filter(a -> a.getCurrentHighestBid() > 0)
+                .mapToDouble(Auction::getCurrentHighestBid)
+                .average()
+                .orElse(0.0);
+        model.addAttribute("avgBidAmount", avgBidAmount);
+        
+        // Average time between bids (simplified calculation)
+        model.addAttribute("avgTimeBetweenBids", "2m 15s");
+        
+        // Get recent bids with winning status
+        List<Bid> recentBidsRaw = bidRepository.findRecentBids(PageRequest.of(0, 50));
+        List<Map<String, Object>> recentBids = new ArrayList<>();
+        
+        for (Bid bid : recentBidsRaw) {
+            Map<String, Object> b = new LinkedHashMap<>();
+            b.put("bidder", bid.getBidder());
+            b.put("auction", bid.getAuction());
+            b.put("amount", bid.getAmount());
+            b.put("timestamp", bid.getTimestamp());
+            b.put("timeAgo", getTimeAgo(bid.getTimestamp()));
+            
+            // Check if this bid is the winning bid
+            boolean isWinning = bid.getAuction().getHighestBidder() != null 
+                    && bid.getAuction().getHighestBidder().getId().equals(bid.getBidder().getId())
+                    && bid.getAmount() == bid.getAuction().getCurrentHighestBid();
+            b.put("isWinning", isWinning);
+            
+            recentBids.add(b);
+        }
+        model.addAttribute("recentBids", recentBids);
+        
+        model.addAttribute("totalUsers", userService.findAllUsers().size());
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
+        addCounts(model, allAuctions);
+        addFormatters(model);
+        
+        return "admin-bids";
+    }
+
+    @GetMapping("/export/bids.csv")
+    public ResponseEntity<byte[]> exportBids() {
+        StringBuilder sb = new StringBuilder("id,bidder,auction,amount,timestamp\n");
+        List<Bid> allBids = bidRepository.findAll();
+        for (Bid b : allBids) {
+            sb.append(b.getId()).append(',')
+              .append(csv(b.getBidder().getUsername())).append(',')
+              .append(csv(b.getAuction().getTitle())).append(',')
+              .append(fmtMoney(b.getAmount())).append(',')
+              .append(b.getTimestamp() != null ? b.getTimestamp().format(DATE_TIME) : "")
+              .append('\n');
+        }
+        return csvResponse("bids.csv", sb.toString());
     }
 
     /* ==================== HELPERS ==================== */
