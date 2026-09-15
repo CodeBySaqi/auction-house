@@ -64,6 +64,182 @@ public class AdminController {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /* ==================== NEW ADMIN CONSOLE ==================== */
+
+    @GetMapping("/console")
+    public String adminConsole(Model model, Principal principal) {
+        User admin = requireAdmin(principal);
+        List<User> allUsers = userService.findAllUsers();
+        List<Auction> allAuctions = auctionService.getAllAuctions();
+        LocalDateTime now = LocalDateTime.now();
+
+        model.addAttribute("admin", admin);
+
+        // KPI metrics
+        model.addAttribute("totalAuctions", allAuctions.size());
+        model.addAttribute("totalUsers", allUsers.size());
+        
+        long activeUsers = allUsers.stream()
+                .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().isAfter(now.minusHours(24)))
+                .count();
+        model.addAttribute("activeUsers", activeUsers);
+        
+        int totalBids = allAuctions.stream().mapToInt(Auction::getBidCount).sum();
+        model.addAttribute("totalBids", totalBids);
+        
+        double totalRevenue = allAuctions.stream()
+                .filter(a -> a.getStatus() == AuctionStatus.CLOSED)
+                .mapToDouble(Auction::getCurrentHighestBid).sum();
+        model.addAttribute("totalRevenue", totalRevenue);
+        
+        long endingSoon = allAuctions.stream()
+                .filter(a -> a.getStatus() == AuctionStatus.ACTIVE
+                        && a.getEndTime() != null
+                        && !a.getEndTime().isAfter(now.plusHours(24)))
+                .count();
+        model.addAttribute("endingSoon", endingSoon);
+        
+        long newUsersToday = allUsers.stream()
+                .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().isAfter(now.toLocalDate().atStartOfDay()))
+                .count();
+        model.addAttribute("newUsersToday", newUsersToday);
+
+        // Activity chart data (14 days)
+        List<Bid> recentBidsAll = bidRepository.findBidsSince(now.minusDays(ACTIVITY_DAYS).toLocalDate().atStartOfDay());
+        Map<LocalDate, Long> bidsByDay = recentBidsAll.stream()
+                .filter(b -> b.getTimestamp() != null)
+                .collect(Collectors.groupingBy(b -> b.getTimestamp().toLocalDate(), Collectors.counting()));
+        
+        Map<LocalDate, Long> signupsByDay = allUsers.stream()
+                .filter(u -> u.getCreatedAt() != null)
+                .collect(Collectors.groupingBy(u -> u.getCreatedAt().toLocalDate(), Collectors.counting()));
+
+        LocalDate today = LocalDate.now();
+        List<Map<String, Object>> activityData = new ArrayList<>();
+        long maxBids = 1L;
+        long maxSignups = 1L;
+        
+        for (int i = ACTIVITY_DAYS - 1; i >= 0; i--) {
+            LocalDate d = today.minusDays(i);
+            long bids = bidsByDay.getOrDefault(d, 0L);
+            long signups = signupsByDay.getOrDefault(d, 0L);
+            maxBids = Math.max(maxBids, bids);
+            maxSignups = Math.max(maxSignups, signups);
+            
+            Map<String, Object> day = new LinkedHashMap<>();
+            day.put("label", d.format(DAY_LABEL));
+            day.put("bids", bids);
+            day.put("signups", signups);
+            activityData.add(day);
+        }
+        
+        for (Map<String, Object> day : activityData) {
+            long bids = ((Number) day.get("bids")).longValue();
+            long signups = ((Number) day.get("signups")).longValue();
+            day.put("bidPercent", Math.round(bids * 100.0 / maxBids));
+            day.put("signupPercent", Math.round(signups * 100.0 / maxSignups));
+        }
+        model.addAttribute("activityData", activityData);
+
+        // Category stats with colors
+        List<Map<String, Object>> categoryStats = new ArrayList<>();
+        String[] colors = {"bg-g-blue", "bg-g-green", "bg-purple-500", "bg-amber-500", "bg-g-red"};
+        int colorIdx = 0;
+        for (AuctionCategory c : AuctionCategory.values()) {
+            long count = allAuctions.stream().filter(a -> a.getCategory() == c).count();
+            Map<String, Object> cat = new LinkedHashMap<>();
+            cat.put("name", c.getDisplayName());
+            cat.put("count", count);
+            cat.put("percent", allAuctions.isEmpty() ? 0 : Math.round(count * 100.0 / allAuctions.size()));
+            cat.put("color", colors[colorIdx % colors.length]);
+            categoryStats.add(cat);
+            colorIdx++;
+        }
+        categoryStats.sort((a, b) -> Long.compare((Long) b.get("count"), (Long) a.get("count")));
+        model.addAttribute("categoryStats", categoryStats);
+
+        // Recent bids with formatting
+        List<Bid> recentBidsRaw = bidRepository.findRecentBids(PageRequest.of(0, 5));
+        List<Map<String, Object>> recentBids = new ArrayList<>();
+        String[] bidColors = {"bg-g-blue-light text-g-blue", "bg-green-50 text-g-green", "bg-purple-50 text-purple-600", 
+                              "bg-amber-50 text-amber-600", "bg-red-50 text-g-red"};
+        int bidColorIdx = 0;
+        for (Bid bid : recentBidsRaw) {
+            Map<String, Object> b = new LinkedHashMap<>();
+            b.put("username", bid.getBidder().getUsername());
+            b.put("initials", bid.getBidder().getUsername().substring(0, 2).toUpperCase());
+            b.put("auctionTitle", bid.getAuction().getTitle());
+            b.put("amount", bid.getAmount());
+            b.put("timeAgo", getTimeAgo(bid.getTimestamp()));
+            b.put("colorClass", bidColors[bidColorIdx % bidColors.length]);
+            recentBids.add(b);
+            bidColorIdx++;
+        }
+        model.addAttribute("recentBids", recentBids);
+
+        // Top bidders with formatting
+        Map<Long, Long> bidsPerUser = new HashMap<>();
+        Map<Long, Long> winsPerUser = new HashMap<>();
+        for (Object[] row : bidRepository.countBidsGroupedByBidder()) {
+            if (row[0] != null) bidsPerUser.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+        }
+        for (Auction a : allAuctions) {
+            if (a.getStatus() == AuctionStatus.CLOSED && a.getHighestBidder() != null) {
+                winsPerUser.merge(a.getHighestBidder().getId(), 1L, Long::sum);
+            }
+        }
+        
+        List<Map<String, Object>> topBidders = allUsers.stream()
+                .sorted(Comparator.comparingLong((User u) -> bidsPerUser.getOrDefault(u.getId(), 0L)).reversed())
+                .limit(5)
+                .map(u -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("username", u.getUsername());
+                    m.put("initials", u.getUsername().substring(0, 2).toUpperCase());
+                    m.put("bidCount", bidsPerUser.getOrDefault(u.getId(), 0L));
+                    m.put("winCount", winsPerUser.getOrDefault(u.getId(), 0L));
+                    m.put("totalSpent", allAuctions.stream()
+                            .filter(a -> a.getStatus() == AuctionStatus.CLOSED 
+                                    && a.getHighestBidder() != null 
+                                    && a.getHighestBidder().getId().equals(u.getId()))
+                            .mapToDouble(Auction::getCurrentHighestBid).sum());
+                    String[] userColors = {"bg-gradient-to-br from-blue-400 to-blue-600", 
+                                          "bg-gradient-to-br from-green-400 to-green-600",
+                                          "bg-gradient-to-br from-purple-400 to-purple-600",
+                                          "bg-gradient-to-br from-red-400 to-red-600",
+                                          "bg-gradient-to-br from-amber-400 to-amber-600"};
+                    m.put("colorClass", userColors[allUsers.indexOf(u) % userColors.length]);
+                    return m;
+                })
+                .collect(Collectors.toList());
+        model.addAttribute("topBidders", topBidders);
+
+        // Ending soon auctions
+        List<Auction> endingSoonAuctions = allAuctions.stream()
+                .filter(a -> a.getStatus() == AuctionStatus.ACTIVE && a.getEndTime() != null)
+                .sorted(Comparator.comparing(Auction::getEndTime))
+                .limit(5)
+                .collect(Collectors.toList());
+        model.addAttribute("endingSoonAuctions", endingSoonAuctions);
+
+        // Notification count
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
+
+        return "admin-console";
+    }
+
+    private String getTimeAgo(LocalDateTime timestamp) {
+        if (timestamp == null) return "Unknown";
+        LocalDateTime now = LocalDateTime.now();
+        long minutes = java.time.temporal.ChronoUnit.MINUTES.between(timestamp, now);
+        if (minutes < 1) return "Just now";
+        if (minutes < 60) return minutes + "m ago";
+        long hours = minutes / 60;
+        if (hours < 24) return hours + "h ago";
+        long days = hours / 24;
+        return days + "d ago";
+    }
+
     /* ==================== OVERVIEW ==================== */
 
     @GetMapping({"", "/", "/dashboard"})
