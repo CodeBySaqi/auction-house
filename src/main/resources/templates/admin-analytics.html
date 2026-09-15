@@ -61,13 +61,9 @@
                                 <p class="text-sm font-medium text-g-text" th:text="${admin.username}">Admin User</p>
                                 <p class="text-xs text-g-text-secondary truncate" th:text="${admin.email}">admin@auctionhouse.com</p>
                             </div>
-                            <a th:href="@{/profile}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                            <a th:href="@{/profile/edit}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
                                 <span class="material-icons-outlined text-lg text-g-text-secondary">person</span>
                                 My Profile
-                            </a>
-                            <a th:href="@{/profile/dashboard}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
-                                <span class="material-icons-outlined text-lg text-g-text-secondary">dashboard</span>
-                                My Dashboard
                             </a>
                             <a th:href="@{/}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
                                 <span class="material-icons-outlined text-lg text-g-text-secondary">home</span>
