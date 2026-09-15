@@ -26,7 +26,7 @@ public class FileStorageService {
     @PostConstruct
     public void init() {
         uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
-        auctionUploadPath = Paths.get("./uploads/auctions").toAbsolutePath().normalize();
+        auctionUploadPath = Paths.get(uploadDir).getParent().resolve("auctions").toAbsolutePath().normalize();
         try {
             Files.createDirectories(uploadPath);
             Files.createDirectories(auctionUploadPath);
