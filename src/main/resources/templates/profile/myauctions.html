@@ -32,7 +32,7 @@
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" th:if="${userAuctions != null and !userAuctions.isEmpty()}">
         <a th:each="auction : ${userAuctions}" th:href="@{'/auctions/detail/' + ${auction.id}}" class="group bg-white rounded-2xl border border-g-border overflow-hidden hover:shadow-g-md hover:border-transparent transition-all no-underline flex flex-col">
             <div class="relative h-44 overflow-hidden bg-gray-100">
-                <img th:src="${auction.imageUrl}" th:alt="${auction.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.style.display='none'">
+                <img th:src="${auction.imageUrl != null} ? @{${auction.imageUrl}} : @{/images/default-auction.png}" th:alt="${auction.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                 <div class="absolute top-3 left-3">
                     <span class="px-2.5 py-1 rounded-full text-xs font-medium shadow-sm"
                           th:classappend="${auction.status.name() == 'ACTIVE'} ? 'bg-green-100 text-g-green' : 'bg-g-bg text-g-text-secondary'"

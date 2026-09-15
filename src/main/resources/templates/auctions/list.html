@@ -44,8 +44,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5" th:if="${!auctions.isEmpty()}">
         <a th:each="auction : ${auctions}" th:href="@{'/auctions/detail/' + ${auction.id}}" class="group bg-white rounded-xl sm:rounded-2xl border border-g-border overflow-hidden hover:shadow-g-md hover:border-transparent transition-all no-underline flex flex-col">
             <div class="relative aspect-video overflow-hidden bg-gray-100">
-                <img th:src="${auction.imageUrl}" th:alt="${auction.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                     onerror="this.style.display='none'">
+                <img th:src="${auction.imageUrl != null} ? @{${auction.imageUrl}} : @{/images/default-auction.png}" th:alt="${auction.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                 <!-- Status badge -->
                 <div class="absolute top-3 left-3 flex gap-2">
                     <span th:if="${auction.status.name() == 'ACTIVE'}" class="inline-flex items-center gap-1 px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium text-g-green shadow-sm">

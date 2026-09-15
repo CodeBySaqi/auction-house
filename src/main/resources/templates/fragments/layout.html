@@ -93,7 +93,7 @@
                                 class="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-g-hover transition-colors">
                             <div class="w-8 h-8 rounded-full bg-g-blue flex items-center justify-center overflow-hidden">
                                 <img th:if="${currentUser != null and currentUser.hasProfilePic()}" th:src="@{'/uploads/' + ${currentUser.profilePicPath}}" class="w-full h-full object-cover" alt="">
-                                <span th:unless="${currentUser != null and currentUser.hasProfilePic()}" class="text-white text-sm font-medium" th:text="${currentUser != null ? #strings.substring(currentUser.username, 0, 1).toUpperCase() : 'U'}">U</span>
+                                <img th:unless="${currentUser != null and currentUser.hasProfilePic()}" th:src="@{/images/default-avatar.png}" class="w-full h-full object-cover" alt="Default">
                             </div>
                         </button>
                         <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-g-lg border border-g-border py-2 z-50">

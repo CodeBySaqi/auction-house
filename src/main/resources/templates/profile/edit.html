@@ -29,6 +29,7 @@
         <div class="flex items-center gap-6 mb-6">
             <div class="w-24 h-24 rounded-full bg-g-blue flex items-center justify-center text-white text-3xl font-medium overflow-hidden shrink-0 border-4 border-white shadow-g-sm">
                 <img th:if="${user.hasProfilePic()}" th:src="@{'/uploads/' + ${user.profilePicPath}}" class="w-full h-full object-cover" alt="Profile">
+                <img th:unless="${user.hasProfilePic()}" th:src="@{/images/default-avatar.png}" class="w-full h-full object-cover" alt="Default Profile">
                 <span th:unless="${user.hasProfilePic()}" th:text="${#strings.substring(user.username, 0, 1).toUpperCase()}">U</span>
             </div>
             <div>

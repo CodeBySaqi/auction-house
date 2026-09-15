@@ -21,7 +21,7 @@
         <div class="flex items-center gap-4">
             <div class="w-16 h-16 rounded-full bg-g-blue flex items-center justify-center text-white text-2xl font-medium overflow-hidden shrink-0">
                 <img th:if="${user.hasProfilePic()}" th:src="@{'/uploads/' + ${user.profilePicPath}}" class="w-full h-full object-cover" alt="Profile">
-                <span th:unless="${user.hasProfilePic()}" th:text="${#strings.substring(user.username, 0, 1).toUpperCase()}">U</span>
+                <img th:unless="${user.hasProfilePic()}" th:src="@{/images/default-avatar.png}" class="w-full h-full object-cover" alt="Default Profile">
             </div>
             <div>
                 <h1 class="font-gsans text-2xl font-medium text-g-text">Welcome, <span th:text="${user.username}">User</span></h1>
@@ -166,8 +166,7 @@
                 </div>
                 <div class="divide-y divide-g-border">
                     <a th:each="auction : ${wonAuctions}" th:href="@{'/auctions/detail/' + ${auction.id}}" class="flex items-center gap-4 p-4 hover:bg-g-bg/50 transition-colors no-underline">
-                        <img th:src="${auction.imageUrl}" th:alt="${auction.title}" class="w-20 h-16 rounded-xl object-cover bg-gray-100 shrink-0"
-                             onerror="this.style.display='none'">
+                        <img th:src="${auction.imageUrl != null} ? @{${auction.imageUrl}} : @{/images/default-auction.png}" th:alt="${auction.title}" class="w-20 h-16 rounded-xl object-cover bg-gray-100 shrink-0">
                         <div class="flex-1 min-w-0">
                             <h3 class="font-gsans font-medium text-g-text text-sm line-clamp-1" th:text="${auction.title}">Item</h3>
                             <p class="text-xs text-g-text-secondary mt-0.5 line-clamp-1" th:text="${auction.categoryDetails}">Details</p>

@@ -24,7 +24,7 @@
 
     <div class="space-y-3" th:if="${!bids.isEmpty()}">
         <a th:each="bid : ${bids}" th:href="@{'/auctions/detail/' + ${bid.auction.id}}" class="flex items-center gap-4 bg-white rounded-2xl border border-g-border p-4 hover:shadow-g-sm hover:border-transparent transition-all no-underline">
-            <img th:src="${bid.auction.imageUrl}" th:alt="${bid.auction.title}" class="w-20 h-16 rounded-xl object-cover bg-gray-100 shrink-0"
+            <img th:src="${bid.auction.imageUrl != null} ? @{${bid.auction.imageUrl}} : @{/images/default-auction.png}" th:alt="${bid.auction.title}" class="w-20 h-16 rounded-xl object-cover bg-gray-100 shrink-0"
                  onerror="this.style.display='none'">
             <div class="flex-1 min-w-0">
                 <h3 class="font-gsans font-medium text-g-text text-sm line-clamp-1" th:text="${bid.auction.title}">Auction</h3>

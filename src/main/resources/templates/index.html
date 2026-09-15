@@ -201,8 +201,7 @@
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <a th:each="auction : ${featuredAuctions}" th:href="@{'/auctions/detail/' + ${auction.id}}" class="group bg-white rounded-2xl border border-g-border overflow-hidden hover:shadow-g-md hover:border-transparent transition-all no-underline">
                 <div class="relative h-52 overflow-hidden bg-gray-100">
-                    <img th:src="${auction.imageUrl}" th:alt="${auction.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                         onerror="this.style.display='none'">
+                    <img th:src="${auction.imageUrl != null} ? @{${auction.imageUrl}} : @{/images/default-auction.png}" th:alt="${auction.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                     <div class="absolute top-3 left-3">
                         <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium text-g-text shadow-sm">
                             <span class="material-icons-outlined text-xs text-g-blue">schedule</span>

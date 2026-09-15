@@ -31,8 +31,7 @@
             <!-- Image -->
             <div class="bg-white rounded-3xl border border-g-border overflow-hidden">
                 <div class="relative h-64 sm:h-80 lg:h-96 bg-gray-100">
-                    <img th:src="${auction.imageUrl}" th:alt="${auction.title}" class="w-full h-full object-cover"
-                         onerror="this.style.display='none'">
+                    <img th:src="${auction.imageUrl != null} ? @{${auction.imageUrl}} : @{/images/default-auction.png}" th:alt="${auction.title}" class="w-full h-full object-cover">
                     <div class="absolute top-4 left-4 flex gap-2">
                         <span th:if="${auction.status.name() == 'ACTIVE'}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/95 backdrop-blur-sm rounded-full text-sm font-medium text-g-green shadow-g-sm">
                             <span class="w-2 h-2 bg-g-green rounded-full animate-pulse"></span> Live Auction
