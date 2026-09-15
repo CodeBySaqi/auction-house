@@ -14,16 +14,16 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Profile pictures
-        String profilePath = Paths.get(System.getProperty("app.upload.dir", "./uploads/profiles"))
-                .toAbsolutePath().normalize().toUri().toString();
-        registry.addResourceHandler("/uploads/profiles/**")
-                .addResourceLocations(profilePath);
-
-        // Auction images
+        // Auction images (more specific path first)
         String auctionPath = Paths.get(System.getProperty("app.upload.dir", "./uploads/profiles"))
                 .getParent().resolve("auctions").toAbsolutePath().normalize().toUri().toString();
         registry.addResourceHandler("/uploads/auctions/**")
                 .addResourceLocations(auctionPath);
+
+        // Profile pictures (catch-all for /uploads/*)
+        String profilePath = Paths.get(System.getProperty("app.upload.dir", "./uploads/profiles"))
+                .toAbsolutePath().normalize().toUri().toString();
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations(profilePath);
     }
 }
