@@ -87,6 +87,20 @@ public class DemoDataSeeder implements CommandLineRunner {
                               "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson",
                               "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson"};
 
+        // Profile picture URLs (verified working)
+        String[] profilePics = {
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=200&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop"
+        };
+
         for (int i = 0; i < count; i++) {
             User user = new User();
             String firstName = firstNames[random.nextInt(firstNames.length)];
@@ -98,6 +112,11 @@ public class DemoDataSeeder implements CommandLineRunner {
             user.setPassword(passwordEncoder.encode("password123"));
             user.setWalletBalance(50000 + random.nextInt(150000)); // $50K - $200K
             user.setCreatedAt(LocalDateTime.now().minusDays(random.nextInt(30)));
+            
+            // 60% of users get profile pictures
+            if (random.nextInt(100) < 60) {
+                user.setProfilePicPath(profilePics[random.nextInt(profilePics.length)]);
+            }
             
             users.add(userRepository.save(user));
         }
@@ -112,12 +131,34 @@ public class DemoDataSeeder implements CommandLineRunner {
         String[] carModels = {"Model S", "911 Turbo", "F8 Tributo", "Huracán", "AMG GT", "M8", "RS7", "Phantom", "Continental GT", "DB11"};
         String[] colors = {"Black", "White", "Red", "Blue", "Silver", "Gray", "Yellow", "Green"};
         String[] conditions = {"Excellent", "Good", "Like New", "Mint", "Very Good"};
+        
+        // Verified car images
+        String[] carImages = {
+            "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&h=600&fit=crop"
+        };
 
         // Watch auction data
         String[] watchBrands = {"Rolex", "Patek Philippe", "Audemars Piguet", "Omega", "TAG Heuer", "Breitling", "Cartier", "IWC"};
         String[] watchModels = {"Submariner", "Daytona", "Nautilus", "Royal Oak", "Speedmaster", "Carrera", "Santos", "Portugieser"};
         String[] movements = {"Automatic", "Manual", "Quartz"};
         String[] caseMaterials = {"Stainless Steel", "Gold", "Platinum", "Titanium", "Rose Gold"};
+        
+        // Verified watch images
+        String[] watchImages = {
+            "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1548171245-d56043048805?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1619134778706-7015533a6150?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?w=800&h=600&fit=crop"
+        };
 
         // Art auction data
         String[] artTitles = {"Sunset Over Mountains", "Abstract Composition", "Portrait of a Lady", "City at Night", 
@@ -125,17 +166,47 @@ public class DemoDataSeeder implements CommandLineRunner {
         String[] artists = {"John Smith", "Maria Garcia", "David Chen", "Sarah Johnson", "Michael Brown", "Emma Wilson"};
         String[] mediums = {"Oil on Canvas", "Watercolor", "Acrylic", "Mixed Media", "Photography", "Sculpture"};
         String[] dimensions = {"24x36 inches", "18x24 inches", "36x48 inches", "12x16 inches", "48x60 inches"};
+        
+        // Verified art images
+        String[] artImages = {
+            "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1549490349-8643362247b5?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=800&h=600&fit=crop"
+        };
 
         // Jewelry auction data
         String[] jewelryTypes = {"Diamond Ring", "Pearl Necklace", "Gold Bracelet", "Sapphire Earrings", "Ruby Pendant", "Emerald Brooch"};
         String[] metals = {"18K Gold", "Platinum", "White Gold", "Rose Gold", "Silver"};
         String[] gemstones = {"Diamond", "Sapphire", "Ruby", "Emerald", "Pearl"};
         String[] designers = {"Tiffany & Co", "Cartier", "Harry Winston", "Van Cleef", "Bulgari"};
+        
+        // Verified jewelry images
+        String[] jewelryImages = {
+            "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=800&h=600&fit=crop"
+        };
 
         // Collectible auction data
         String[] collectibleTypes = {"Vintage Wine", "Rare Coins", "Antique Furniture", "Sports Memorabilia", "First Edition Books", "Comic Books"};
         String[] eras = {"Victorian", "Art Deco", "Mid-Century", "Modern", "Ancient"};
         String[] rarities = {"Common", "Uncommon", "Rare", "Very Rare", "Extremely Rare"};
+        
+        // Verified collectible images
+        String[] collectibleImages = {
+            "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1519861531473-9200262188bf?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1524578271613-d550eacf6090?w=800&h=600&fit=crop",
+            "https://images.unsplash.com/photo-1618666012174-83b441c0bc76?w=800&h=600&fit=crop"
+        };
 
         for (int i = 0; i < count; i++) {
             AuctionCategory category = AuctionCategory.values()[random.nextInt(AuctionCategory.values().length)];
@@ -152,6 +223,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                     car.setColor(colors[random.nextInt(colors.length)]);
                     car.setTitle(car.getYear() + " " + car.getMake() + " " + car.getModel());
                     car.setStartingPrice(30000 + random.nextInt(170000)); // $30K - $200K
+                    car.setImageUrl(carImages[random.nextInt(carImages.length)]);
                     auction = car;
                     break;
                     
@@ -164,6 +236,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                     watch.setReferenceNumber("REF-" + (10000 + random.nextInt(90000)));
                     watch.setTitle(watch.getBrand() + " " + watch.getModelName());
                     watch.setStartingPrice(5000 + random.nextInt(95000)); // $5K - $100K
+                    watch.setImageUrl(watchImages[random.nextInt(watchImages.length)]);
                     auction = watch;
                     break;
                     
@@ -176,6 +249,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                     art.setDimensions(dimensions[random.nextInt(dimensions.length)]);
                     art.setAuthenticated(random.nextBoolean());
                     art.setStartingPrice(2000 + random.nextInt(48000)); // $2K - $50K
+                    art.setImageUrl(artImages[random.nextInt(artImages.length)]);
                     auction = art;
                     break;
                     
@@ -188,6 +262,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                     jewelry.setDesigner(designers[random.nextInt(designers.length)]);
                     jewelry.setCertified(random.nextBoolean());
                     jewelry.setStartingPrice(1000 + random.nextInt(29000)); // $1K - $30K
+                    jewelry.setImageUrl(jewelryImages[random.nextInt(jewelryImages.length)]);
                     auction = jewelry;
                     break;
                     
@@ -200,6 +275,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                     collectible.setRarity(rarities[random.nextInt(rarities.length)]);
                     collectible.setProvenance("Private collection");
                     collectible.setStartingPrice(500 + random.nextInt(19500)); // $500 - $20K
+                    collectible.setImageUrl(collectibleImages[random.nextInt(collectibleImages.length)]);
                     auction = collectible;
                     break;
             }
