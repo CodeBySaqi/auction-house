@@ -101,8 +101,33 @@
                     <a th:href="@{/admin/settings}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
                         <span class="material-icons-outlined">settings</span>
                     </a>
-                    <div class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm">
-                        A
+                    <div class="relative">
+                        <button onclick="toggleProfileDropdown()" class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm hover:shadow-g-sm transition-shadow cursor-pointer">
+                            A
+                        </button>
+                        <div id="profileDropdown" class="hidden absolute right-0 top-12 w-56 bg-white border border-g-border rounded-2xl shadow-g-lg z-50 py-2">
+                            <div class="px-4 py-3 border-b border-g-border mb-1">
+                                <p class="text-sm font-medium text-g-text" th:text="${admin.username}">Admin User</p>
+                                <p class="text-xs text-g-text-secondary truncate" th:text="${admin.email}">admin@auctionhouse.com</p>
+                            </div>
+                            <a th:href="@{/profile}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                <span class="material-icons-outlined text-lg text-g-text-secondary">person</span>
+                                My Profile
+                            </a>
+                            <a th:href="@{/profile/dashboard}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                <span class="material-icons-outlined text-lg text-g-text-secondary">dashboard</span>
+                                My Dashboard
+                            </a>
+                            <a th:href="@{/}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                <span class="material-icons-outlined text-lg text-g-text-secondary">home</span>
+                                View Site
+                            </a>
+                            <div class="border-t border-g-border my-1"></div>
+                            <a th:href="@{/logout}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-red hover:bg-red-50 transition-colors">
+                                <span class="material-icons-outlined text-lg">logout</span>
+                                Logout
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -140,10 +165,6 @@
                 <div class="px-3 mt-6 mb-2">
                     <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Analytics</span>
                 </div>
-                <a th:href="@{/admin/analytics}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
-                    <span class="material-icons-outlined text-xl text-g-text-secondary">analytics</span>
-                    Reports
-                </a>
                 <a th:href="@{/admin/analytics}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
                     <span class="material-icons-outlined text-xl text-g-text-secondary">trending_up</span>
                     Activity
@@ -449,6 +470,21 @@
     </div>
 
     <script>
+        // Toggle profile dropdown
+        function toggleProfileDropdown() {
+            const dropdown = document.getElementById('profileDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('profileDropdown');
+            const button = event.target.closest('button[onclick="toggleProfileDropdown()"]');
+            if (!button && !dropdown.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
         // Auto-hide flash messages after 5 seconds
         setTimeout(() => {
             const flashMessages = document.querySelectorAll('[th\\:if="${success}"], [th\\:if="${error}"]');

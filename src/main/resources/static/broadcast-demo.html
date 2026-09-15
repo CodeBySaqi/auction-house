@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broadcast - AuctionHouse Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'g-blue': '#1a73e8',
+                    'g-blue-hover': '#1765cc',
+                    'g-blue-light': '#e8f0fe',
+                    'g-red': '#ea4335',
+                    'g-yellow': '#fbbc04',
+                    'g-green': '#34a853',
+                    'g-surface': '#ffffff',
+                    'g-bg': '#f8f9fa',
+                    'g-text': '#202124',
+                    'g-text-secondary': '#5f6368',
+                    'g-border': '#dadce0',
+                    'g-hover': '#f1f3f4',
+                },
+                fontFamily: {
+                    'gsans': ['"Google Sans"', 'Roboto', 'system-ui', 'sans-serif'],
+                    'roboto': ['Roboto', 'system-ui', 'sans-serif'],
+                },
+                boxShadow: {
+                    'g-sm': '0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15)',
+                    'g-md': '0 1px 3px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15)',
+                    'g-lg': '0 1px 3px 0 rgba(60,64,67,.3), 0 8px 16px 6px rgba(60,64,67,.15)',
+                    'g-xl': '0 2px 6px 2px rgba(60,64,67,.3), 0 12px 28px 8px rgba(60,64,67,.15)',
+                }
+            }
+        }
+    }
+    </script>
+    <style>
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen">
+
+    <!-- Flash Message Demo -->
+    <div id="flashMessage" class="hidden fixed top-20 right-4 z-50 bg-green-50 border border-green-200 text-green-800 px-6 py-3 rounded-2xl shadow-g-md flex items-center gap-3 animate-slide-in">
+        <span class="material-icons-outlined text-g-green">check_circle</span>
+        <span class="text-sm font-medium">Announcement delivered to 100 accounts.</span>
+        <button onclick="document.getElementById('flashMessage').classList.add('hidden')" class="ml-2 p-1 hover:bg-green-100 rounded-full transition-colors">
+            <span class="material-icons-outlined text-lg">close</span>
+        </button>
+    </div>
+
+    <!-- App Bar -->
+    <nav class="bg-white border-b border-g-border sticky top-0 z-40">
+        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-g-blue rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-white text-xl">gavel</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-gsans font-medium text-xl text-g-text">Auction<span class="text-g-blue">House</span></span>
+                        <span class="px-2.5 py-1 bg-g-text text-white text-[10px] font-bold uppercase tracking-wider rounded-md">Admin</span>
+                    </div>
+                </div>
+
+                <div class="hidden md:flex flex-1 max-w-xl mx-8">
+                    <div class="relative w-full">
+                        <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-g-text-secondary">search</span>
+                        <input type="text" placeholder="Search..." 
+                               class="w-full pl-11 pr-4 py-2.5 bg-g-bg border border-g-border rounded-full text-sm placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white focus:shadow-g-sm transition-all">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <a href="#" class="relative p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined">notifications</span>
+                        <span class="absolute top-1 right-1 w-4 h-4 bg-g-red rounded-full text-[10px] text-white font-bold flex items-center justify-center">3</span>
+                    </a>
+                    <a href="#" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined">settings</span>
+                    </a>
+                    <div class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm">
+                        A
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div class="max-w-[1680px] mx-auto flex">
+        
+        <!-- Sidebar -->
+        <aside class="hidden lg:block w-64 flex-shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-hide py-6 pr-4">
+            <nav class="space-y-1">
+                <div class="px-3 mb-2">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Main</span>
+                </div>
+                <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">dashboard</span>
+                    Dashboard
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">storefront</span>
+                    Auctions
+                    <span class="ml-auto px-2 py-0.5 bg-g-bg rounded-full text-xs font-semibold text-g-text-secondary">150</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">people</span>
+                    Users
+                    <span class="ml-auto px-2 py-0.5 bg-g-bg rounded-full text-xs font-semibold text-g-text-secondary">100</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">gavel</span>
+                    Bids
+                </a>
+                
+                <div class="px-3 mt-6 mb-2">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Analytics</span>
+                </div>
+                <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">analytics</span>
+                    Reports
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">trending_up</span>
+                    Activity
+                </a>
+                
+                <div class="px-3 mt-6 mb-2">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Tools</span>
+                </div>
+                <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-full bg-g-blue-light text-g-blue font-medium text-sm">
+                    <span class="material-icons-outlined text-xl">campaign</span>
+                    Broadcast
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">download</span>
+                    Export Auctions
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">download</span>
+                    Export Users
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+            
+            <!-- Page Header -->
+            <div class="mb-6">
+                <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">Broadcast</h1>
+                <p class="text-sm text-g-text-secondary mt-1">Send announcements and notifications to all users on the platform.</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-2xl border border-g-border p-5">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center">
+                            <span class="material-icons-outlined text-amber-600 text-xl">campaign</span>
+                        </div>
+                    </div>
+                    <p class="font-gsans text-2xl font-medium text-g-text tabular-nums">24</p>
+                    <p class="text-xs text-g-text-secondary mt-1">Total Broadcasts</p>
+                </div>
+                <div class="bg-white rounded-2xl border border-g-border p-5">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center">
+                            <span class="material-icons-outlined text-g-green text-xl">check_circle</span>
+                        </div>
+                    </div>
+                    <p class="font-gsans text-2xl font-medium text-g-text tabular-nums">2,400</p>
+                    <p class="text-xs text-g-text-secondary mt-1">Messages Delivered</p>
+                </div>
+                <div class="bg-white rounded-2xl border border-g-border p-5">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-9 h-9 bg-g-blue-light rounded-xl flex items-center justify-center">
+                            <span class="material-icons-outlined text-g-blue text-xl">people</span>
+                        </div>
+                    </div>
+                    <p class="font-gsans text-2xl font-medium text-g-text tabular-nums">100</p>
+                    <p class="text-xs text-g-text-secondary mt-1">Active Recipients</p>
+                </div>
+                <div class="bg-white rounded-2xl border border-g-border p-5">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center">
+                            <span class="material-icons-outlined text-purple-600 text-xl">schedule</span>
+                        </div>
+                    </div>
+                    <p class="font-gsans text-2xl font-medium text-g-text tabular-nums">2h ago</p>
+                    <p class="text-xs text-g-text-secondary mt-1">Last Broadcast</p>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-6">
+                
+                <!-- Compose Broadcast -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-2xl border border-g-border p-6">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                                <span class="material-icons-outlined text-amber-600 text-xl">edit</span>
+                            </div>
+                            <div>
+                                <h2 class="font-gsans text-lg font-medium text-g-text">Compose Announcement</h2>
+                                <p class="text-xs text-g-text-secondary">Create and send a message to all platform users</p>
+                            </div>
+                        </div>
+
+                        <form class="space-y-5">
+                            <!-- Message Type -->
+                            <div>
+                                <label class="block text-sm font-medium text-g-text mb-2">Message Type</label>
+                                <select class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all">
+                                    <option value="announcement">📢 Announcement</option>
+                                    <option value="alert">⚠️ Alert</option>
+                                    <option value="update">🔄 Update</option>
+                                    <option value="new_feature">✨ New Feature</option>
+                                </select>
+                            </div>
+
+                            <!-- Subject -->
+                            <div>
+                                <label class="block text-sm font-medium text-g-text mb-2">Subject</label>
+                                <input type="text" placeholder="e.g., New Feature Release, Maintenance Notice..." 
+                                       class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all"
+                                       value="Platform Update: New Bidding Features">
+                            </div>
+
+                            <!-- Message -->
+                            <div>
+                                <label class="block text-sm font-medium text-g-text mb-2">Message</label>
+                                <textarea rows="8" placeholder="Type your announcement message here..." 
+                                          class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all resize-none">We're excited to announce new bidding features that will enhance your auction experience!
+
+🎯 Auto-bid: Set your maximum bid and let the system bid for you
+⚡ Quick Bid: One-click bidding with preset increments
+📱 Mobile Notifications: Get instant alerts when you're outbid
+
+These features are now live! Log in and try them out on your favorite auctions.</textarea>
+                                <div class="flex items-center justify-between mt-2">
+                                    <p class="text-xs text-g-text-secondary">Supports plain text only</p>
+                                    <p class="text-xs text-g-text-secondary tabular-nums">387 / 1000 characters</p>
+                                </div>
+                            </div>
+
+                            <!-- Preview Toggle -->
+                            <div class="border-t border-g-border pt-5">
+                                <button type="button" onclick="togglePreview()" class="inline-flex items-center gap-2 px-4 py-2 bg-g-bg border border-g-border rounded-lg text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
+                                    <span class="material-icons-outlined text-lg">visibility</span>
+                                    Preview Message
+                                </button>
+                            </div>
+
+                            <!-- Preview Card -->
+                            <div id="previewCard" class="bg-g-bg border border-g-border rounded-xl p-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="material-icons-outlined text-amber-600">campaign</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-semibold uppercase rounded">Announcement</span>
+                                            <span class="text-xs text-g-text-secondary">Just now</span>
+                                        </div>
+                                        <p class="text-sm font-medium text-g-text mb-1">Platform Update: New Bidding Features</p>
+                                        <p class="text-sm text-g-text-secondary whitespace-pre-line">We're excited to announce new bidding features that will enhance your auction experience!
+
+🎯 Auto-bid: Set your maximum bid and let the system bid for you
+⚡ Quick Bid: One-click bidding with preset increments
+📱 Mobile Notifications: Get instant alerts when you're outbid
+
+These features are now live! Log in and try them out on your favorite auctions.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="flex items-center justify-between pt-4 border-t border-g-border">
+                                <div class="flex items-center gap-2 text-sm text-g-text-secondary">
+                                    <span class="material-icons-outlined text-lg">people</span>
+                                    <span>This message will be sent to all <strong class="text-g-text">100</strong> users</span>
+                                </div>
+                                <div class="flex gap-3">
+                                    <button type="button" class="px-6 py-2.5 bg-white border border-g-border rounded-full text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
+                                        Save Draft
+                                    </button>
+                                    <button type="button" onclick="showFlashMessage()" class="px-6 py-2.5 bg-amber-500 text-white rounded-full text-sm font-medium hover:bg-amber-600 transition-colors shadow-g-sm flex items-center gap-2">
+                                        <span class="material-icons-outlined text-lg">send</span>
+                                        Send Broadcast
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Recent Broadcasts -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-2xl border border-g-border p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-gsans text-base font-medium text-g-text">Recent Broadcasts</h3>
+                            <a href="#" class="text-xs font-medium text-g-blue hover:underline">View all</a>
+                        </div>
+                        <div class="space-y-4">
+                            <!-- Broadcast 1 -->
+                            <div class="pb-4 border-b border-g-border">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <span class="material-icons-outlined text-g-green text-lg">check_circle</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-g-text truncate">Maintenance Scheduled</p>
+                                        <p class="text-xs text-g-text-secondary mt-1">Delivered to 100 users</p>
+                                        <p class="text-xs text-g-text-secondary mt-1">2 hours ago</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Broadcast 2 -->
+                            <div class="pb-4 border-b border-g-border">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <span class="material-icons-outlined text-g-green text-lg">check_circle</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-g-text truncate">New Auction Categories Added</p>
+                                        <p class="text-xs text-g-text-secondary mt-1">Delivered to 98 users</p>
+                                        <p class="text-xs text-g-text-secondary mt-1">1 day ago</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Broadcast 3 -->
+                            <div class="pb-4 border-b border-g-border">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <span class="material-icons-outlined text-g-green text-lg">check_circle</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-g-text truncate">Welcome to AuctionHouse!</p>
+                                        <p class="text-xs text-g-text-secondary mt-1">Delivered to 95 users</p>
+                                        <p class="text-xs text-g-text-secondary mt-1">3 days ago</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Broadcast 4 -->
+                            <div class="pb-4 border-b border-g-border">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <span class="material-icons-outlined text-g-green text-lg">check_circle</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-g-text truncate">Security Update Required</p>
+                                        <p class="text-xs text-g-text-secondary mt-1">Delivered to 100 users</p>
+                                        <p class="text-xs text-g-text-secondary mt-1">5 days ago</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Broadcast 5 -->
+                            <div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <span class="material-icons-outlined text-g-green text-lg">check_circle</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-g-text truncate">Holiday Auction Event</p>
+                                        <p class="text-xs text-g-text-secondary mt-1">Delivered to 92 users</p>
+                                        <p class="text-xs text-g-text-secondary mt-1">1 week ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        function togglePreview() {
+            const preview = document.getElementById('previewCard');
+            preview.classList.toggle('hidden');
+        }
+
+        function showFlashMessage() {
+            const flash = document.getElementById('flashMessage');
+            flash.classList.remove('hidden');
+            setTimeout(() => {
+                flash.style.transition = 'opacity 0.3s ease';
+                flash.style.opacity = '0';
+                setTimeout(() => {
+                    flash.classList.add('hidden');
+                    flash.style.opacity = '1';
+                }, 300);
+            }, 5000);
+        }
+    </script>
+
+</body>
+</html>
