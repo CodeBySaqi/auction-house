@@ -93,13 +93,25 @@
                     <span class="material-icons-outlined text-xl text-g-text-secondary">analytics</span>
                     Reports
                 </a>
+                <a th:href="@{/admin/analytics}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">trending_up</span>
+                    Activity
+                </a>
                 
                 <div class="px-3 mt-6 mb-2">
                     <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Tools</span>
                 </div>
                 <a th:href="@{/admin/settings}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
-                    <span class="material-icons-outlined text-xl text-g-text-secondary">settings</span>
-                    Settings
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">campaign</span>
+                    Broadcast
+                </a>
+                <a th:href="@{/admin/export/auctions.csv}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">download</span>
+                    Export Auctions
+                </a>
+                <a th:href="@{/admin/export/users.csv}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">download</span>
+                    Export Users
                 </a>
             </nav>
         </aside>
