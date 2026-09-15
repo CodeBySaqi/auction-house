@@ -40,9 +40,20 @@ public class DemoDataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (userRepository.count() > 1) {
-            System.out.println("✓ Demo data already exists, skipping seed");
+        // Only seed if we don't have comprehensive data yet (less than 50 users)
+        if (userRepository.count() > 50) {
+            System.out.println("✓ Comprehensive demo data already exists (" + userRepository.count() + " users), skipping seed");
             return;
+        }
+
+        // Clear existing demo data to start fresh
+        if (userRepository.count() > 0) {
+            System.out.println("🗑️  Clearing existing demo data...");
+            notificationRepository.deleteAll();
+            bidRepository.deleteAll();
+            auctionRepository.deleteAll();
+            userRepository.deleteAll();
+            System.out.println("✓ Existing data cleared");
         }
 
         System.out.println("🌱 Seeding comprehensive demo data (100 users, 150 auctions, ~1000 bids)...");
