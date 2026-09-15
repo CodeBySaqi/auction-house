@@ -113,10 +113,8 @@ public class DemoDataSeeder implements CommandLineRunner {
             user.setWalletBalance(50000 + random.nextInt(150000)); // $50K - $200K
             user.setCreatedAt(LocalDateTime.now().minusDays(random.nextInt(30)));
             
-            // 60% of users get profile pictures
-            if (random.nextInt(100) < 60) {
-                user.setProfilePicPath(profilePics[random.nextInt(profilePics.length)]);
-            }
+            // All users get profile pictures
+            user.setProfilePicPath(profilePics[random.nextInt(profilePics.length)]);
             
             users.add(userRepository.save(user));
         }
