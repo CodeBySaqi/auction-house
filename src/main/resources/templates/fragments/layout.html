@@ -46,6 +46,40 @@
     <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
 
+<!-- Tailwind Config Fragment -->
+<script th:fragment="tailwindConfig">
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'g-blue': '#1a73e8',
+                    'g-blue-hover': '#1765cc',
+                    'g-blue-light': '#e8f0fe',
+                    'g-red': '#ea4335',
+                    'g-yellow': '#fbbc04',
+                    'g-green': '#34a853',
+                    'g-surface': '#ffffff',
+                    'g-bg': '#f8f9fa',
+                    'g-text': '#202124',
+                    'g-text-secondary': '#5f6368',
+                    'g-border': '#dadce0',
+                    'g-hover': '#f1f3f4',
+                },
+                fontFamily: {
+                    'gsans': ['"Google Sans"', 'Roboto', 'system-ui', 'sans-serif'],
+                    'roboto': ['Roboto', 'system-ui', 'sans-serif'],
+                },
+                boxShadow: {
+                    'g-sm': '0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15)',
+                    'g-md': '0 1px 3px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15)',
+                    'g-lg': '0 1px 3px 0 rgba(60,64,67,.3), 0 8px 16px 6px rgba(60,64,67,.15)',
+                    'g-xl': '0 2px 6px 2px rgba(60,64,67,.3), 0 12px 28px 8px rgba(60,64,67,.15)',
+                }
+            }
+        }
+    }
+</script>
+
 <!-- Navbar Fragment -->
 <nav th:fragment="navbar" class="bg-white border-b border-g-border sticky top-0 z-50 w-full">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
