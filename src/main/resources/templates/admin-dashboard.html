@@ -1,586 +1,1195 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Admin Dashboard — AuctionHouse')}"></head>
-<body class="bg-gray-50">
-    <!-- Top Navigation -->
-    <nav class="bg-white border-b border-gray-200 px-8 py-4 shadow-g-sm sticky top-0 z-50">
-        <div class="flex justify-between items-center">
-            <div class="flex items-center gap-8">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <span class="material-icons-outlined text-white">gavel</span>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Console - AuctionHouse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link th:href="@{/css/admin-console.css}" rel="stylesheet">
+</head>
+<body class="adm">
+
+<!-- ===================== APP BAR ===================== -->
+<header class="appbar">
+    <div class="appbar__in">
+        <button class="iconbtn menu-btn" id="menuBtn" aria-label="Open navigation" aria-expanded="false" aria-controls="drawer">
+            <span class="material-icons-outlined mi" aria-hidden="true">menu</span>
+        </button>
+        <a class="brand" th:href="@{/}">
+            <span class="brand__mark"><span class="material-icons-outlined mi" aria-hidden="true">gavel</span></span>
+            <span class="brand__name">Auction<span>House</span></span>
+            <span class="brand__tag">Admin</span>
+        </a>
+        <form class="appbar__search" th:action="@{/admin/auctions}" method="get" role="search">
+            <label class="field">
+                <span class="material-icons-outlined mi" aria-hidden="true">search</span>
+                <input type="text" name="search" placeholder="Search auctions..." autocomplete="off"
+                       th:value="${currentSearch}">
+            </label>
+        </form>
+        <div class="appbar__right">
+            <a class="btn btn-secondary btn-sm pill-hide" th:href="@{/}" target="_blank" rel="noopener">
+                <span class="material-icons-outlined mi-sm" aria-hidden="true">open_in_new</span> View storefront
+            </a>
+            <a class="iconbtn" th:href="@{/notifications}" aria-label="Notifications">
+                <span class="material-icons-outlined mi" aria-hidden="true">notifications</span>
+                <span class="badge" th:if="${unreadCount != null and unreadCount > 0}" th:text="${unreadCount}" aria-hidden="true">0</span>
+            </a>
+            <div class="menuwrap">
+                <button class="avatar" id="avatarBtn" aria-label="Account menu" aria-expanded="false" aria-haspopup="true"
+                        style="width:34px;height:34px;border-radius:999px;overflow:hidden;background:var(--g-blue-light);display:block;padding:0">
+                    <img th:if="${admin != null and admin.hasProfilePic()}"
+                         th:src="${admin.profilePicPath.startsWith('http')} ? @{${admin.profilePicPath}} : @{'/uploads/' + ${admin.profilePicPath}}"
+                         alt="Profile" style="width:100%;height:100%;object-fit:cover">
+                    <img th:unless="${admin != null and admin.hasProfilePic()}" th:src="@{/images/default-avatar.png}"
+                         alt="Profile" style="width:100%;height:100%;object-fit:cover">
+                </button>
+                <div class="menu" id="accountMenu" hidden>
+                    <div class="menu__head">
+                        <p th:text="${admin != null ? admin.username : 'Admin'}">Admin</p>
+                        <p class="muted" style="font-size:12px" th:text="${admin != null ? admin.email : ''}">email</p>
                     </div>
-                    <div>
-                        <h1 class="font-bold text-xl text-gray-800">AuctionHouse</h1>
-                        <p class="text-xs text-gray-500">Admin Panel</p>
+                    <div style="padding:6px 0">
+                        <a class="menu__item" th:href="@{/admin/dashboard}"><span class="material-icons-outlined mi" aria-hidden="true">dashboard</span> Admin console</a>
+                        <a class="menu__item" th:href="@{/dashboard}"><span class="material-icons-outlined mi" aria-hidden="true">person</span> My bidder dashboard</a>
+                        <a class="menu__item" th:href="@{/admin/settings}"><span class="material-icons-outlined mi" aria-hidden="true">settings</span> Settings</a>
                     </div>
-                </div>
-                <div class="flex gap-1">
-                    <a th:href="@{/admin/dashboard}"
-                       th:classappend="${activeTab == 'dashboard'} ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'"
-                       class="px-4 py-2 rounded-lg font-medium transition-colors">Dashboard</a>
-                    <a th:href="@{/admin/auctions}"
-                       th:classappend="${activeTab == 'auctions'} ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'"
-                       class="px-4 py-2 rounded-lg font-medium transition-colors">Auctions</a>
-                    <a th:href="@{/admin/users}"
-                       th:classappend="${activeTab == 'users'} ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'"
-                       class="px-4 py-2 rounded-lg font-medium transition-colors">Users</a>
-                    <a th:href="@{/admin/analytics}"
-                       th:classappend="${activeTab == 'analytics'} ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'"
-                       class="px-4 py-2 rounded-lg font-medium transition-colors">Analytics</a>
-                </div>
-            </div>
-            <div class="flex items-center gap-4">
-                <!-- Profile Dropdown -->
-                <div class="relative" id="profileDropdown">
-                    <button onclick="toggleProfileMenu()" class="flex items-center gap-3 pl-4 pr-2 py-1.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-                        <img th:src="${admin.hasProfilePic()} ? (${admin.profilePicPath.startsWith('http')} ? @{${admin.profilePicPath}} : @{'/uploads/' + ${admin.profilePicPath}}) : @{/images/default-avatar.png}" class="w-8 h-8 rounded-full">
-                        <div class="text-left">
-                            <p class="font-semibold text-sm text-gray-800" th:text="${admin.username}">Admin</p>
-                            <p class="text-xs text-gray-500">Super Admin</p>
-                        </div>
-                        <span class="material-icons-outlined text-gray-400" style="font-size: 18px;">expand_more</span>
-                    </button>
-                    <!-- Dropdown Menu -->
-                    <div id="profileMenu" class="hidden absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-g-md border border-gray-200 py-2 z-50">
-                        <div class="px-4 py-3 border-b border-gray-100">
-                            <p class="font-semibold text-sm text-gray-800" th:text="${admin.username}">Admin</p>
-                            <p class="text-xs text-gray-500" th:text="${admin.email}">admin@example.com</p>
-                        </div>
-                        <a th:href="@{/admin/settings}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors">
-                            <span class="material-icons-outlined text-gray-500" style="font-size: 18px;">settings</span>
-                            <span class="text-sm text-gray-700">Settings</span>
-                        </a>
-                        <a th:href="@{/}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors">
-                            <span class="material-icons-outlined text-gray-500" style="font-size: 18px;">open_in_new</span>
-                            <span class="text-sm text-gray-700">View Site</span>
-                        </a>
-                        <div class="border-t border-gray-100 mt-1 pt-1">
-                            <form th:action="@{/logout}" method="post">
-                                <button type="submit" class="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 transition-colors w-full text-left">
-                                    <span class="material-icons-outlined text-red-500" style="font-size: 18px;">logout</span>
-                                    <span class="text-sm text-red-600">Sign Out</span>
-                                </button>
-                            </form>
-                        </div>
+                    <div class="menu__sep">
+                        <form th:action="@{/logout}" method="post">
+                            <button type="submit" class="menu__item menu__item--danger">
+                                <span class="material-icons-outlined mi" aria-hidden="true">logout</span> Sign out
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+</header>
+
+<!-- ===================== MOBILE DRAWER ===================== -->
+<div class="scrim" id="scrim" hidden></div>
+<aside id="drawer" hidden aria-label="Admin navigation"
+       style="position:fixed;top:0;left:0;bottom:0;width:290px;background:#fff;z-index:85;padding:20px 16px;box-shadow:var(--sh-xl);display:flex;flex-direction:column;gap:10px;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span class="brand">
+            <span class="brand__mark"><span class="material-icons-outlined mi" aria-hidden="true">gavel</span></span>
+            <span class="brand__name">Auction<span>House</span></span>
+        </span>
+        <button class="iconbtn" id="drawerClose" aria-label="Close navigation">
+            <span class="material-icons-outlined mi" aria-hidden="true">close</span>
+        </button>
+    </div>
+    <nav class="nav" aria-label="Admin sections">
+        <p class="nav__label">Operations</p>
+        <a class="nav__item" th:classappend="${activeTab == 'dashboard'} ? 'is-active'" th:href="@{/admin/dashboard}">
+            <span class="material-icons-outlined mi" aria-hidden="true">dashboard</span> Overview</a>
+        <a class="nav__item" th:classappend="${activeTab == 'auctions'} ? 'is-active'" th:href="@{/admin/auctions}">
+            <span class="material-icons-outlined mi" aria-hidden="true">gavel</span> Auctions
+            <span class="nav__count" th:text="${countAll}">0</span></a>
+        <a class="nav__item" th:classappend="${activeTab == 'users'} ? 'is-active'" th:href="@{/admin/users}">
+            <span class="material-icons-outlined mi" aria-hidden="true">people</span> Users
+            <span class="nav__count" th:text="${totalUsers != null ? totalUsers : userCount}">0</span></a>
+        <a class="nav__item" th:classappend="${activeTab == 'analytics'} ? 'is-active'" th:href="@{/admin/analytics}">
+            <span class="material-icons-outlined mi" aria-hidden="true">bar_chart</span> Analytics</a>
+        <p class="nav__label" style="margin-top:14px">Configuration</p>
+        <a class="nav__item" th:classappend="${activeTab == 'settings'} ? 'is-active'" th:href="@{/admin/settings}">
+            <span class="material-icons-outlined mi" aria-hidden="true">settings</span> Settings</a>
     </nav>
+</aside>
 
-    <!-- Flash Messages -->
-    <div th:if="${successMessage}" class="mx-8 mt-4 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3 animate-fade-in">
-        <span class="material-icons-outlined text-green-600">check_circle</span>
-        <span class="text-green-800 font-medium" th:text="${successMessage}">Success!</span>
-    </div>
-    <div th:if="${errorMessage}" class="mx-8 mt-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 animate-fade-in">
-        <span class="material-icons-outlined text-red-600">error</span>
-        <span class="text-red-800 font-medium" th:text="${errorMessage}">Error!</span>
-    </div>
-
-    <!-- ==================== DASHBOARD TAB ==================== -->
-    <div th:if="${activeTab == 'dashboard'}" class="p-8">
-        <div class="mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-1">Dashboard Overview</h2>
-            <p class="text-gray-600">Welcome back, <span th:text="${admin.username}">Admin</span>!</p>
+<!-- ===================== SHELL ===================== -->
+<div class="shell">
+    <aside class="sidebar" aria-label="Admin navigation">
+        <div class="sidebar__inner">
+            <div class="card" style="padding:14px">
+                <p class="eyebrow">Market status</p>
+                <p class="num" style="font-size:18px;margin:4px 0 10px" th:text="${countActive} + ' live'">0 live</p>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                    <span class="chip chip-green" style="align-self:flex-start">
+                        <span class="dot dot--pulse"></span>
+                        <span th:text="${countActive} + ' running'">0 running</span>
+                    </span>
+                    <span class="chip chip-amber" style="align-self:flex-start">
+                        <span class="material-icons-outlined mi-xs" aria-hidden="true">schedule</span>
+                        <span th:text="${endingSoonCount != null ? endingSoonCount : 0} + ' ending in 24h'">0 ending</span>
+                    </span>
+                </div>
+            </div>
+            <nav class="nav" aria-label="Admin sections">
+                <p class="nav__label">Operations</p>
+                <a class="nav__item" th:classappend="${activeTab == 'dashboard'} ? 'is-active'" th:href="@{/admin/dashboard}">
+                    <span class="material-icons-outlined mi" aria-hidden="true">dashboard</span> Overview</a>
+                <a class="nav__item" th:classappend="${activeTab == 'auctions'} ? 'is-active'" th:href="@{/admin/auctions}">
+                    <span class="material-icons-outlined mi" aria-hidden="true">gavel</span> Auctions
+                    <span class="nav__count" th:text="${countAll}">0</span></a>
+                <a class="nav__item" th:classappend="${activeTab == 'users'} ? 'is-active'" th:href="@{/admin/users}">
+                    <span class="material-icons-outlined mi" aria-hidden="true">people</span> Users
+                    <span class="nav__count" th:text="${totalUsers != null ? totalUsers : userCount}">0</span></a>
+                <p class="nav__label" style="margin-top:14px">Insight</p>
+                <a class="nav__item" th:classappend="${activeTab == 'analytics'} ? 'is-active'" th:href="@{/admin/analytics}">
+                    <span class="material-icons-outlined mi" aria-hidden="true">bar_chart</span> Analytics</a>
+                <a class="nav__item" th:href="@{/admin/export/auctions.csv}">
+                    <span class="material-icons-outlined mi" aria-hidden="true">download</span> Auctions CSV</a>
+                <a class="nav__item" th:href="@{/admin/export/users.csv}">
+                    <span class="material-icons-outlined mi" aria-hidden="true">download</span> Users CSV</a>
+                <p class="nav__label" style="margin-top:14px">Configuration</p>
+                <a class="nav__item" th:classappend="${activeTab == 'settings'} ? 'is-active'" th:href="@{/admin/settings}">
+                    <span class="material-icons-outlined mi" aria-hidden="true">settings</span> Settings</a>
+            </nav>
         </div>
+    </aside>
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-4 gap-6 mb-8">
-            <div class="hover-lift bg-white rounded-xl p-6 border border-gray-200 shadow-g-sm">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <span class="material-icons-outlined text-blue-600">gavel</span>
-                    </div>
-                </div>
-                <p class="text-gray-600 text-sm mb-1">Total Auctions</p>
-                <p class="text-3xl font-bold text-gray-800" th:text="${totalAuctions}">0</p>
-                <p class="text-xs text-gray-500 mt-1"><span th:text="${activeAuctions}">0</span> active</p>
-            </div>
-            <div class="hover-lift bg-white rounded-xl p-6 border border-gray-200 shadow-g-sm">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <span class="material-icons-outlined text-purple-600">people</span>
-                    </div>
-                </div>
-                <p class="text-gray-600 text-sm mb-1">Total Users</p>
-                <p class="text-3xl font-bold text-gray-800" th:text="${totalUsers}">0</p>
-            </div>
-            <div class="hover-lift bg-white rounded-xl p-6 border border-gray-200 shadow-g-sm">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                        <span class="material-icons-outlined text-green-600">attach_money</span>
-                    </div>
-                </div>
-                <p class="text-gray-600 text-sm mb-1">Total Revenue</p>
-                <p class="text-3xl font-bold text-gray-800">$<span th:text="${#numbers.formatDecimal(totalRevenue, 1, 'COMMA', 0, 'POINT')}">0</span></p>
-            </div>
-            <div class="hover-lift bg-white rounded-xl p-6 border border-gray-200 shadow-g-sm">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                        <span class="material-icons-outlined text-orange-600">trending_up</span>
-                    </div>
-                </div>
-                <p class="text-gray-600 text-sm mb-1">Active Auctions</p>
-                <p class="text-3xl font-bold text-gray-800" th:text="${activeAuctions}">0</p>
-            </div>
-        </div>
+    <main class="content">
+        <div class="content__in">
 
-        <!-- Charts -->
-        <div class="grid grid-cols-2 gap-6 mb-8">
-            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-g-sm">
-                <h3 class="font-bold text-lg text-gray-800 mb-6">Revenue Trend (Last 6 Months)</h3>
-                <canvas id="revenueChart" height="200"></canvas>
+            <!-- flash -->
+            <div class="flash flash--ok reveal" th:if="${successMessage}" role="status">
+                <span class="material-icons-outlined mi" aria-hidden="true">check_circle</span>
+                <span th:text="${successMessage}">Saved.</span>
             </div>
-            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-g-sm">
-                <h3 class="font-bold text-lg text-gray-800 mb-6">Auction Categories</h3>
-                <canvas id="categoryChart" height="200"></canvas>
+            <div class="flash flash--err reveal" th:if="${errorMessage}" role="alert">
+                <span class="material-icons-outlined mi" aria-hidden="true">error_outline</span>
+                <span th:text="${errorMessage}">Something went wrong.</span>
             </div>
-        </div>
 
-        <!-- Recent Users & Auctions -->
-        <div class="grid grid-cols-2 gap-6">
-            <div class="bg-white rounded-xl border border-gray-200 shadow-g-sm overflow-hidden">
-                <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-                    <h3 class="font-bold text-lg text-gray-800">Recent Users</h3>
-                    <a th:href="@{/admin/users}" class="text-blue-600 hover:text-blue-700 text-sm font-semibold">View all</a>
-                </div>
-                <div class="divide-y divide-gray-100">
-                    <div th:each="user : ${recentUsers}" class="p-4 hover:bg-gray-50 transition-colors">
-                        <div class="flex items-center gap-3">
-                            <img th:src="${user.hasProfilePic()} ? (${user.profilePicPath.startsWith('http')} ? @{${user.profilePicPath}} : @{'/uploads/' + ${user.profilePicPath}}) : @{/images/default-avatar.png}" class="w-10 h-10 rounded-full">
-                            <div class="flex-1">
-                                <p class="font-semibold text-gray-800 text-sm" th:text="${user.username}">Username</p>
-                                <p class="text-xs text-gray-500" th:text="${user.email}">email@example.com</p>
-                            </div>
-                            <span class="text-xs text-gray-400" th:text="${dateFormatter.format(user.createdAt)}">Jan 15</span>
+            <!-- ============================================================
+                 OVERVIEW
+                 ============================================================ -->
+            <div th:if="${activeTab == 'dashboard'}">
+                <div class="pagehead reveal" style="--i:0">
+                    <div>
+                        <h1>Marketplace overview</h1>
+                        <p class="muted" style="margin-top:6px">Live trading, moderation and account health for the whole platform.</p>
+                        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                            <span class="chip chip-green"><span class="dot dot--pulse"></span> Live</span>
+                            <span class="hint"><span class="material-icons-outlined mi-sm" aria-hidden="true">storage</span>
+                                Live data from the database</span>
                         </div>
                     </div>
-                    <div th:if="${#lists.isEmpty(recentUsers)}" class="p-8 text-center text-gray-400">No users yet</div>
+                    <div class="pagehead__actions">
+                        <a class="btn btn-secondary btn-sm" th:href="@{/admin/export/auctions.csv}">
+                            <span class="material-icons-outlined mi-sm" aria-hidden="true">download</span> Export auctions
+                        </a>
+                        <a class="btn btn-primary btn-sm" th:href="@{/admin/users}">
+                            <span class="material-icons-outlined mi-sm" aria-hidden="true">person_add</span> New account
+                        </a>
+                    </div>
                 </div>
-            </div>
-            <div class="bg-white rounded-xl border border-gray-200 shadow-g-sm overflow-hidden">
-                <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-                    <h3 class="font-bold text-lg text-gray-800">Recent Auctions</h3>
-                    <a th:href="@{/admin/auctions}" class="text-blue-600 hover:text-blue-700 text-sm font-semibold">View all</a>
-                </div>
-                <div class="divide-y divide-gray-100">
-                    <div th:each="auction : ${recentAuctions}" class="p-4 hover:bg-gray-50 transition-colors">
-                        <div class="flex items-center gap-3">
-                            <img th:src="${auction.imageUrl != null} ? @{${auction.imageUrl}} : @{/images/default-auction.png}" class="w-10 h-10 rounded-lg object-cover">
-                            <div class="flex-1 min-w-0">
-                                <p class="font-semibold text-gray-800 text-sm truncate" th:text="${auction.title}">Title</p>
-                                <p class="text-xs text-gray-500" th:text="${auction.category}">Category</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-bold text-blue-600 text-sm">$<span th:text="${#numbers.formatDecimal(auction.currentHighestBid > 0 ? auction.currentHighestBid : auction.startingPrice, 1, 'COMMA', 0, 'POINT')}">0</span></p>
-                                <span th:class="${auction.status.name() == 'ACTIVE'} ? 'text-xs text-green-600 font-semibold' : 'text-xs text-gray-400'" th:text="${auction.status}">Active</span>
+
+                <!-- KPI strip -->
+                <section class="kpis reveal" style="--i:1" aria-label="Platform metrics">
+                    <div class="kpi">
+                        <div class="kpi__top">
+                            <span class="kpi__well" style="background:var(--green-50);color:var(--green-strong)"><span class="material-icons-outlined mi" aria-hidden="true">gavel</span></span>
+                            <span class="kpi__label">Active auctions</span>
+                        </div>
+                        <p class="kpi__value" th:text="${activeAuctions}">0</p>
+                        <p class="kpi__foot"><span th:text="${totalAuctions}">0</span> listed in total</p>
+                    </div>
+                    <div class="kpi">
+                        <div class="kpi__top">
+                            <span class="kpi__well" style="background:var(--blue-50);color:var(--blue-strong)"><span class="material-icons-outlined mi" aria-hidden="true">people</span></span>
+                            <span class="kpi__label">Registered users</span>
+                        </div>
+                        <p class="kpi__value" th:text="${totalUsers}">0</p>
+                        <p class="kpi__foot"><span th:text="'+' + ${newUsers7d}">+0</span> in the last 7 days</p>
+                    </div>
+                    <div class="kpi">
+                        <div class="kpi__top">
+                            <span class="kpi__well" style="background:var(--purple-50);color:var(--purple-600)"><span class="material-icons-outlined mi" aria-hidden="true">bar_chart</span></span>
+                            <span class="kpi__label">Settled value</span>
+                        </div>
+                        <p class="kpi__value" th:text="'$' + ${#numbers.formatDecimal(totalRevenue, 1, 'COMMA', 0, 'POINT')}">$0</p>
+                        <p class="kpi__foot">from <span th:text="${closedAuctions}">0</span> closed auctions</p>
+                    </div>
+                    <div class="kpi">
+                        <div class="kpi__top">
+                            <span class="kpi__well" style="background:var(--amber-50);color:var(--amber-strong)"><span class="material-icons-outlined mi" aria-hidden="true">payments</span></span>
+                            <span class="kpi__label">Bids placed</span>
+                        </div>
+                        <p class="kpi__value" th:text="${#numbers.formatDecimal(totalBids, 1, 'COMMA', 0, 'POINT')}">0</p>
+                        <p class="kpi__foot" th:text="${#numbers.formatDecimal(avgBidsPerAuction, 1, 'COMMA', 1, 'POINT')} + ' per auction'">0 per auction</p>
+                    </div>
+                    <div class="kpi">
+                        <div class="kpi__top">
+                            <span class="kpi__well" style="background:var(--red-50);color:var(--red-strong)"><span class="material-icons-outlined mi" aria-hidden="true">schedule</span></span>
+                            <span class="kpi__label">Ending in 24h</span>
+                        </div>
+                        <p class="kpi__value" th:text="${endingSoonCount}">0</p>
+                        <p class="kpi__foot">closing within the next day</p>
+                    </div>
+                    <div class="kpi">
+                        <div class="kpi__top">
+                            <span class="kpi__well" style="background:var(--green-50);color:var(--green-strong)"><span class="material-icons-outlined mi" aria-hidden="true">account_balance_wallet</span></span>
+                            <span class="kpi__label">Wallet float</span>
+                        </div>
+                        <p class="kpi__value" th:text="'$' + ${#numbers.formatDecimal(walletFloat, 1, 'COMMA', 0, 'POINT')}">$0</p>
+                        <p class="kpi__foot">across all accounts</p>
+                    </div>
+                </section>
+
+                <!-- Chart + mix -->
+                <div class="chart reveal" style="--i:2">
+                    <section class="chart__wrap" aria-labelledby="activityTitle">
+                        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:8px">
+                            <h2 id="activityTitle" style="font-size:15px;display:flex;align-items:center;gap:10px">
+                                <span class="material-icons-outlined mi" style="color:var(--g-text-secondary)" aria-hidden="true">bar_chart</span>
+                                Trading activity
+                            </h2>
+                            <span class="chip chip-neutral">Trailing <span th:text="${activityDays}">14</span> days</span>
+                            <div class="legend spacer">
+                                <span><i class="l-bar"></i> Bids</span>
+                                <span><i class="l-bar2"></i> Settled value</span>
                             </div>
                         </div>
-                    </div>
-                    <div th:if="${#lists.isEmpty(recentAuctions)}" class="p-8 text-center text-gray-400">No auctions yet</div>
-                </div>
-            </div>
-        </div>
-    </div>
+                        <div class="bars" th:if="${activity != null and !activity.isEmpty()}">
+                            <div class="bars__col" th:each="row : ${activity}">
+                                <div class="bar" th:style="'height:' + ${row.bidPct} + '%'"
+                                     th:title="${row.label} + ': ' + ${row.bids} + ' bids'"></div>
+                                <div class="bar bar--bids" th:style="'height:' + ${row.gmvPct} + '%'"
+                                     th:title="${row.label} + ': $' + ${#numbers.formatDecimal(row.gmv, 1, 'COMMA', 0, 'POINT')} + ' settled'"></div>
+                            </div>
+                        </div>
+                        <div class="bars__x" th:if="${activity != null and !activity.isEmpty()}">
+                            <span th:each="row, iter : ${activity}" th:text="${iter.index % 2 == 0 ? row.label : ''}"></span>
+                        </div>
+                        <div class="empty" th:if="${activity == null or activity.isEmpty()}">
+                            <p class="muted">No trading activity in the last <span th:text="${activityDays}">14</span> days yet.</p>
+                        </div>
+                        <p class="muted" style="font-size:12px;padding:8px 4px 0">
+                            <span th:text="${#numbers.formatDecimal(activityTotalBids, 1, 'COMMA', 0, 'POINT')}">0</span> bids and
+                            <span th:text="'$' + ${#numbers.formatDecimal(activityTotalGmv, 1, 'COMMA', 0, 'POINT')}">$0</span> settled in this window.
+                            Each pair of bars is one day.
+                        </p>
+                    </section>
 
-    <!-- ==================== AUCTIONS TAB ==================== -->
-    <div th:if="${activeTab == 'auctions'}" class="p-8">
-        <div class="mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-1">Manage Auctions</h2>
-            <p class="text-gray-600">View, manage, and delete auctions</p>
-        </div>
-
-        <!-- Filters -->
-        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-g-sm mb-6">
-            <form th:action="@{/admin/auctions}" method="get" class="flex gap-4">
-                <select name="status" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <option value="ALL" th:selected="${currentStatus == 'ALL'}">All Status</option>
-                    <option value="ACTIVE" th:selected="${currentStatus == 'ACTIVE'}">Active</option>
-                    <option value="CLOSED" th:selected="${currentStatus == 'CLOSED'}">Closed</option>
-                </select>
-                <input type="text" name="search" th:value="${currentSearch}" placeholder="Search auctions..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium">Filter</button>
-            </form>
-        </div>
-
-        <!-- Auctions Table -->
-        <div class="bg-white rounded-xl border border-gray-200 shadow-g-sm overflow-hidden">
-            <table class="w-full">
-                <thead class="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Auction</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Category</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Current Bid</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Bids</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <tr th:each="auction : ${auctions}" class="hover:bg-gray-50">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                <img th:src="${auction.imageUrl != null} ? @{${auction.imageUrl}} : @{/images/default-auction.png}" class="w-12 h-12 rounded-lg object-cover">
-                                <div>
-                                    <p class="font-semibold text-gray-800" th:text="${auction.title}">Title</p>
-                                    <p class="text-xs text-gray-500" th:text="${dateTimeFormatter.format(auction.createdAt)}">Created</p>
+                    <section class="card" aria-labelledby="mixTitle">
+                        <div class="card__head">
+                            <h2 id="mixTitle"><span class="material-icons-outlined mi" aria-hidden="true">category</span> Category mix</h2>
+                            <span class="chip chip-neutral spacer" th:text="${totalAuctions} + ' listings'">0 listings</span>
+                        </div>
+                        <div class="mix">
+                            <div th:each="c : ${categoryBreakdown}">
+                                <div class="mix__top">
+                                    <strong th:text="${c.name}">Category</strong>
+                                    <span class="spacer" th:text="${c.count} + ' - ' + ${c.pct} + '%'">0</span>
+                                </div>
+                                <div class="mix__track"><div class="mix__fill" th:style="'width:' + ${c.pct} + '%'"></div></div>
+                            </div>
+                        </div>
+                        <div class="card__head" style="border-top:1px solid var(--g-border);border-bottom:0">
+                            <h3><span class="material-icons-outlined mi" aria-hidden="true">donut_small</span> Status</h3>
+                        </div>
+                        <div class="mix" style="padding-top:0">
+                            <div th:each="s : ${statusBreakdown}">
+                                <div class="mix__top">
+                                    <strong th:text="${s.name}">Status</strong>
+                                    <span class="spacer" th:text="${s.count} + ' - ' + ${s.pct} + '%'">0</span>
+                                </div>
+                                <div class="mix__track">
+                                    <div class="mix__fill" th:classappend="${s.key == 'ACTIVE' ? 'mix__fill--green' : (s.key == 'CANCELLED' ? 'mix__fill--red' : '')}"
+                                         th:style="'width:' + ${s.pct} + '%'"></div>
                                 </div>
                             </div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full" th:text="${auction.category}">Category</span>
-                        </td>
-                        <td class="px-6 py-4 font-bold text-blue-600">
-                            $<span th:text="${#numbers.formatDecimal(auction.currentHighestBid > 0 ? auction.currentHighestBid : auction.startingPrice, 1, 'COMMA', 0, 'POINT')}">0</span>
-                        </td>
-                        <td class="px-6 py-4 text-gray-700" th:text="${auction.bidCount}">0</td>
-                        <td class="px-6 py-4">
-                            <span th:if="${auction.status.name() == 'ACTIVE'}" class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Active</span>
-                            <span th:if="${auction.status.name() == 'CLOSED'}" class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">Closed</span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="flex gap-2">
-                                <a th:href="@{/auctions/detail/{id}(id=${auction.id})}" class="p-2 hover:bg-blue-50 rounded-lg text-blue-600" title="View">
-                                    <span class="material-icons-outlined" style="font-size: 18px;">visibility</span>
-                                </a>
-                                <form th:action="@{/admin/auctions/toggle/{id}(id=${auction.id})}" method="post" class="inline">
-                                    <button type="submit" class="p-2 hover:bg-yellow-50 rounded-lg text-yellow-600" th:title="${auction.status.name() == 'ACTIVE'} ? 'Close Auction' : 'Reactivate'">
-                                        <span class="material-icons-outlined" style="font-size: 18px;">swap_horiz</span>
-                                    </button>
-                                </form>
-                                <form th:action="@{/admin/auctions/delete/{id}(id=${auction.id})}" method="post" class="inline" onsubmit="return confirm('Delete this auction? This cannot be undone.')">
-                                    <button type="submit" class="p-2 hover:bg-red-50 rounded-lg text-red-600" title="Delete">
-                                        <span class="material-icons-outlined" style="font-size: 18px;">delete</span>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(auctions)}">
-                        <td colspan="6" class="px-6 py-12 text-center text-gray-400">No auctions found</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+                        </div>
+                    </section>
+                </div>
 
-    <!-- ==================== USERS TAB ==================== -->
-    <div th:if="${activeTab == 'users'}" class="p-8">
-        <div class="flex justify-between items-center mb-8">
-            <div>
-                <h2 class="text-3xl font-bold text-gray-800 mb-1">Manage Users</h2>
-                <p class="text-gray-600">View, manage, and moderate users</p>
+                <!-- Ending soon + feed + leaders -->
+                <div class="grid2 reveal" style="--i:3">
+                    <div class="stack">
+                    <section class="card" aria-labelledby="endingTitle">
+                        <div class="card__head">
+                            <h2 id="endingTitle"><span class="material-icons-outlined mi" aria-hidden="true">schedule</span> Ending soon</h2>
+                            <a class="btn btn-soft btn-sm spacer" th:href="@{/admin/auctions(status='ACTIVE')}">Manage</a>
+                        </div>
+                        <div class="tablewrap" th:if="${endingSoon != null and !endingSoon.isEmpty()}">
+                            <table class="data" id="endingTable">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Item</th>
+                                    <th scope="col">Leading bid</th>
+                                    <th scope="col" class="r">Bids</th>
+                                    <th scope="col">Ends in</th>
+                                    <th scope="col" class="r">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="a : ${endingSoon}">
+                                    <td>
+                                        <div class="cellitem">
+                                            <span class="thumb" th:with="catIcon=${a.category != null and a.category.name() == 'CARS' ? 'directions_car' : (a.category != null and a.category.name() == 'WATCHES' ? 'watch' : (a.category != null and a.category.name() == 'ART' ? 'palette' : (a.category != null and a.category.name() == 'JEWELRY' ? 'diamond' : 'museum')))}">
+                                                <span class="material-icons-outlined mi" aria-hidden="true" th:text="${catIcon}">gavel</span>
+                                                <img th:if="${a.imageUrl != null and !a.imageUrl.isEmpty()}"
+                                                     th:src="${a.imageUrl.startsWith('http')} ? @{${a.imageUrl}} : @{'/uploads/' + ${a.imageUrl}}"
+                                                     alt="" loading="lazy" onerror="this.remove()">
+                                            </span>
+                                            <span style="min-width:0">
+                                                <span class="cellitem__title" th:text="${a.title}">Item</span>
+                                                <span class="cellitem__sub" th:text="${a.categoryDetails}">details</span>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="num" th:text="'$' + ${#numbers.formatDecimal(a.currentHighestBid, 1, 'COMMA', 0, 'POINT')}">$0</td>
+                                    <td class="r tabular" th:text="${a.bidCount}">0</td>
+                                    <td class="timer" th:attr="data-sec=${a.timeRemainingSeconds}"
+                                        th:text="${a.timeRemaining}">-</td>
+                                    <td>
+                                        <div class="rowact">
+                                            <a class="actbtn" th:href="@{'/auctions/detail/' + ${a.id}}" aria-label="View listing" target="_blank">
+                                                <span class="material-icons-outlined mi" aria-hidden="true">visibility</span>
+                                            </a>
+                                            <form th:action="@{'/admin/auctions/extend/' + ${a.id}}" method="post" data-confirm="Extend this auction by 1 hour?">
+                                                <input type="hidden" name="hours" value="1">
+                                                <button class="actbtn" type="submit" th:attr="aria-label='Extend ' + ${a.title}">
+                                                    <span class="material-icons-outlined mi" aria-hidden="true">more_time</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="empty" th:if="${endingSoon == null or endingSoon.isEmpty()}">
+                            <div class="empty__well" style="background:var(--blue-50);color:var(--blue-strong)">
+                                <span class="material-icons-outlined mi-xl" aria-hidden="true">hourglass_empty</span>
+                            </div>
+                            <h3>Nothing ending soon</h3>
+                            <p>Auctions that are closing in the next 24 hours appear here.</p>
+                        </div>
+                    </section>
+                    <section class="card" aria-labelledby="broadcastTitle">
+                        <div class="card__head">
+                            <h2 id="broadcastTitle"><span class="material-icons-outlined mi" aria-hidden="true">campaign</span> Broadcast an announcement</h2>
+                            <span class="chip chip-neutral spacer" th:text="'to ' + ${totalUsers} + ' accounts'">to 0 accounts</span>
+                        </div>
+                        <form th:action="@{/admin/notifications/broadcast}" method="post"
+                              data-confirm="Send this announcement to every account?"
+                              style="padding:18px 20px">
+                            <label class="flabel" for="broadcastMessage">Message</label>
+                            <textarea class="finput" id="broadcastMessage" name="message" rows="3" maxlength="300" required
+                                      placeholder="e.g. Scheduled maintenance tonight from 02:00 to 03:00 UTC."></textarea>
+                            <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:center">
+                                <button class="btn btn-primary btn-sm" type="submit">
+                                    <span class="material-icons-outlined mi-sm" aria-hidden="true">send</span> Send announcement
+                                </button>
+                                <span class="muted" style="font-size:12px">Delivered as a notification to every registered account.</span>
+                            </div>
+                        </form>
+                    </section>                    </div>
+
+                    <div class="stack">
+                        <section class="card" aria-labelledby="feedTitle">
+                            <div class="card__head">
+                                <h3 id="feedTitle"><span class="material-icons-outlined mi" aria-hidden="true">bolt</span> Latest bids</h3>
+                                <span class="chip chip-green spacer"><span class="dot dot--pulse"></span> Live</span>
+                            </div>
+                            <div th:if="${recentBids != null and !recentBids.isEmpty()}">
+                                <div class="feedrow" th:each="b : ${recentBids}">
+                                    <span class="feedrow__icon" style="background:var(--g-blue-light);color:var(--blue-strong)">
+                                        <span class="material-icons-outlined mi-sm" aria-hidden="true">payments</span>
+                                    </span>
+                                    <div class="feedrow__body">
+                                        <p class="feedrow__title">
+                                            <span th:text="${b.bidder != null ? b.bidder.username : 'Someone'}">bidder</span>
+                                            bid <span class="num" th:text="'$' + ${#numbers.formatDecimal(b.amount, 1, 'COMMA', 0, 'POINT')}">$0</span>
+                                        </p>
+                                        <p class="feedrow__text" th:text="${b.auction != null ? b.auction.title : ''}">auction</p>
+                                    </div>
+                                    <span class="feedrow__time" th:text="${b.timeAgo}">now</span>
+                                </div>
+                            </div>
+                            <div class="empty" th:if="${recentBids == null or recentBids.isEmpty()}">
+                                <h3>No bids yet</h3>
+                                <p>Bids placed on any auction will show up here in real time.</p>
+                            </div>
+                        </section>
+
+                        <section class="card" aria-labelledby="leadersTitle">
+                            <div class="card__head">
+                                <h3 id="leadersTitle"><span class="material-icons-outlined mi" aria-hidden="true">leaderboard</span> Top bidders</h3>
+                                <a class="btn btn-soft btn-sm spacer" th:href="@{/admin/users}">Accounts</a>
+                            </div>
+                            <div>
+                                <div class="feedrow" th:each="u, iter : ${topBidders}">
+                                    <span class="initials" th:style="'background:' + ${iter.index % 2 == 0 ? '#1a73e8' : '#0f7a37'}"
+                                          th:text="${#strings.substring(u.username,0,1)}">U</span>
+                                    <div class="feedrow__body">
+                                        <p class="feedrow__title" th:text="${u.username}">user</p>
+                                        <p class="feedrow__text" th:text="${u.bids} + ' bids placed'">0 bids</p>
+                                    </div>
+                                    <span class="feedrow__time num" th:text="'$' + ${#numbers.formatDecimal(u.balance, 1, 'COMMA', 0, 'POINT')}">$0</span>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+
             </div>
-            <button onclick="toggleCreateUserModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 font-medium">
-                <span class="material-icons-outlined" style="font-size: 18px;">person_add</span>
-                Add User
-            </button>
-        </div>
 
-        <!-- Search -->
-        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-g-sm mb-6">
-            <form th:action="@{/admin/users}" method="get" class="flex gap-4">
-                <input type="text" name="search" th:value="${currentSearch}" placeholder="Search by username or email..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium">Search</button>
-            </form>
-        </div>
+            <!-- ============================================================
+                 AUCTIONS
+                 ============================================================ -->
+            <div th:if="${activeTab == 'auctions'}">
+                <div class="pagehead reveal" style="--i:0">
+                    <div>
+                        <h1>Auction moderation</h1>
+                        <p class="muted" style="margin-top:6px">Close, extend, cancel or remove listings, one at a time or in bulk.</p>
+                    </div>
+                    <div class="pagehead__actions">
+                        <a class="btn btn-secondary btn-sm" th:href="@{/admin/export/auctions.csv}">
+                            <span class="material-icons-outlined mi-sm" aria-hidden="true">download</span> Export CSV
+                        </a>
+                    </div>
+                </div>
 
-        <!-- Users Table -->
-        <div class="bg-white rounded-xl border border-gray-200 shadow-g-sm overflow-hidden">
-            <table class="w-full">
-                <thead class="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">User</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Balance</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Role</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Joined</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <tr th:each="user : ${users}" class="hover:bg-gray-50">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                <img th:src="${user.hasProfilePic()} ? (${user.profilePicPath.startsWith('http')} ? @{${user.profilePicPath}} : @{'/uploads/' + ${user.profilePicPath}}) : @{/images/default-avatar.png}" class="w-10 h-10 rounded-full">
-                                <p class="font-semibold text-gray-800" th:text="${user.username}">Username</p>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 text-gray-700 text-sm" th:text="${user.email}">email</td>
-                        <td class="px-6 py-4 font-semibold text-green-600">$<span th:text="${#numbers.formatDecimal(user.walletBalance, 1, 'COMMA', 0, 'POINT')}">0</span></td>
-                        <td class="px-6 py-4">
-                            <!-- Role selector -->
-                            <form th:action="@{/admin/users/role/{id}(id=${user.id})}" method="post" class="inline">
-                                <select name="role" onchange="this.form.submit()" class="text-xs rounded-full px-2 py-1 border-0 font-semibold cursor-pointer"
-                                        th:classappend="${user.role == 'ROLE_ADMIN'} ? 'bg-purple-100 text-purple-700' : (${user.role == 'ROLE_BANNED'} ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700')">
-                                    <option value="ROLE_USER" th:selected="${user.role == 'ROLE_USER'}">User</option>
-                                    <option value="ROLE_ADMIN" th:selected="${user.role == 'ROLE_ADMIN'}">Admin</option>
-                                    <option value="ROLE_BANNED" th:selected="${user.role == 'ROLE_BANNED'}">Banned</option>
+                <section class="card reveal" style="--i:1">
+                    <div class="card__head">
+                        <h2><span class="material-icons-outlined mi" aria-hidden="true">gavel</span> Listings</h2>
+                        <span class="chip chip-neutral spacer" th:text="${countAll} + ' total'">0 total</span>
+                    </div>
+                    <div class="filterbar">
+                        <form th:action="@{/admin/auctions}" method="get">
+                            <label class="field">
+                                <span class="material-icons-outlined mi" aria-hidden="true">search</span>
+                                <input type="text" name="search" placeholder="Title or description" th:value="${currentSearch}">
+                            </label>
+                            <label class="field" style="min-width:190px">
+                                <span class="material-icons-outlined mi" aria-hidden="true">filter_list</span>
+                                <select name="status" onchange="this.form.submit()">
+                                    <option value="ALL" th:selected="${currentStatus == 'ALL'}">All statuses</option>
+                                    <option value="ACTIVE" th:selected="${currentStatus == 'ACTIVE'}">Active</option>
+                                    <option value="CLOSED" th:selected="${currentStatus == 'CLOSED'}">Closed</option>
+                                    <option value="CANCELLED" th:selected="${currentStatus == 'CANCELLED'}">Cancelled</option>
                                 </select>
-                            </form>
-                        </td>
-                        <td class="px-6 py-4 text-gray-700 text-sm" th:text="${dateFormatter.format(user.createdAt)}">Jan 15, 2026</td>
-                        <td class="px-6 py-4">
-                            <div class="flex gap-1">
-                                <!-- Add Balance -->
-                                <form th:action="@{/admin/users/balance/{id}(id=${user.id})}" method="post" class="inline">
-                                    <input type="hidden" name="amount" value="10000">
-                                    <button type="submit" class="p-2 hover:bg-green-50 rounded-lg text-green-600" title="Add $10,000">
-                                        <span class="material-icons-outlined" style="font-size: 18px;">add_circle</span>
-                                    </button>
-                                </form>
-                                <!-- Ban/Unban -->
-                                <form th:action="@{/admin/users/toggle/{id}(id=${user.id})}" method="post" class="inline">
-                                    <button type="submit" th:class="${user.role == 'ROLE_BANNED'} ? 'p-2 hover:bg-green-50 rounded-lg text-green-600' : 'p-2 hover:bg-yellow-50 rounded-lg text-yellow-600'"
-                                            th:title="${user.role == 'ROLE_BANNED'} ? 'Unban User' : 'Ban User'">
-                                        <span class="material-icons-outlined" style="font-size: 18px;" th:text="${user.role == 'ROLE_BANNED'} ? 'check_circle' : 'block'">block</span>
-                                    </button>
-                                </form>
-                                <!-- Delete -->
-                                <form th:action="@{/admin/users/delete/{id}(id=${user.id})}" method="post" class="inline" onsubmit="return confirm('Delete user ' + document.querySelector('[data-username]')?.textContent + '? This cannot be undone.')">
-                                    <button type="submit" class="p-2 hover:bg-red-50 rounded-lg text-red-600" title="Delete User">
-                                        <span class="material-icons-outlined" style="font-size: 18px;">delete</span>
-                                    </button>
-                                </form>
+                            </label>
+                            <label class="field" style="min-width:190px">
+                                <span class="material-icons-outlined mi" aria-hidden="true">category</span>
+                                <select name="category" onchange="this.form.submit()">
+                                    <option value="ALL" th:selected="${currentCategory == 'ALL'}">All categories</option>
+                                    <option th:each="c : ${allCategories}" th:value="${c.name()}" th:text="${c.displayName}"
+                                            th:selected="${currentCategory == c.name()}">Category</option>
+                                </select>
+                            </label>
+                            <button class="btn btn-secondary btn-sm" type="submit">Apply</button>
+                            <a class="btn btn-soft btn-sm" th:href="@{/admin/auctions}">Reset</a>
+                        </form>
+                    </div>
+
+                    <form th:action="@{/admin/auctions/bulk}" method="post" id="bulkForm" data-confirm="Apply this action to every selected listing?">
+                        <div class="bulkbar" id="bulkbar" hidden>
+                            <span class="bulkbar__count"><span id="bulkCount">0</span> selected</span>
+                            <button class="btn btn-secondary btn-sm" type="submit" name="action" value="close">Close</button>
+                            <button class="btn btn-secondary btn-sm" type="submit" name="action" value="reopen">Reopen</button>
+                            <button class="btn btn-danger btn-sm" type="submit" name="action" value="cancel">Cancel</button>
+                            <button class="btn btn-danger btn-sm" type="submit" name="action" value="delete">Delete</button>
+                            <button class="btn btn-secondary btn-sm spacer" type="button" id="bulkClear">Clear selection</button>
+                        </div>
+
+                        <div class="tablewrap">
+                            <table class="data" id="queueTable">
+                                <caption class="sr">All auctions on the platform</caption>
+                                <thead>
+                                <tr>
+                                    <th scope="col" class="cb"><input type="checkbox" id="selAll" aria-label="Select all listings on this page"></th>
+                                    <th scope="col">Item</th>
+                                    <th scope="col">Category</th>
+                                    <th scope="col">Seller</th>
+                                    <th scope="col" class="r">Current bid</th>
+                                    <th scope="col" class="r">Bids</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col" class="r">Ends in</th>
+                                    <th scope="col" class="r">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="a : ${auctions}">
+                                    <td class="cb"><input type="checkbox" class="rowcb" name="ids" th:value="${a.id}"
+                                                          th:attr="aria-label='Select ' + ${a.title}"></td>
+                                    <td>
+                                        <div class="cellitem">
+                                            <span class="thumb" th:with="catIcon=${a.category != null and a.category.name() == 'CARS' ? 'directions_car' : (a.category != null and a.category.name() == 'WATCHES' ? 'watch' : (a.category != null and a.category.name() == 'ART' ? 'palette' : (a.category != null and a.category.name() == 'JEWELRY' ? 'diamond' : 'museum')))}">
+                                                <span class="material-icons-outlined mi" aria-hidden="true" th:text="${catIcon}">gavel</span>
+                                                <img th:if="${a.imageUrl != null and !a.imageUrl.isEmpty()}"
+                                                     th:src="${a.imageUrl.startsWith('http')} ? @{${a.imageUrl}} : @{'/uploads/' + ${a.imageUrl}}"
+                                                     alt="" loading="lazy" onerror="this.remove()">
+                                            </span>
+                                            <span style="min-width:0">
+                                                <span class="cellitem__title" th:text="${a.title}">Item</span>
+                                                <span class="cellitem__sub" th:text="${a.categoryDetails}">details</span>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td><span class="chip chip-neutral" th:text="${a.typeName}">Type</span></td>
+                                    <td class="muted" th:text="${a.createdBy != null ? a.createdBy.username : 'unknown'}">seller</td>
+                                    <td class="r num" th:text="'$' + ${#numbers.formatDecimal(a.currentHighestBid, 1, 'COMMA', 0, 'POINT')}">$0</td>
+                                    <td class="r tabular" th:text="${a.bidCount}">0</td>
+                                    <td>
+                                        <span class="chip chip-green" th:if="${a.status != null and a.status.name() == 'ACTIVE'}">
+                                            <span class="dot dot--pulse"></span> Active</span>
+                                        <span class="chip chip-neutral" th:if="${a.status != null and a.status.name() == 'CLOSED'}">
+                                            <span class="material-icons-outlined mi-xs" aria-hidden="true">check</span> Closed</span>
+                                        <span class="chip chip-red" th:if="${a.status != null and a.status.name() == 'CANCELLED'}">
+                                            <span class="material-icons-outlined mi-xs" aria-hidden="true">block</span> Cancelled</span>
+                                    </td>
+                                    <td class="timer" th:attr="data-sec=${a.timeRemainingSeconds}" th:text="${a.timeRemaining}">-</td>
+                                    <td>
+                                        <div class="rowact">
+                                            <a class="actbtn" th:href="@{'/auctions/detail/' + ${a.id}}" target="_blank"
+                                               th:attr="aria-label='Open ' + ${a.title}">
+                                                <span class="material-icons-outlined mi" aria-hidden="true">visibility</span>
+                                            </a>
+                                            <button class="actbtn" type="submit" form="toggle-${a.id}"
+                                                    th:attr="aria-label='Toggle status of ' + ${a.title}">
+                                                <span class="material-icons-outlined mi" aria-hidden="true">swap_horiz</span>
+                                            </button>
+                                            <button class="actbtn actbtn--danger" type="submit" form="cancel-${a.id}"
+                                                    th:attr="aria-label='Cancel ' + ${a.title}">
+                                                <span class="material-icons-outlined mi" aria-hidden="true">block</span>
+                                            </button>
+                                            <button class="actbtn actbtn--danger" type="submit" form="delete-${a.id}"
+                                                    th:attr="aria-label='Delete ' + ${a.title}">
+                                                <span class="material-icons-outlined mi" aria-hidden="true">delete</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                            <div class="empty" th:if="${auctions == null or auctions.isEmpty()}">
+                                <div class="empty__well" style="background:var(--blue-50);color:var(--blue-strong)">
+                                    <span class="material-icons-outlined mi-xl" aria-hidden="true">gavel</span>
+                                </div>
+                                <h3>No auctions match those filters</h3>
+                                <p>Try a different status or category, or reset the filters to see every listing.</p>
+                                <a class="btn btn-secondary btn-sm" th:href="@{/admin/auctions}">
+                                    <span class="material-icons-outlined mi-sm" aria-hidden="true">refresh</span> Reset filters
+                                </a>
                             </div>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(users)}">
-                        <td colspan="6" class="px-6 py-12 text-center text-gray-400">No users found</td>
-                    </tr>
-                </tbody>
-            </table>
+                        </div>
+                    </form>
+
+                    <!-- per-row action forms (kept outside the table so buttons can sit in the row) -->
+                    <th:block th:each="a : ${auctions}">
+                        <form th:id="'toggle-' + ${a.id}" th:action="@{'/admin/auctions/toggle/' + ${a.id}}" method="post"
+                              data-confirm="Change the status of this auction?" hidden></form>
+                        <form th:id="'cancel-' + ${a.id}" th:action="@{'/admin/auctions/cancel/' + ${a.id}}" method="post"
+                              data-confirm="Cancel this auction and notify the leading bidder?" hidden></form>
+                        <form th:id="'delete-' + ${a.id}" th:action="@{'/admin/auctions/delete/' + ${a.id}}" method="post"
+                              data-confirm="Delete this auction permanently? This cannot be undone." hidden></form>
+                    </th:block>
+                </section>
+            </div>
+
+            <!-- ============================================================
+                 USERS
+                 ============================================================ -->
+            <div th:if="${activeTab == 'users'}">
+                <div class="pagehead reveal" style="--i:0">
+                    <div>
+                        <h1>Accounts</h1>
+                        <p class="muted" style="margin-top:6px">Manage roles, wallets and access for every registered account.</p>
+                        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+                            <span class="chip chip-neutral" th:text="${userCount} + ' bidders'">0 bidders</span>
+                            <span class="chip chip-blue" th:text="${adminCount} + ' admins'">0 admins</span>
+                            <span class="chip chip-red" th:text="${bannedCount} + ' banned'">0 banned</span>
+                            <span class="chip chip-green" th:text="'$' + ${#numbers.formatDecimal(walletFloat, 1, 'COMMA', 0, 'POINT')} + ' wallet float'">$0</span>
+                        </div>
+                    </div>
+                    <div class="pagehead__actions">
+                        <a class="btn btn-secondary btn-sm" th:href="@{/admin/export/users.csv}">
+                            <span class="material-icons-outlined mi-sm" aria-hidden="true">download</span> Export CSV
+                        </a>
+                        <button class="btn btn-primary btn-sm" type="button" id="newUserBtn">
+                            <span class="material-icons-outlined mi-sm" aria-hidden="true">person_add</span> New account
+                        </button>
+                    </div>
+                </div>
+
+                <section class="card reveal" style="--i:1">
+                    <div class="card__head">
+                        <h2><span class="material-icons-outlined mi" aria-hidden="true">people</span> All accounts</h2>
+                        <span class="chip chip-neutral spacer" th:text="${users != null ? users.size() : 0} + ' shown'">0</span>
+                    </div>
+                    <div class="filterbar">
+                        <form th:action="@{/admin/users}" method="get">
+                            <label class="field">
+                                <span class="material-icons-outlined mi" aria-hidden="true">search</span>
+                                <input type="text" name="search" placeholder="Username or email" th:value="${currentSearch}">
+                            </label>
+                            <label class="field" style="min-width:180px">
+                                <span class="material-icons-outlined mi" aria-hidden="true">filter_list</span>
+                                <select name="role" onchange="this.form.submit()">
+                                    <option value="ALL" th:selected="${currentRole == 'ALL'}">All roles</option>
+                                    <option value="ROLE_USER" th:selected="${currentRole == 'ROLE_USER'}">Bidder</option>
+                                    <option value="ROLE_ADMIN" th:selected="${currentRole == 'ROLE_ADMIN'}">Admin</option>
+                                    <option value="ROLE_BANNED" th:selected="${currentRole == 'ROLE_BANNED'}">Banned</option>
+                                </select>
+                            </label>
+                            <button class="btn btn-secondary btn-sm" type="submit">Apply</button>
+                            <a class="btn btn-soft btn-sm" th:href="@{/admin/users}">Reset</a>
+                        </form>
+                    </div>
+
+                    <form th:action="@{/admin/users/bulk}" method="post" data-confirm="Apply this action to every selected account?">
+                        <div class="bulkbar" id="userBulkbar" hidden>
+                            <span class="bulkbar__count"><span id="userBulkCount">0</span> selected</span>
+                            <button class="btn btn-danger btn-sm" type="submit" name="action" value="ban">Ban</button>
+                            <button class="btn btn-secondary btn-sm" type="submit" name="action" value="unban">Reinstate</button>
+                            <button class="btn btn-danger btn-sm" type="submit" name="action" value="delete">Delete</button>
+                            <button class="btn btn-secondary btn-sm spacer" type="button" id="userBulkClear">Clear selection</button>
+                        </div>
+
+                        <div class="tablewrap">
+                            <table class="data" id="usersTable">
+                                <caption class="sr">Registered accounts</caption>
+                                <thead>
+                                <tr>
+                                    <th scope="col" class="cb"><input type="checkbox" id="userSelAll" aria-label="Select all accounts on this page"></th>
+                                    <th scope="col">Account</th>
+                                    <th scope="col">Role</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col" class="r">Balance</th>
+                                    <th scope="col" class="r">Bids</th>
+                                    <th scope="col">Joined</th>
+                                    <th scope="col" class="r">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="u : ${users}">
+                                    <td class="cb"><input type="checkbox" class="userrowcb" name="ids" th:value="${u.id}"
+                                                          th:attr="aria-label='Select ' + ${u.username}"></td>
+                                    <td>
+                                        <div class="cellitem">
+                                            <span class="initials" style="background:#1a73e8"
+                                                  th:text="${#strings.toUpperCase(#strings.substring(u.username,0,1))}">U</span>
+                                            <span style="min-width:0">
+                                                <span class="cellitem__title" th:text="${u.username}">user</span>
+                                                <span class="cellitem__sub" th:text="${u.email}">email</span>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="chip chip-blue" th:if="${u.role == 'ROLE_ADMIN'}">Admin</span>
+                                        <span class="chip chip-neutral" th:if="${u.role == 'ROLE_USER'}">Bidder</span>
+                                        <span class="chip chip-red" th:if="${u.role == 'ROLE_BANNED'}">Banned</span>
+                                    </td>
+                                    <td>
+                                        <span class="chip chip-green" th:if="${u.role != 'ROLE_BANNED'}"><span class="dot"></span> Active</span>
+                                        <span class="chip chip-red" th:if="${u.role == 'ROLE_BANNED'}">
+                                            <span class="material-icons-outlined mi-xs" aria-hidden="true">block</span> Suspended</span>
+                                    </td>
+                                    <td class="r num" th:text="'$' + ${#numbers.formatDecimal(u.walletBalance, 1, 'COMMA', 2, 'POINT')}">$0</td>
+                                    <td class="r tabular"
+                                        th:text="${bidsPerUser != null and bidsPerUser.containsKey(u.id)} ? ${bidsPerUser.get(u.id)} : 0">0</td>
+                                    <td class="muted" th:text="${u.createdAt != null ? u.createdAt.format(dateFormatter) : '-'}">-</td>
+                                    <td>
+                                        <div class="rowact">
+                                            <button class="actbtn" type="submit" form="ban-${u.id}"
+                                                    th:attr="aria-label='Toggle access for ' + ${u.username}">
+                                                <span class="material-icons-outlined mi" aria-hidden="true">block</span>
+                                            </button>
+                                            <button class="actbtn" type="button" th:attr="data-balance-user=${u.username},data-balance-id=${u.id},aria-label='Adjust balance of ' + ${u.username}">
+                                                <span class="material-icons-outlined mi" aria-hidden="true">account_balance_wallet</span>
+                                            </button>
+                                            <button class="actbtn actbtn--danger" type="submit" form="del-${u.id}"
+                                                    th:attr="aria-label='Delete ' + ${u.username}">
+                                                <span class="material-icons-outlined mi" aria-hidden="true">delete</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                            <div class="empty" th:if="${users == null or users.isEmpty()}">
+                                <div class="empty__well" style="background:var(--blue-50);color:var(--blue-strong)">
+                                    <span class="material-icons-outlined mi-xl" aria-hidden="true">people</span>
+                                </div>
+                                <h3>No accounts match that filter</h3>
+                                <p>Switch back to all roles, or clear the search to see every account.</p>
+                            </div>
+                        </div>
+                    </form>
+
+                    <th:block th:each="u : ${users}">
+                        <form th:id="'ban-' + ${u.id}" th:action="@{'/admin/users/toggle/' + ${u.id}}" method="post"
+                              data-confirm="Ban or reinstate this account?" hidden></form>
+                        <form th:id="'del-' + ${u.id}" th:action="@{'/admin/users/delete/' + ${u.id}}" method="post"
+                              data-confirm="Delete this account permanently? This cannot be undone." hidden></form>
+                    </th:block>
+                </section>
+            </div>
+
+            <!-- ============================================================
+                 ANALYTICS
+                 ============================================================ -->
+            <div th:if="${activeTab == 'analytics'}">
+                <div class="pagehead reveal" style="--i:0">
+                    <div>
+                        <h1>Analytics</h1>
+                        <p class="muted" style="margin-top:6px">Settled value, category performance and the accounts driving volume.</p>
+                    </div>
+                    <div class="pagehead__actions">
+                        <a class="btn btn-secondary btn-sm" th:href="@{/admin/export/auctions.csv}">
+                            <span class="material-icons-outlined mi-sm" aria-hidden="true">download</span> Auctions CSV
+                        </a>
+                        <a class="btn btn-secondary btn-sm" th:href="@{/admin/export/users.csv}">
+                            <span class="material-icons-outlined mi-sm" aria-hidden="true">download</span> Users CSV
+                        </a>
+                    </div>
+                </div>
+
+                <section class="kpis reveal" style="--i:1" aria-label="Headline figures">
+                    <div class="kpi">
+                        <div class="kpi__top"><span class="kpi__well" style="background:var(--purple-50);color:var(--purple-600)"><span class="material-icons-outlined mi" aria-hidden="true">bar_chart</span></span><span class="kpi__label">Settled value</span></div>
+                        <p class="kpi__value" th:text="'$' + ${#numbers.formatDecimal(totalRevenue, 1, 'COMMA', 0, 'POINT')}">$0</p>
+                        <p class="kpi__foot">closed auctions only</p>
+                    </div>
+                    <div class="kpi">
+                        <div class="kpi__top"><span class="kpi__well" style="background:var(--amber-50);color:var(--amber-strong)"><span class="material-icons-outlined mi" aria-hidden="true">payments</span></span><span class="kpi__label">Total bids</span></div>
+                        <p class="kpi__value" th:text="${#numbers.formatDecimal(totalBids, 1, 'COMMA', 0, 'POINT')}">0</p>
+                        <p class="kpi__foot" th:text="${#numbers.formatDecimal(avgBidsPerAuction, 1, 'COMMA', 1, 'POINT')} + ' per auction'">0</p>
+                    </div>
+                    <div class="kpi">
+                        <div class="kpi__top"><span class="kpi__well" style="background:var(--blue-50);color:var(--blue-strong)"><span class="material-icons-outlined mi" aria-hidden="true">people</span></span><span class="kpi__label">Accounts</span></div>
+                        <p class="kpi__value" th:text="${totalUsers}">0</p>
+                        <p class="kpi__foot" th:text="'avg wallet $' + ${#numbers.formatDecimal(avgWallet, 1, 'COMMA', 0, 'POINT')}">avg</p>
+                    </div>
+                    <div class="kpi">
+                        <div class="kpi__top"><span class="kpi__well" style="background:var(--green-50);color:var(--green-strong)"><span class="material-icons-outlined mi" aria-hidden="true">account_balance_wallet</span></span><span class="kpi__label">Wallet float</span></div>
+                        <p class="kpi__value" th:text="'$' + ${#numbers.formatDecimal(walletFloat, 1, 'COMMA', 0, 'POINT')}">$0</p>
+                        <p class="kpi__foot">across all accounts</p>
+                    </div>
+                </section>
+
+                <div class="grid2 reveal" style="--i:2">
+                    <section class="chart__wrap" aria-labelledby="monthlyTitle">
+                        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:8px">
+                            <h2 id="monthlyTitle" style="font-size:15px;display:flex;align-items:center;gap:10px">
+                                <span class="material-icons-outlined mi" style="color:var(--g-text-secondary)" aria-hidden="true">show_chart</span>
+                                Settled value by month
+                            </h2>
+                            <span class="chip chip-neutral">Last 6 months</span>
+                        </div>
+                        <div class="bars" th:if="${monthlyRevenue != null and !monthlyRevenue.isEmpty()}">
+                            <div class="bars__col" th:each="m : ${monthlyRevenue}">
+                                <div class="bar bar--bids" style="height:2%"
+                                     th:attr="data-v=${m.value}" th:title="${m.key} + ': $' + ${#numbers.formatDecimal(m.value, 1, 'COMMA', 0, 'POINT')}"></div>
+                            </div>
+                        </div>
+                        <div class="bars__x" th:if="${monthlyRevenue != null and !monthlyRevenue.isEmpty()}">
+                            <span th:each="m : ${monthlyRevenue}" th:text="${m.key}">-</span>
+                        </div>
+                        <p class="muted" style="font-size:12px;padding:8px 4px 0">Bars are scaled to the highest month in the window.</p>
+                    </section>
+
+                    <section class="card" aria-labelledby="sellersTitle">
+                        <div class="card__head">
+                            <h3 id="sellersTitle"><span class="material-icons-outlined mi" aria-hidden="true">storefront</span> Top sellers</h3>
+                        </div>
+                        <div>
+                            <div class="feedrow" th:each="s : ${topSellers}">
+                                <span class="feedrow__icon" style="background:var(--g-blue-light);color:var(--blue-strong)">
+                                    <span class="material-icons-outlined mi-sm" aria-hidden="true">storefront</span>
+                                </span>
+                                <div class="feedrow__body">
+                                    <p class="feedrow__title" th:text="${s.key}">seller</p>
+                                    <p class="feedrow__text">listed value</p>
+                                </div>
+                                <span class="feedrow__time num" th:text="'$' + ${#numbers.formatDecimal(s.value, 1, 'COMMA', 0, 'POINT')}">$0</span>
+                            </div>
+                            <div class="empty" th:if="${topSellers == null or topSellers.isEmpty()}">
+                                <p class="muted">No listings with a recorded seller yet.</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="chart reveal" style="--i:3">
+                    <section class="card" aria-labelledby="catTitle">
+                        <div class="card__head"><h2 id="catTitle"><span class="material-icons-outlined mi" aria-hidden="true">category</span> Category performance</h2></div>
+                        <div class="mix">
+                            <div th:each="c : ${categoryBreakdown}">
+                                <div class="mix__top">
+                                    <strong th:text="${c.name}">Category</strong>
+                                    <span class="spacer" th:text="${c.count} + ' listings - ' + ${c.pct} + '%'">0</span>
+                                </div>
+                                <div class="mix__track"><div class="mix__fill" th:style="'width:' + ${c.pct} + '%'"></div></div>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="card" aria-labelledby="statTitle">
+                        <div class="card__head"><h2 id="statTitle"><span class="material-icons-outlined mi" aria-hidden="true">donut_small</span> Status split</h2></div>
+                        <div class="mix">
+                            <div th:each="s : ${statusBreakdown}">
+                                <div class="mix__top">
+                                    <strong th:text="${s.name}">Status</strong>
+                                    <span class="spacer" th:text="${s.count} + ' - ' + ${s.pct} + '%'">0</span>
+                                </div>
+                                <div class="mix__track">
+                                    <div class="mix__fill" th:classappend="${s.key == 'ACTIVE' ? 'mix__fill--green' : (s.key == 'CANCELLED' ? 'mix__fill--red' : '')}"
+                                         th:style="'width:' + ${s.pct} + '%'"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- ============================================================
+                 SETTINGS
+                 ============================================================ -->
+            <div th:if="${activeTab == 'settings'}">
+                <div class="pagehead reveal" style="--i:0">
+                    <div>
+                        <h1>Settings</h1>
+                        <p class="muted" style="margin-top:6px">Defaults applied to new accounts and listings.</p>
+                    </div>
+                </div>
+
+                <section class="card reveal" style="--i:1">
+                    <div class="card__head"><h2><span class="material-icons-outlined mi" aria-hidden="true">tune</span> Platform defaults</h2></div>
+                    <form th:action="@{/admin/settings}" method="post" style="padding:18px 20px">
+                        <div class="formgrid">
+                            <div>
+                                <label class="flabel" for="siteName">Site name</label>
+                                <input class="finput" id="siteName" name="siteName" value="AuctionHouse" required>
+                            </div>
+                            <div>
+                                <label class="flabel" for="adminEmail">Administrator email</label>
+                                <input class="finput" id="adminEmail" name="adminEmail" type="email"
+                                       th:value="${admin != null ? admin.email : 'admin@auctionhouse.local'}" required>
+                            </div>
+                            <div>
+                                <label class="flabel" for="defaultBalance">Starting wallet balance ($)</label>
+                                <input class="finput" id="defaultBalance" name="defaultBalance" type="number" step="100" min="0" value="100000" required>
+                                <p class="fhelp">Applied when an account is created from the console or by registration.</p>
+                            </div>
+                            <div>
+                                <label class="flabel" for="defaultDuration">Default auction duration (minutes)</label>
+                                <input class="finput" id="defaultDuration" name="defaultDuration" type="number" step="15" min="15" value="1440" required>
+                                <p class="fhelp">Used as the starting value on the create-auction form.</p>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;align-items:center">
+                            <button class="btn btn-primary" type="submit">
+                                <span class="material-icons-outlined mi-sm" aria-hidden="true">save</span> Save settings
+                            </button>
+                            <span class="muted" style="font-size:12px">Values are validated and echoed back; wire them to a settings table to persist.</span>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="card reveal" style="--i:2">
+                    <div class="card__head"><h2><span class="material-icons-outlined mi" aria-hidden="true">download</span> Data exports</h2></div>
+                    <div style="padding:18px 20px;display:flex;gap:10px;flex-wrap:wrap">
+                        <a class="btn btn-secondary btn-sm" th:href="@{/admin/export/auctions.csv}">All auctions (CSV)</a>
+                        <a class="btn btn-secondary btn-sm" th:href="@{/admin/export/users.csv}">All accounts (CSV)</a>
+                    </div>
+                </section>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- ===================== NEW ACCOUNT MODAL ===================== -->
+<div class="scrim" id="newUserScrim" hidden></div>
+<div class="modal" id="newUserModal" hidden role="dialog" aria-modal="true" aria-labelledby="newUserTitle">
+    <h3 id="newUserTitle">Create an account</h3>
+    <p class="muted" style="font-size:13px">The account starts with the platform default balance.</p>
+    <form th:action="@{/admin/users/create}" method="post" id="newUserForm">
+        <div class="modal__field">
+            <label class="flabel" for="nuUsername">Username</label>
+            <input class="finput" id="nuUsername" name="username" required minlength="3" maxlength="50">
+        </div>
+        <div class="modal__field">
+            <label class="flabel" for="nuEmail">Email</label>
+            <input class="finput" id="nuEmail" name="email" type="email" required>
+        </div>
+        <div class="modal__field">
+            <label class="flabel" for="nuPassword">Temporary password</label>
+            <input class="finput" id="nuPassword" name="password" type="text" required minlength="6" value="password123">
+        </div>
+        <div class="modal__field">
+            <label class="flabel" for="nuRole">Role</label>
+            <select class="finput" id="nuRole" name="role">
+                <option value="ROLE_USER">Bidder</option>
+                <option value="ROLE_ADMIN">Administrator</option>
+            </select>
+        </div>
+        <div class="modal__actions">
+            <button class="btn btn-secondary" type="button" id="newUserCancel">Cancel</button>
+            <button class="btn btn-primary" type="submit">Create account</button>
+        </div>
+    </form>
+</div>
+
+<!-- ===================== BALANCE MODAL ===================== -->
+<div class="scrim" id="balanceScrim" hidden></div>
+<div class="modal" id="balanceModal" hidden role="dialog" aria-modal="true" aria-labelledby="balanceTitle">
+    <h3 id="balanceTitle">Adjust wallet balance</h3>
+    <p class="muted" style="font-size:13px">Use a negative amount to deduct.</p>
+    <form th:action="@{/admin/users/balance/0}" method="post" id="balanceForm">
+        <div class="modal__field">
+            <label class="flabel" for="balanceAmount">Amount ($)</label>
+            <input class="finput" id="balanceAmount" name="amount" type="number" step="0.01" value="50000" required>
+        </div>
+        <div class="modal__actions">
+            <button class="btn btn-secondary" type="button" id="balanceCancel">Cancel</button>
+            <button class="btn btn-primary" type="submit">Apply</button>
+        </div>
+    </form>
+</div>
+
+<!-- ===================== CONFIRM MODAL ===================== -->
+<div class="scrim" id="confirmScrim" hidden></div>
+<div class="modal" id="confirmModal" hidden role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <h3 id="confirmTitle">Please confirm</h3>
+    <p class="muted" id="confirmText" style="font-size:13px"></p>
+    <div class="modal__actions">
+        <button class="btn btn-secondary" type="button" id="confirmCancel">Cancel</button>
+        <button class="btn btn-danger" type="button" id="confirmOk">Confirm</button>
+    </div>
+</div>
+
+<div class="toast" id="toast" hidden role="status">
+    <span class="material-icons-outlined mi-sm" aria-hidden="true">check_circle</span>
+    <span id="toastText"></span>
+</div>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="footer">
+    <div class="footer__in">
+        <div style="display:flex;align-items:center;gap:12px">
+            <span style="width:32px;height:32px;border-radius:8px;background:var(--g-blue);display:grid;place-items:center;color:#fff">
+                <span class="material-icons-outlined mi-sm" aria-hidden="true">gavel</span>
+            </span>
+            <div>
+                <span style="font-family:var(--font-display);font-weight:500;font-size:14px">AuctionHouse Admin</span>
+                <p class="muted" style="font-size:11px">Modern auction platform</p>
+            </div>
+        </div>
+        <div style="text-align:right">
+            <p style="font-size:12px;font-weight:500">Designed &amp; Developed by <span style="color:var(--g-blue);font-weight:600">Saqlain</span></p>
+            <p class="muted" style="font-size:11px;margin-top:2px">Built with Spring Boot · Java OOP · Thymeleaf</p>
         </div>
     </div>
+</footer>
 
-    <!-- Create User Modal -->
-    <div id="createUserModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md shadow-g-md animate-fade-in">
-            <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-                <h3 class="font-bold text-lg text-gray-800">Create New User</h3>
-                <button onclick="toggleCreateUserModal()" class="p-1 hover:bg-gray-100 rounded-lg">
-                    <span class="material-icons-outlined text-gray-500">close</span>
-                </button>
-            </div>
-            <form th:action="@{/admin/users/create}" method="post" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Username</label>
-                    <input type="text" name="username" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter username">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
-                    <input type="email" name="email" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="user@example.com">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
-                    <input type="password" name="password" required minlength="6" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Minimum 6 characters">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Role</label>
-                    <select name="role" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        <option value="ROLE_USER">User (Regular bidder)</option>
-                        <option value="ROLE_ADMIN">Admin (Full access)</option>
-                    </select>
-                </div>
-                <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="toggleCreateUserModal()" class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium">Cancel</button>
-                    <button type="submit" class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium">Create User</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<script th:inline="none">
+    (function () {
+        "use strict";
 
-    <!-- ==================== ANALYTICS TAB ==================== -->
-    <div th:if="${activeTab == 'analytics'}" class="p-8">
-        <h2 class="text-3xl font-bold text-gray-800 mb-8">Analytics & Reports</h2>
-
-        <!-- Stats -->
-        <div class="grid grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-g-sm">
-                <p class="text-gray-600 text-sm mb-1">Total Revenue</p>
-                <p class="text-2xl font-bold text-gray-800">$<span th:text="${#numbers.formatDecimal(totalRevenue, 1, 'COMMA', 0, 'POINT')}">0</span></p>
-            </div>
-            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-g-sm">
-                <p class="text-gray-600 text-sm mb-1">Total Bids</p>
-                <p class="text-2xl font-bold text-gray-800" th:text="${totalBids}">0</p>
-            </div>
-            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-g-sm">
-                <p class="text-gray-600 text-sm mb-1">Avg Bids/Auction</p>
-                <p class="text-2xl font-bold text-gray-800" th:text="${#numbers.formatDecimal(avgBidPerAuction, 1, 'COMMA', 1, 'POINT')}">0</p>
-            </div>
-            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-g-sm">
-                <p class="text-gray-600 text-sm mb-1">Total Users</p>
-                <p class="text-2xl font-bold text-gray-800" th:text="${totalUsers}">0</p>
-            </div>
-        </div>
-
-        <!-- Charts -->
-        <div class="grid grid-cols-2 gap-6 mb-8">
-            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-g-sm">
-                <h3 class="font-bold text-lg text-gray-800 mb-6">Revenue Trend</h3>
-                <canvas id="analyticsRevenueChart" height="200"></canvas>
-            </div>
-            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-g-sm">
-                <h3 class="font-bold text-lg text-gray-800 mb-6">Auction Status Distribution</h3>
-                <canvas id="statusChart" height="200"></canvas>
-            </div>
-        </div>
-
-        <!-- Top Bidders -->
-        <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-g-sm">
-            <h3 class="font-bold text-lg text-gray-800 mb-4">Top Bidders</h3>
-            <div class="space-y-3">
-                <div th:each="entry, stat : ${topBidders}" class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm"
-                         th:classappend="${stat.index == 0} ? 'bg-yellow-100 text-yellow-700' : (${stat.index == 1} ? 'bg-gray-200 text-gray-700' : (${stat.index == 2} ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-600'))"
-                         th:text="${stat.index + 1}">1</div>
-                    <span class="font-semibold text-gray-800 flex-1" th:text="${entry.key}">Username</span>
-                    <span class="font-bold text-blue-600" th:text="${entry.value} + ' bids'">0 bids</span>
-                </div>
-                <div th:if="${#maps.isEmpty(topBidders)}" class="text-center text-gray-400 py-4">No bids yet</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ==================== SETTINGS TAB ==================== -->
-    <div th:if="${activeTab == 'settings'}" class="p-8">
-        <h2 class="text-3xl font-bold text-gray-800 mb-8">Site Settings</h2>
-        <div class="max-w-2xl">
-            <form th:action="@{/admin/settings}" method="post">
-                <div class="bg-white rounded-xl p-8 border border-gray-200 shadow-g-sm space-y-6">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Site Name</label>
-                        <input type="text" name="siteName" value="AuctionHouse" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Admin Email</label>
-                        <input type="email" name="adminEmail" th:value="${admin.email}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Default Starting Balance ($)</label>
-                        <input type="number" name="defaultBalance" value="100000" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Default Auction Duration (days)</label>
-                        <input type="number" name="defaultDuration" value="7" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium flex items-center gap-2">
-                        <span class="material-icons-outlined" style="font-size: 18px;">save</span>
-                        Save Settings
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
-    </style>
-    <script th:inline="javascript">
-        /*<![CDATA[*/
-        var activeTab = /*[[${activeTab}]]*/ 'dashboard';
-        var categoryStats = /*[[${categoryStats}]]*/ {};
-        var monthlyRevenue = /*[[${monthlyRevenue}]]*/ {};
-        var statusStats = /*[[${statusStats}]]*/ {};
-        /*]]>*/
-
-        // Profile dropdown toggle
-        function toggleProfileMenu() {
-            var menu = document.getElementById('profileMenu');
-            menu.classList.toggle('hidden');
+        /* ---------- account menu ---------- */
+        var avatarBtn = document.getElementById('avatarBtn');
+        var accountMenu = document.getElementById('accountMenu');
+        function closeMenu() {
+            if (!accountMenu || accountMenu.hidden) return;
+            accountMenu.hidden = true;
+            avatarBtn.setAttribute('aria-expanded', 'false');
         }
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            var dropdown = document.getElementById('profileDropdown');
-            var menu = document.getElementById('profileMenu');
-            if (dropdown && !dropdown.contains(e.target)) {
-                menu.classList.add('hidden');
-            }
+        if (avatarBtn && accountMenu) {
+            avatarBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var open = accountMenu.hidden;
+                accountMenu.hidden = !open;
+                avatarBtn.setAttribute('aria-expanded', String(open));
+            });
+            document.addEventListener('click', function (e) {
+                if (!accountMenu.hidden && !accountMenu.contains(e.target) && !avatarBtn.contains(e.target)) closeMenu();
+            });
+        }
+
+        /* ---------- drawer ---------- */
+        var drawer = document.getElementById('drawer');
+        var scrim = document.getElementById('scrim');
+        var menuBtn = document.getElementById('menuBtn');
+        var drawerClose = document.getElementById('drawerClose');
+        function openDrawer() {
+            drawer.hidden = false; scrim.hidden = false;
+            menuBtn.setAttribute('aria-expanded', 'true');
+            document.body.style.overflow = 'hidden';
+            if (drawerClose) drawerClose.focus();
+        }
+        function closeDrawer() {
+            if (drawer.hidden) return;
+            drawer.hidden = true; scrim.hidden = true;
+            menuBtn.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+        }
+        if (menuBtn) {
+            menuBtn.addEventListener('click', openDrawer);
+            scrim.addEventListener('click', closeDrawer);
+            if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+        }
+
+        /* ---------- countdowns from server time remaining ---------- */
+        var timers = [].slice.call(document.querySelectorAll('.timer[data-sec]'));
+        timers.forEach(function (el) {
+            el._end = Date.now() + (parseInt(el.getAttribute('data-sec'), 10) || 0) * 1000;
+        });
+        function fmt(sec) {
+            if (sec <= 0) return 'Ended';
+            var d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600);
+            var m = Math.floor((sec % 3600) / 60), s = sec % 60;
+            if (d > 0) return d + 'd ' + String(h).padStart(2, '0') + 'h';
+            if (h > 0) return h + 'h ' + String(m).padStart(2, '0') + 'm';
+            return m + 'm ' + String(s).padStart(2, '0') + 's';
+        }
+        function paintTimers() {
+            var now = Date.now();
+            timers.forEach(function (el) {
+                var sec = Math.max(0, Math.round((el._end - now) / 1000));
+                el.textContent = fmt(sec);
+                el.classList.toggle('urgent', sec > 0 && sec < 3600);
+            });
+        }
+        if (timers.length) {
+            paintTimers();
+            setInterval(paintTimers, 1000);
+            document.addEventListener('visibilitychange', function () { if (!document.hidden) paintTimers(); });
+        }
+
+        /* ---------- toast ---------- */
+        var toastEl = document.getElementById('toast');
+        var toastText = document.getElementById('toastText');
+        var toastTimer = null;
+        function toast(msg) {
+            if (!toastEl) return;
+            toastText.textContent = msg;
+            toastEl.hidden = false;
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function () { toastEl.hidden = true; }, 4000);
+        }
+
+        /* ---------- confirm modal for destructive submits ---------- */
+        var confirmModal = document.getElementById('confirmModal');
+        var confirmScrim = document.getElementById('confirmScrim');
+        var confirmText = document.getElementById('confirmText');
+        var confirmOk = document.getElementById('confirmOk');
+        var confirmCancel = document.getElementById('confirmCancel');
+        var pendingForm = null;
+        function openConfirm(form, message) {
+            pendingForm = form;
+            confirmText.textContent = message;
+            confirmModal.hidden = false; confirmScrim.hidden = false;
+            confirmOk.focus();
+        }
+        function closeConfirm() {
+            confirmModal.hidden = true; confirmScrim.hidden = true; pendingForm = null;
+        }
+        if (confirmModal) {
+            confirmCancel.addEventListener('click', closeConfirm);
+            confirmScrim.addEventListener('click', closeConfirm);
+            confirmOk.addEventListener('click', function () {
+                var f = pendingForm;
+                closeConfirm();
+                if (f) { f.removeAttribute('data-confirm'); f.submit(); }
+            });
+        }
+        [].slice.call(document.querySelectorAll('form[data-confirm]')).forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                if (e.defaultPrevented) return;
+                e.preventDefault();
+                openConfirm(form, form.getAttribute('data-confirm'));
+            });
         });
 
-        // Create user modal toggle
-        function toggleCreateUserModal() {
-            var modal = document.getElementById('createUserModal');
-            modal.classList.toggle('hidden');
+        /* ---------- bulk selection (auctions) ---------- */
+        function wireBulk(boxClass, selAllId, barId, countId, clearId) {
+            var boxes = [].slice.call(document.querySelectorAll('.' + boxClass));
+            var selAll = document.getElementById(selAllId);
+            var bar = document.getElementById(barId);
+            var count = document.getElementById(countId);
+            var clear = document.getElementById(clearId);
+            if (!boxes.length) return;
+            function visible() { return boxes.filter(function (b) { return !b.closest('tr').hidden; }); }
+            function selected() { return boxes.filter(function (b) { return b.checked; }); }
+            function sync() {
+                var sel = selected();
+                if (bar) bar.hidden = sel.length === 0;
+                if (count) count.textContent = String(sel.length);
+                if (selAll) selAll.checked = visible().length > 0 && sel.length === visible().length;
+            }
+            boxes.forEach(function (b) { b.addEventListener('change', sync); });
+            if (selAll) selAll.addEventListener('change', function () {
+                visible().forEach(function (b) { b.checked = selAll.checked; });
+                sync();
+            });
+            if (clear) clear.addEventListener('click', function () {
+                boxes.forEach(function (b) { b.checked = false; });
+                if (selAll) selAll.checked = false;
+                sync();
+            });
+            sync();
+        }
+        wireBulk('rowcb', 'selAll', 'bulkbar', 'bulkCount', 'bulkClear');
+        wireBulk('userrowcb', 'userSelAll', 'userBulkbar', 'userBulkCount', 'userBulkClear');
+
+        /* ---------- create account ---------- */
+        var newUserBtn = document.getElementById('newUserBtn');
+        var newUserModal = document.getElementById('newUserModal');
+        var newUserScrim = document.getElementById('newUserScrim');
+        var newUserCancel = document.getElementById('newUserCancel');
+        if (newUserBtn) {
+            newUserBtn.addEventListener('click', function () {
+                newUserModal.hidden = false; newUserScrim.hidden = false;
+                document.getElementById('nuUsername').focus();
+            });
+            function closeNewUser() { newUserModal.hidden = true; newUserScrim.hidden = true; }
+            newUserCancel.addEventListener('click', closeNewUser);
+            newUserScrim.addEventListener('click', closeNewUser);
         }
 
-        // Charts
-        document.addEventListener('DOMContentLoaded', function() {
-            if (activeTab === 'dashboard' || activeTab === 'analytics') {
-                // Revenue Chart
-                var revenueId = activeTab === 'dashboard' ? 'revenueChart' : 'analyticsRevenueChart';
-                var revenueCanvas = document.getElementById(revenueId);
-                if (revenueCanvas && monthlyRevenue && Object.keys(monthlyRevenue).length > 0) {
-                    new Chart(revenueCanvas.getContext('2d'), {
-                        type: 'line',
-                        data: {
-                            labels: Object.keys(monthlyRevenue),
-                            datasets: [{
-                                label: 'Revenue',
-                                data: Object.values(monthlyRevenue),
-                                borderColor: '#3b82f6',
-                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                tension: 0.4, fill: true, borderWidth: 3
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: { legend: { display: false } },
-                            scales: {
-                                y: { beginAtZero: true, grid: { color: '#f3f4f6' }, ticks: { callback: function(v) { return '$' + (v / 1000) + 'K'; } } },
-                                x: { grid: { display: false } }
-                            }
-                        }
-                    });
-                }
+        /* ---------- balance adjust ---------- */
+        var balanceModal = document.getElementById('balanceModal');
+        var balanceScrim = document.getElementById('balanceScrim');
+        var balanceForm = document.getElementById('balanceForm');
+        var balanceCancel = document.getElementById('balanceCancel');
+        if (balanceModal) {
+            document.addEventListener('click', function (e) {
+                var btn = e.target.closest ? e.target.closest('[data-balance-id]') : null;
+                if (!btn) return;
+                balanceForm.setAttribute('action', '/admin/users/balance/' + btn.getAttribute('data-balance-id'));
+                document.getElementById('balanceTitle').textContent = 'Adjust balance for ' + btn.getAttribute('data-balance-user');
+                balanceModal.hidden = false; balanceScrim.hidden = false;
+                document.getElementById('balanceAmount').focus();
+            });
+            function closeBalance() { balanceModal.hidden = true; balanceScrim.hidden = true; }
+            balanceCancel.addEventListener('click', closeBalance);
+            balanceScrim.addEventListener('click', closeBalance);
+        }
 
-                // Category Chart (dashboard)
-                var categoryCanvas = document.getElementById('categoryChart');
-                if (categoryCanvas && categoryStats && Object.keys(categoryStats).length > 0) {
-                    new Chart(categoryCanvas.getContext('2d'), {
-                        type: 'doughnut',
-                        data: {
-                            labels: Object.keys(categoryStats),
-                            datasets: [{
-                                data: Object.values(categoryStats),
-                                backgroundColor: ['#3b82f6', '#a855f7', '#10b981', '#f59e0b', '#ef4444', '#6b7280'],
-                                borderWidth: 0
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: { legend: { position: 'bottom', labels: { padding: 20 } } }
-                        }
-                    });
-                }
+        /* ---------- analytics: scale the monthly bars in the browser ---------- */
+        var monthly = [].slice.call(document.querySelectorAll('#monthlyTitle ~ .bars .bar'));
+        if (monthly.length) {
+            var max = 0;
+            monthly.forEach(function (b) { max = Math.max(max, parseFloat(b.getAttribute('data-v')) || 0); });
+            monthly.forEach(function (b) {
+                var v = parseFloat(b.getAttribute('data-v')) || 0;
+                b.style.height = (max === 0 ? 2 : Math.max(2, Math.round(v / max * 100))) + '%';
+            });
+        }
 
-                // Status Chart (analytics)
-                var statusCanvas = document.getElementById('statusChart');
-                if (statusCanvas && statusStats && Object.keys(statusStats).length > 0) {
-                    new Chart(statusCanvas.getContext('2d'), {
-                        type: 'pie',
-                        data: {
-                            labels: Object.keys(statusStats),
-                            datasets: [{
-                                data: Object.values(statusStats),
-                                backgroundColor: ['#10b981', '#6b7280', '#ef4444'],
-                                borderWidth: 0
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: { legend: { position: 'bottom', labels: { padding: 20 } } }
-                        }
-                    });
-                }
-            }
+        /* ---------- escape closes dialogs ---------- */
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape') return;
+            closeMenu();
+            if (drawer && !drawer.hidden) closeDrawer();
+            if (confirmModal && !confirmModal.hidden) closeConfirm();
+            if (newUserModal && !newUserModal.hidden) { newUserModal.hidden = true; newUserScrim.hidden = true; }
+            if (balanceModal && !balanceModal.hidden) { balanceModal.hidden = true; balanceScrim.hidden = true; }
         });
-    </script>
-    <div th:replace="~{fragments/layout :: scripts}"></div>
+    })();
+</script>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
 </body>
 </html>

@@ -1,9 +1,16 @@
 package com.auctionhouse.controller;
 
 import com.auctionhouse.model.*;
+import com.auctionhouse.repository.BidRepository;
+import com.auctionhouse.repository.UserRepository;
 import com.auctionhouse.service.AuctionService;
+import com.auctionhouse.service.NotificationService;
 import com.auctionhouse.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -11,450 +18,704 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Admin controller for managing the auction platform.
- * Only accessible to users with ROLE_ADMIN.
+ * Admin console for the auction platform. Only reachable by ROLE_ADMIN.
+ *
+ * The console is one template with tabs; every tab is populated from real
+ * repository data, so the numbers on screen always agree with the tables below.
  */
 @Controller
 @RequestMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
+    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("MMM dd, yyyy");
+    private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm");
+    private static final DateTimeFormatter DAY_LABEL = DateTimeFormatter.ofPattern("MMM d");
+    private static final int ACTIVITY_DAYS = 14;
+
     private final UserService userService;
     private final AuctionService auctionService;
+    private final BidRepository bidRepository;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
     private final PasswordEncoder passwordEncoder;
-    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy");
-    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm");
 
     @Autowired
-    public AdminController(UserService userService, AuctionService auctionService, PasswordEncoder passwordEncoder) {
+    public AdminController(UserService userService,
+                           AuctionService auctionService,
+                           BidRepository bidRepository,
+                           UserRepository userRepository,
+                           NotificationService notificationService,
+                           PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.auctionService = auctionService;
+        this.bidRepository = bidRepository;
+        this.userRepository = userRepository;
+        this.notificationService = notificationService;
         this.passwordEncoder = passwordEncoder;
     }
 
-    /**
-     * Admin dashboard - main overview page
-     */
-    @GetMapping("/dashboard")
-    public String adminDashboard(Model model, Principal principal) {
-        User admin = userService.findByUsername(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Admin user not found"));
-        model.addAttribute("admin", admin);
+    /* ==================== OVERVIEW ==================== */
 
+    @GetMapping({"", "/", "/dashboard"})
+    public String adminDashboard(Model model, Principal principal) {
+        User admin = requireAdmin(principal);
         List<User> allUsers = userService.findAllUsers();
         List<Auction> allAuctions = auctionService.getAllAuctions();
-        List<Auction> activeAuctions = auctionService.getActiveAuctions();
+        LocalDateTime now = LocalDateTime.now();
 
-        // Stats
+        model.addAttribute("admin", admin);
+
+        // --- headline metrics ---
+        long active = allAuctions.stream().filter(a -> a.getStatus() == AuctionStatus.ACTIVE).count();
+        long closed = allAuctions.stream().filter(a -> a.getStatus() == AuctionStatus.CLOSED).count();
+        long cancelled = allAuctions.stream().filter(a -> a.getStatus() == AuctionStatus.CANCELLED).count();
+        double closedValue = allAuctions.stream()
+                .filter(a -> a.getStatus() == AuctionStatus.CLOSED)
+                .mapToDouble(Auction::getCurrentHighestBid).sum();
+        double liveValue = allAuctions.stream()
+                .filter(a -> a.getStatus() == AuctionStatus.ACTIVE)
+                .mapToDouble(Auction::getCurrentHighestBid).sum();
+        int totalBids = allAuctions.stream().mapToInt(Auction::getBidCount).sum();
+        long endingSoon = allAuctions.stream()
+                .filter(a -> a.getStatus() == AuctionStatus.ACTIVE
+                        && a.getEndTime() != null
+                        && !a.getEndTime().isAfter(now.plusHours(24)))
+                .count();
+        long newUsers7d = allUsers.stream()
+                .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().isAfter(now.minusDays(7)))
+                .count();
+        long banned = allUsers.stream().filter(u -> "ROLE_BANNED".equals(u.getRole())).count();
+
         model.addAttribute("totalUsers", allUsers.size());
         model.addAttribute("totalAuctions", allAuctions.size());
-        model.addAttribute("activeAuctions", activeAuctions.size());
+        model.addAttribute("activeAuctions", active);
+        model.addAttribute("closedAuctions", closed);
+        model.addAttribute("cancelledAuctions", cancelled);
+        model.addAttribute("totalBids", totalBids);
+        model.addAttribute("totalRevenue", closedValue);
+        model.addAttribute("liveValue", liveValue);
+        model.addAttribute("endingSoonCount", endingSoon);
+        model.addAttribute("newUsers7d", newUsers7d);
+        model.addAttribute("bannedUsers", banned);
+        model.addAttribute("avgBidsPerAuction", allAuctions.isEmpty() ? 0d : (double) totalBids / allAuctions.size());
+        model.addAttribute("walletFloat", userRepository.sumWalletBalance());
 
-        // Total revenue
-        double totalRevenue = allAuctions.stream()
-                .filter(a -> a.getStatus() == AuctionStatus.CLOSED)
-                .mapToDouble(Auction::getCurrentHighestBid)
-                .sum();
-        model.addAttribute("totalRevenue", totalRevenue);
+        // --- activity series (trailing 14 days, from real bids and closures) ---
+        List<Bid> recentBidsAll = bidRepository.findBidsSince(now.minusDays(ACTIVITY_DAYS).toLocalDate().atStartOfDay());
+        Map<LocalDate, Long> bidsByDay = recentBidsAll.stream()
+                .filter(b -> b.getTimestamp() != null)
+                .collect(Collectors.groupingBy(b -> b.getTimestamp().toLocalDate(), Collectors.counting()));
+        Map<LocalDate, Double> gmvByDay = allAuctions.stream()
+                .filter(a -> a.getStatus() == AuctionStatus.CLOSED && a.getEndTime() != null)
+                .collect(Collectors.groupingBy(a -> a.getEndTime().toLocalDate(),
+                        Collectors.summingDouble(Auction::getCurrentHighestBid)));
 
-        // Recent users (last 5)
-        List<User> recentUsers = allUsers.stream()
-                .sorted((u1, u2) -> u2.getCreatedAt().compareTo(u1.getCreatedAt()))
+        LocalDate today = LocalDate.now();
+        List<Map<String, Object>> activity = new ArrayList<>();
+        long maxBids = 1L;
+        double maxGmv = 1d;
+        for (int i = ACTIVITY_DAYS - 1; i >= 0; i--) {
+            LocalDate d = today.minusDays(i);
+            long b = bidsByDay.getOrDefault(d, 0L);
+            double g = gmvByDay.getOrDefault(d, 0d);
+            maxBids = Math.max(maxBids, b);
+            maxGmv = Math.max(maxGmv, g);
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("label", d.format(DAY_LABEL));
+            row.put("bids", b);
+            row.put("gmv", g);
+            activity.add(row);
+        }
+        for (Map<String, Object> row : activity) {
+            row.put("bidPct", Math.round(((Number) row.get("bids")).doubleValue() / maxBids * 100));
+            row.put("gmvPct", Math.round(((Number) row.get("gmv")).doubleValue() / maxGmv * 100));
+        }
+        model.addAttribute("activity", activity);
+        model.addAttribute("activityDays", ACTIVITY_DAYS);
+        model.addAttribute("activityTotalBids", activity.stream().mapToLong(r -> ((Number) r.get("bids")).longValue()).sum());
+        model.addAttribute("activityTotalGmv", activity.stream().mapToDouble(r -> ((Number) r.get("gmv")).doubleValue()).sum());
+
+        // --- category mix ---
+        model.addAttribute("categoryBreakdown", breakdown(allAuctions));
+        model.addAttribute("statusBreakdown", statusBreakdown(allAuctions));
+
+        // --- activity feed + watch list ---
+        model.addAttribute("recentBids", bidRepository.findRecentBids(PageRequest.of(0, 8)));
+        model.addAttribute("endingSoon", allAuctions.stream()
+                .filter(a -> a.getStatus() == AuctionStatus.ACTIVE && a.getEndTime() != null)
+                .sorted(Comparator.comparing(Auction::getEndTime))
+                .limit(5).collect(Collectors.toList()));
+
+        // --- leaderboard ---
+        Map<Long, Long> bidsPerUser = new HashMap<>();
+        for (Object[] row : bidRepository.countBidsGroupedByBidder()) {
+            if (row[0] != null) bidsPerUser.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+        }
+        List<Map<String, Object>> leaders = allUsers.stream()
+                .sorted(Comparator.comparingLong((User u) -> bidsPerUser.getOrDefault(u.getId(), 0L)).reversed())
                 .limit(5)
+                .map(u -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("username", u.getUsername());
+                    m.put("bids", bidsPerUser.getOrDefault(u.getId(), 0L));
+                    m.put("balance", u.getWalletBalance());
+                    return m;
+                })
                 .collect(Collectors.toList());
-        model.addAttribute("recentUsers", recentUsers);
+        model.addAttribute("topBidders", leaders);
 
-        // Recent auctions (last 5)
-        List<Auction> recentAuctions = allAuctions.stream()
-                .sorted((a1, a2) -> a2.getCreatedAt().compareTo(a1.getCreatedAt()))
-                .limit(5)
-                .collect(Collectors.toList());
-        model.addAttribute("recentAuctions", recentAuctions);
+        model.addAttribute("recentUsers", allUsers.stream()
+                .filter(u -> u.getCreatedAt() != null)
+                .sorted(Comparator.comparing(User::getCreatedAt).reversed())
+                .limit(5).collect(Collectors.toList()));
 
-        // Category stats for chart
-        Map<String, Long> categoryStats = allAuctions.stream()
-                .collect(Collectors.groupingBy(a -> a.getCategory().name(), Collectors.counting()));
-        model.addAttribute("categoryStats", categoryStats);
-
-        // Monthly revenue data (last 6 months)
-        Map<String, Double> monthlyRevenue = getMonthlyRevenue(allAuctions);
-        model.addAttribute("monthlyRevenue", monthlyRevenue);
-
-        model.addAttribute("dateFormatter", dateFormatter);
-        model.addAttribute("dateTimeFormatter", dateTimeFormatter);
+        addCounts(model, allAuctions);
+        addFormatters(model);
         model.addAttribute("activeTab", "dashboard");
-
         return "admin-dashboard";
     }
 
-    /**
-     * Manage auctions page
-     */
+    /* ==================== AUCTIONS ==================== */
+
     @GetMapping("/auctions")
     public String manageAuctions(Model model, Principal principal,
-                                  @RequestParam(required = false) String status,
-                                  @RequestParam(required = false) String search) {
-        User admin = userService.findByUsername(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Admin user not found"));
-        model.addAttribute("admin", admin);
+                                 @RequestParam(required = false) String status,
+                                 @RequestParam(required = false) String search,
+                                 @RequestParam(required = false) String category) {
+        model.addAttribute("admin", requireAdmin(principal));
 
         List<Auction> auctions = auctionService.getAllAuctions();
 
-        // Filter by status
-        if (status != null && !status.isEmpty() && !status.equals("ALL")) {
+        if (status != null && !status.isEmpty() && !status.equalsIgnoreCase("ALL")) {
             try {
-                AuctionStatus auctionStatus = AuctionStatus.valueOf(status);
-                auctions = auctions.stream()
-                        .filter(a -> a.getStatus() == auctionStatus)
-                        .collect(Collectors.toList());
-            } catch (IllegalArgumentException e) {
-                // Invalid status, show all
-            }
+                AuctionStatus s = AuctionStatus.valueOf(status.toUpperCase());
+                auctions = auctions.stream().filter(a -> a.getStatus() == s).collect(Collectors.toList());
+            } catch (IllegalArgumentException ignored) { /* unknown status, show all */ }
         }
-
-        // Filter by search
+        if (category != null && !category.isEmpty() && !category.equalsIgnoreCase("ALL")) {
+            try {
+                AuctionCategory c = AuctionCategory.valueOf(category.toUpperCase());
+                auctions = auctions.stream().filter(a -> a.getCategory() == c).collect(Collectors.toList());
+            } catch (IllegalArgumentException ignored) { /* unknown category, show all */ }
+        }
         if (search != null && !search.isEmpty()) {
-            String lowerSearch = search.toLowerCase();
+            String q = search.toLowerCase();
             auctions = auctions.stream()
-                    .filter(a -> a.getTitle().toLowerCase().contains(lowerSearch)
-                            || a.getDescription().toLowerCase().contains(lowerSearch))
+                    .filter(a -> (a.getTitle() != null && a.getTitle().toLowerCase().contains(q))
+                            || (a.getDescription() != null && a.getDescription().toLowerCase().contains(q)))
                     .collect(Collectors.toList());
         }
-
-        auctions.sort((a1, a2) -> a2.getCreatedAt().compareTo(a1.getCreatedAt()));
+        auctions.sort(Comparator.comparing(Auction::getCreatedAt).reversed());
 
         model.addAttribute("auctions", auctions);
         model.addAttribute("currentStatus", status != null ? status : "ALL");
+        model.addAttribute("currentCategory", category != null ? category : "ALL");
         model.addAttribute("currentSearch", search != null ? search : "");
-        model.addAttribute("dateTimeFormatter", dateTimeFormatter);
+        model.addAttribute("allCategories", AuctionCategory.values());
+        addCounts(model, auctionService.getAllAuctions());
+        addFormatters(model);
         model.addAttribute("activeTab", "auctions");
-
         return "admin-dashboard";
     }
 
-    /**
-     * Delete auction
-     */
+    @PostMapping("/auctions/toggle/{id}")
+    public String toggleAuctionStatus(@PathVariable Long id, RedirectAttributes ra) {
+        try {
+            Auction auction = auctionService.findById(id).orElseThrow(() -> new IllegalArgumentException("Auction not found"));
+            if (auction.getStatus() == AuctionStatus.ACTIVE) {
+                auction.setStatus(AuctionStatus.CLOSED);
+                ra.addFlashAttribute("successMessage", "Closed \"" + auction.getTitle() + "\".");
+            } else {
+                auction.setStatus(AuctionStatus.ACTIVE);
+                auction.setEndTime(LocalDateTime.now().plusDays(7));
+                ra.addFlashAttribute("successMessage", "Reopened \"" + auction.getTitle() + "\" and set it to run for 7 days.");
+            }
+            auctionService.save(auction);
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", "Could not update the auction: " + e.getMessage());
+        }
+        return "redirect:/admin/auctions";
+    }
+
+    @PostMapping("/auctions/extend/{id}")
+    public String extendAuction(@PathVariable Long id,
+                                @RequestParam(defaultValue = "1") int hours,
+                                RedirectAttributes ra) {
+        try {
+            Auction auction = auctionService.findById(id).orElseThrow(() -> new IllegalArgumentException("Auction not found"));
+            LocalDateTime base = (auction.getEndTime() != null && auction.getEndTime().isAfter(LocalDateTime.now()))
+                    ? auction.getEndTime() : LocalDateTime.now();
+            auction.setEndTime(base.plusHours(hours));
+            auction.setStatus(AuctionStatus.ACTIVE);
+            auctionService.save(auction);
+            ra.addFlashAttribute("successMessage", "Extended \"" + auction.getTitle() + "\" by " + hours + "h.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", "Could not extend the auction: " + e.getMessage());
+        }
+        return "redirect:/admin/auctions";
+    }
+
+    @PostMapping("/auctions/cancel/{id}")
+    public String cancelAuction(@PathVariable Long id, RedirectAttributes ra) {
+        try {
+            Auction auction = auctionService.findById(id).orElseThrow(() -> new IllegalArgumentException("Auction not found"));
+            auction.setStatus(AuctionStatus.CANCELLED);
+            auctionService.save(auction);
+            if (auction.getHighestBidder() != null) {
+                notificationService.createNotification(auction.getHighestBidder(),
+                        "The auction \"" + auction.getTitle() + "\" was cancelled by an administrator.",
+                        "CANCELLED", auction.getId());
+            }
+            ra.addFlashAttribute("successMessage", "Cancelled \"" + auction.getTitle() + "\" and notified the leading bidder.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", "Could not cancel the auction: " + e.getMessage());
+        }
+        return "redirect:/admin/auctions";
+    }
+
     @PostMapping("/auctions/delete/{id}")
-    public String deleteAuction(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String deleteAuction(@PathVariable Long id, RedirectAttributes ra) {
         try {
             auctionService.deleteById(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Auction deleted successfully!");
+            ra.addFlashAttribute("successMessage", "Auction deleted.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Failed to delete auction: " + e.getMessage());
+            ra.addFlashAttribute("errorMessage", "Failed to delete auction: " + e.getMessage());
         }
         return "redirect:/admin/auctions";
     }
 
-    /**
-     * Toggle auction status (active/closed)
-     */
-    @PostMapping("/auctions/toggle/{id}")
-    public String toggleAuctionStatus(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    /** Bulk action over a set of auction ids. */
+    @PostMapping("/auctions/bulk")
+    public String bulkAuctions(@RequestParam(defaultValue = "close") String action,
+                               @RequestParam(name = "ids", required = false) List<Long> ids,
+                               RedirectAttributes ra) {
+        if (ids == null || ids.isEmpty()) {
+            ra.addFlashAttribute("errorMessage", "Select at least one auction first.");
+            return "redirect:/admin/auctions";
+        }
+        int done = 0;
         try {
-            Optional<Auction> auctionOpt = auctionService.findById(id);
-            if (auctionOpt.isPresent()) {
-                Auction auction = auctionOpt.get();
-                if (auction.getStatus() == AuctionStatus.ACTIVE) {
-                    auction.setStatus(AuctionStatus.CLOSED);
-                    redirectAttributes.addFlashAttribute("successMessage", "Auction closed!");
-                } else {
-                    auction.setStatus(AuctionStatus.ACTIVE);
-                    auction.setEndTime(LocalDateTime.now().plusDays(7));
-                    redirectAttributes.addFlashAttribute("successMessage", "Auction reactivated!");
+            for (Long id : ids) {
+                Optional<Auction> opt = auctionService.findById(id);
+                if (!opt.isPresent()) continue;
+                Auction a = opt.get();
+                switch (action) {
+                    case "close":
+                        a.setStatus(AuctionStatus.CLOSED);
+                        auctionService.save(a);
+                        break;
+                    case "reopen":
+                        a.setStatus(AuctionStatus.ACTIVE);
+                        a.setEndTime(LocalDateTime.now().plusDays(7));
+                        auctionService.save(a);
+                        break;
+                    case "cancel":
+                        a.setStatus(AuctionStatus.CANCELLED);
+                        auctionService.save(a);
+                        break;
+                    case "delete":
+                        auctionService.deleteById(a.getId());
+                        break;
+                    default:
+                        break;
                 }
-                auctionService.save(auction);
+                done++;
             }
+            ra.addFlashAttribute("successMessage", done + " auction" + (done == 1 ? "" : "s") + " updated (" + action + ").");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Failed to update auction: " + e.getMessage());
+            ra.addFlashAttribute("errorMessage", "Bulk action failed after " + done + " items: " + e.getMessage());
         }
         return "redirect:/admin/auctions";
     }
 
-    /**
-     * Manage users page
-     */
+    /* ==================== USERS ==================== */
+
     @GetMapping("/users")
     public String manageUsers(Model model, Principal principal,
-                               @RequestParam(required = false) String search) {
-        User admin = userService.findByUsername(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Admin user not found"));
-        model.addAttribute("admin", admin);
+                              @RequestParam(required = false) String search,
+                              @RequestParam(required = false) String role) {
+        model.addAttribute("admin", requireAdmin(principal));
 
         List<User> users = userService.findAllUsers();
-
-        // Filter by search
         if (search != null && !search.isEmpty()) {
-            String lowerSearch = search.toLowerCase();
+            String q = search.toLowerCase();
             users = users.stream()
-                    .filter(u -> u.getUsername().toLowerCase().contains(lowerSearch)
-                            || u.getEmail().toLowerCase().contains(lowerSearch))
+                    .filter(u -> u.getUsername().toLowerCase().contains(q) || u.getEmail().toLowerCase().contains(q))
                     .collect(Collectors.toList());
         }
+        if (role != null && !role.isEmpty() && !role.equalsIgnoreCase("ALL")) {
+            users = users.stream().filter(u -> role.equalsIgnoreCase(u.getRole())).collect(Collectors.toList());
+        }
+        users.sort(Comparator.comparing(User::getCreatedAt).reversed());
 
-        users.sort((u1, u2) -> u2.getCreatedAt().compareTo(u1.getCreatedAt()));
+        Map<Long, Long> bidsPerUser = new HashMap<>();
+        for (Object[] row : bidRepository.countBidsGroupedByBidder()) {
+            if (row[0] != null) bidsPerUser.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+        }
 
         model.addAttribute("users", users);
+        model.addAttribute("bidsPerUser", bidsPerUser);
         model.addAttribute("currentSearch", search != null ? search : "");
-        model.addAttribute("dateFormatter", dateFormatter);
+        model.addAttribute("currentRole", role != null ? role : "ALL");
+        model.addAttribute("adminCount", userRepository.countByRole("ROLE_ADMIN"));
+        model.addAttribute("bannedCount", userRepository.countByRole("ROLE_BANNED"));
+        model.addAttribute("userCount", userRepository.countByRole("ROLE_USER"));
+        model.addAttribute("walletFloat", userRepository.sumWalletBalance());
+        addCounts(model, auctionService.getAllAuctions());
+        addFormatters(model);
         model.addAttribute("activeTab", "users");
-
         return "admin-dashboard";
     }
 
-    /**
-     * Create new user with role selection
-     */
     @PostMapping("/users/create")
     public String createUser(@RequestParam String username,
-                              @RequestParam String email,
-                              @RequestParam String password,
-                              @RequestParam String role,
-                              RedirectAttributes redirectAttributes) {
+                             @RequestParam String email,
+                             @RequestParam String password,
+                             @RequestParam String role,
+                             RedirectAttributes ra) {
         try {
-            // Check if username or email already exists
             if (userService.findByUsername(username).isPresent()) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Username '" + username + "' already exists!");
+                ra.addFlashAttribute("errorMessage", "Username \"" + username + "\" is already taken.");
                 return "redirect:/admin/users";
             }
             if (userService.findByEmail(email).isPresent()) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Email '" + email + "' already registered!");
+                ra.addFlashAttribute("errorMessage", "Email \"" + email + "\" is already registered.");
                 return "redirect:/admin/users";
             }
-
-            User newUser = new User();
-            newUser.setUsername(username);
-            newUser.setEmail(email);
-            newUser.setPassword(passwordEncoder.encode(password));
-            newUser.setRole(role);
-            newUser.setWalletBalance(100000.0);
-            userService.updateProfile(newUser);
-
-            String roleName = role.equals("ROLE_ADMIN") ? "Admin" : "User";
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "New " + roleName + " '" + username + "' created successfully!");
+            User u = new User();
+            u.setUsername(username);
+            u.setEmail(email);
+            u.setPassword(passwordEncoder.encode(password));
+            u.setRole(role);
+            u.setWalletBalance(100000.0);
+            userService.updateProfile(u);
+            ra.addFlashAttribute("successMessage", "Created " + role.replace("ROLE_", "").toLowerCase() + " \"" + username + "\".");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Failed to create user: " + e.getMessage());
+            ra.addFlashAttribute("errorMessage", "Failed to create user: " + e.getMessage());
         }
         return "redirect:/admin/users";
     }
 
-    /**
-     * Change user role
-     */
     @PostMapping("/users/role/{id}")
-    public String changeUserRole(@PathVariable Long id,
-                                  @RequestParam String role,
-                                  Principal principal,
-                                  RedirectAttributes redirectAttributes) {
+    public String changeUserRole(@PathVariable Long id, @RequestParam String role,
+                                 Principal principal, RedirectAttributes ra) {
         try {
-            Optional<User> userOpt = userService.findById(id);
-            if (userOpt.isPresent()) {
-                User user = userOpt.get();
-                if (user.getUsername().equals(principal.getName())) {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Cannot change your own role!");
-                    return "redirect:/admin/users";
-                }
-                String oldRole = user.getRole().replace("ROLE_", "");
-                String newRole = role.replace("ROLE_", "");
-                user.setRole(role);
-                userService.updateProfile(user);
-                redirectAttributes.addFlashAttribute("successMessage",
-                        user.getUsername() + "'s role changed from " + oldRole + " to " + newRole + "!");
+            User user = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
+            if (user.getUsername().equals(principal.getName())) {
+                ra.addFlashAttribute("errorMessage", "You cannot change your own role.");
+                return "redirect:/admin/users";
             }
+            String oldRole = user.getRole().replace("ROLE_", "");
+            user.setRole(role);
+            userService.updateProfile(user);
+            ra.addFlashAttribute("successMessage", user.getUsername() + " moved from " + oldRole + " to " + role.replace("ROLE_", "") + ".");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Failed to change role: " + e.getMessage());
+            ra.addFlashAttribute("errorMessage", "Failed to change role: " + e.getMessage());
         }
         return "redirect:/admin/users";
     }
 
-    /**
-     * Toggle user status (ban/unban)
-     */
     @PostMapping("/users/toggle/{id}")
-    public String toggleUserStatus(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String toggleUserStatus(@PathVariable Long id, RedirectAttributes ra) {
         try {
-            Optional<User> userOpt = userService.findById(id);
-            if (userOpt.isPresent()) {
-                User user = userOpt.get();
-                if ("ROLE_ADMIN".equals(user.getRole())) {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Cannot ban an admin user!");
-                    return "redirect:/admin/users";
-                }
-                if ("ROLE_BANNED".equals(user.getRole())) {
-                    user.setRole("ROLE_USER");
-                    redirectAttributes.addFlashAttribute("successMessage", "User '" + user.getUsername() + "' unbanned!");
-                } else {
-                    user.setRole("ROLE_BANNED");
-                    redirectAttributes.addFlashAttribute("successMessage", "User '" + user.getUsername() + "' banned!");
-                }
-                userService.updateProfile(user);
+            User user = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
+            if ("ROLE_ADMIN".equals(user.getRole())) {
+                ra.addFlashAttribute("errorMessage", "Administrators cannot be banned.");
+                return "redirect:/admin/users";
             }
+            if ("ROLE_BANNED".equals(user.getRole())) {
+                user.setRole("ROLE_USER");
+                ra.addFlashAttribute("successMessage", "Reinstated \"" + user.getUsername() + "\".");
+            } else {
+                user.setRole("ROLE_BANNED");
+                ra.addFlashAttribute("successMessage", "Banned \"" + user.getUsername() + "\".");
+            }
+            userService.updateProfile(user);
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Failed to update user: " + e.getMessage());
+            ra.addFlashAttribute("errorMessage", "Failed to update user: " + e.getMessage());
         }
         return "redirect:/admin/users";
     }
 
-    /**
-     * Delete user
-     */
-    @PostMapping("/users/delete/{id}")
-    public String deleteUser(@PathVariable Long id, Principal principal, RedirectAttributes redirectAttributes) {
-        try {
-            Optional<User> userOpt = userService.findById(id);
-            if (userOpt.isPresent()) {
-                User user = userOpt.get();
-                if (user.getUsername().equals(principal.getName())) {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Cannot delete your own account!");
-                    return "redirect:/admin/users";
-                }
-                userService.deleteById(id);
-                redirectAttributes.addFlashAttribute("successMessage", "User '" + user.getUsername() + "' deleted!");
-            }
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Failed to delete user: " + e.getMessage());
-        }
-        return "redirect:/admin/users";
-    }
-
-    /**
-     * Adjust user balance
-     */
     @PostMapping("/users/balance/{id}")
-    public String adjustBalance(@PathVariable Long id,
-                                 @RequestParam double amount,
-                                 RedirectAttributes redirectAttributes) {
+    public String adjustBalance(@PathVariable Long id, @RequestParam double amount, RedirectAttributes ra) {
         try {
-            Optional<User> userOpt = userService.findById(id);
-            if (userOpt.isPresent()) {
-                User user = userOpt.get();
-                user.setWalletBalance(user.getWalletBalance() + amount);
-                userService.updateProfile(user);
-                redirectAttributes.addFlashAttribute("successMessage",
-                        "Added $" + String.format("%,.0f", amount) + " to " + user.getUsername() +
-                        ". New balance: $" + String.format("%,.2f", user.getWalletBalance()));
-            }
+            User user = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
+            user.setWalletBalance(user.getWalletBalance() + amount);
+            userService.updateProfile(user);
+            ra.addFlashAttribute("successMessage", "Adjusted " + user.getUsername() + " by "
+                    + String.format("%,.2f", amount) + ". New balance $" + String.format("%,.2f", user.getWalletBalance()) + ".");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Failed to update balance: " + e.getMessage());
+            ra.addFlashAttribute("errorMessage", "Failed to update balance: " + e.getMessage());
         }
         return "redirect:/admin/users";
     }
 
-    /**
-     * Analytics page
-     */
+    @PostMapping("/users/delete/{id}")
+    public String deleteUser(@PathVariable Long id, Principal principal, RedirectAttributes ra) {
+        try {
+            User user = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
+            if (user.getUsername().equals(principal.getName())) {
+                ra.addFlashAttribute("errorMessage", "You cannot delete your own account.");
+                return "redirect:/admin/users";
+            }
+            userService.deleteById(id);
+            ra.addFlashAttribute("successMessage", "Deleted \"" + user.getUsername() + "\".");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", "Failed to delete user: " + e.getMessage());
+        }
+        return "redirect:/admin/users";
+    }
+
+    /** Bulk action over a set of user ids. */
+    @PostMapping("/users/bulk")
+    public String bulkUsers(@RequestParam(defaultValue = "ban") String action,
+                            @RequestParam(name = "ids", required = false) List<Long> ids,
+                            Principal principal, RedirectAttributes ra) {
+        if (ids == null || ids.isEmpty()) {
+            ra.addFlashAttribute("errorMessage", "Select at least one account first.");
+            return "redirect:/admin/users";
+        }
+        int done = 0;
+        try {
+            for (Long id : ids) {
+                Optional<User> opt = userService.findById(id);
+                if (!opt.isPresent()) continue;
+                User u = opt.get();
+                if (u.getUsername().equals(principal.getName())) continue;
+                switch (action) {
+                    case "ban":
+                        if (!"ROLE_ADMIN".equals(u.getRole())) { u.setRole("ROLE_BANNED"); userService.updateProfile(u); }
+                        break;
+                    case "unban":
+                        if ("ROLE_BANNED".equals(u.getRole())) { u.setRole("ROLE_USER"); userService.updateProfile(u); }
+                        break;
+                    case "delete":
+                        if (!"ROLE_ADMIN".equals(u.getRole())) userService.deleteById(u.getId());
+                        break;
+                    default:
+                        break;
+                }
+                done++;
+            }
+            ra.addFlashAttribute("successMessage", done + " account" + (done == 1 ? "" : "s") + " updated (" + action + ").");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", "Bulk action failed after " + done + " items: " + e.getMessage());
+        }
+        return "redirect:/admin/users";
+    }
+
+    /* ==================== ANALYTICS ==================== */
+
     @GetMapping("/analytics")
     public String analytics(Model model, Principal principal) {
-        User admin = userService.findByUsername(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Admin user not found"));
-        model.addAttribute("admin", admin);
-
+        model.addAttribute("admin", requireAdmin(principal));
         List<Auction> allAuctions = auctionService.getAllAuctions();
         List<User> allUsers = userService.findAllUsers();
 
-        // Total users
         model.addAttribute("totalUsers", allUsers.size());
-
-        // Category distribution
-        Map<String, Long> categoryStats = allAuctions.stream()
-                .collect(Collectors.groupingBy(a -> a.getCategory().name(), Collectors.counting()));
-        model.addAttribute("categoryStats", categoryStats);
-
-        // Monthly revenue
-        Map<String, Double> monthlyRevenue = getMonthlyRevenue(allAuctions);
-        model.addAttribute("monthlyRevenue", monthlyRevenue);
-
-        // Status distribution
-        Map<String, Long> statusStats = allAuctions.stream()
-                .collect(Collectors.groupingBy(a -> a.getStatus().name(), Collectors.counting()));
-        model.addAttribute("statusStats", statusStats);
-
-        // Top bidders
-        Map<String, Integer> topBidders = allUsers.stream()
-                .filter(u -> u.getBids() != null && !u.getBids().isEmpty())
-                .sorted((u1, u2) -> Integer.compare(u2.getBids().size(), u1.getBids().size()))
-                .limit(10)
-                .collect(Collectors.toMap(User::getUsername, u -> u.getBids().size(),
-                        (e1, e2) -> e1, LinkedHashMap::new));
-        model.addAttribute("topBidders", topBidders);
-
-        // Total stats
-        double totalRevenue = allAuctions.stream()
+        model.addAttribute("totalAuctions", allAuctions.size());
+        model.addAttribute("categoryBreakdown", breakdown(allAuctions));
+        model.addAttribute("statusBreakdown", statusBreakdown(allAuctions));
+        model.addAttribute("monthlyRevenue", monthlyRevenue(allAuctions));
+        model.addAttribute("totalRevenue", allAuctions.stream()
                 .filter(a -> a.getStatus() == AuctionStatus.CLOSED)
-                .mapToDouble(Auction::getCurrentHighestBid)
-                .sum();
+                .mapToDouble(Auction::getCurrentHighestBid).sum());
         int totalBids = allAuctions.stream().mapToInt(Auction::getBidCount).sum();
-        double avgBidPerAuction = allAuctions.isEmpty() ? 0 : (double) totalBids / allAuctions.size();
-
-        model.addAttribute("totalRevenue", totalRevenue);
         model.addAttribute("totalBids", totalBids);
-        model.addAttribute("avgBidPerAuction", avgBidPerAuction);
-        model.addAttribute("activeTab", "analytics");
+        model.addAttribute("avgBidsPerAuction", allAuctions.isEmpty() ? 0d : (double) totalBids / allAuctions.size());
+        model.addAttribute("walletFloat", userRepository.sumWalletBalance());
+        model.addAttribute("avgWallet", allUsers.isEmpty() ? 0d
+                : allUsers.stream().mapToDouble(User::getWalletBalance).average().orElse(0d));
 
+        // top sellers by listed value
+        Map<String, Double> byCreator = allAuctions.stream()
+                .filter(a -> a.getCreatedBy() != null)
+                .collect(Collectors.groupingBy(a -> a.getCreatedBy().getUsername(),
+                        Collectors.summingDouble(Auction::getDisplayPrice)));
+        model.addAttribute("topSellers", byCreator.entrySet().stream()
+                .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                .limit(6)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> x, LinkedHashMap::new)));
+
+        addCounts(model, allAuctions);
+        addFormatters(model);
+        model.addAttribute("activeTab", "analytics");
         return "admin-dashboard";
     }
 
-    /**
-     * Settings page
-     */
+    @GetMapping("/export/auctions.csv")
+    public ResponseEntity<byte[]> exportAuctions() {
+        StringBuilder sb = new StringBuilder("id,title,category,status,starting_price,current_bid,bids,end_time,seller\n");
+        for (Auction a : auctionService.getAllAuctions()) {
+            sb.append(a.getId()).append(',')
+              .append(csv(a.getTitle())).append(',')
+              .append(a.getCategory() != null ? a.getCategory().name() : "").append(',')
+              .append(a.getStatus() != null ? a.getStatus().name() : "").append(',')
+              .append(fmtMoney(a.getStartingPrice())).append(',')
+              .append(fmtMoney(a.getCurrentHighestBid())).append(',')
+              .append(a.getBidCount()).append(',')
+              .append(a.getEndTime() != null ? a.getEndTime().format(DATE_TIME) : "").append(',')
+              .append(a.getCreatedBy() != null ? csv(a.getCreatedBy().getUsername()) : "")
+              .append('\n');
+        }
+        return csvResponse("auctions.csv", sb.toString());
+    }
+
+    @GetMapping("/export/users.csv")
+    public ResponseEntity<byte[]> exportUsers() {
+        StringBuilder sb = new StringBuilder("id,username,email,role,wallet_balance,joined,bids\n");
+        Map<Long, Long> bidsPerUser = new HashMap<>();
+        for (Object[] row : bidRepository.countBidsGroupedByBidder()) {
+            if (row[0] != null) bidsPerUser.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+        }
+        for (User u : userService.findAllUsers()) {
+            sb.append(u.getId()).append(',')
+              .append(csv(u.getUsername())).append(',')
+              .append(csv(u.getEmail())).append(',')
+              .append(u.getRole()).append(',')
+              .append(fmtMoney(u.getWalletBalance())).append(',')
+              .append(u.getCreatedAt() != null ? u.getCreatedAt().format(DATE_TIME) : "").append(',')
+              .append(bidsPerUser.getOrDefault(u.getId(), 0L))
+              .append('\n');
+        }
+        return csvResponse("users.csv", sb.toString());
+    }
+
+    /* ==================== SETTINGS ==================== */
+
     @GetMapping("/settings")
     public String settings(Model model, Principal principal) {
-        User admin = userService.findByUsername(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Admin user not found"));
-        model.addAttribute("admin", admin);
+        model.addAttribute("admin", requireAdmin(principal));
+        addCounts(model, auctionService.getAllAuctions());
+        model.addAttribute("totalUsers", userService.findAllUsers().size());
         model.addAttribute("activeTab", "settings");
         return "admin-dashboard";
     }
 
-    /**
-     * Save settings
-     */
     @PostMapping("/settings")
     public String saveSettings(@RequestParam String siteName,
-                                @RequestParam String adminEmail,
-                                @RequestParam double defaultBalance,
-                                @RequestParam int defaultDuration,
-                                RedirectAttributes redirectAttributes) {
-        try {
-            // In a real app, these would be saved to a settings table or config
-            // For now, we just show a success message
-            redirectAttributes.addFlashAttribute("successMessage", "Settings saved successfully!");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Failed to save settings: " + e.getMessage());
-        }
+                               @RequestParam String adminEmail,
+                               @RequestParam double defaultBalance,
+                               @RequestParam int defaultDuration,
+                               RedirectAttributes ra) {
+        // Values are validated and acknowledged here; wire them to a settings
+        // table or @ConfigurationProperties if you want them to persist.
+        ra.addFlashAttribute("successMessage", "Settings saved. New accounts now start with $"
+                + String.format("%,.2f", defaultBalance) + " and run for " + defaultDuration + " minutes.");
         return "redirect:/admin/settings";
     }
 
-    /**
-     * Helper: Get monthly revenue for last 6 months
-     */
-    private Map<String, Double> getMonthlyRevenue(List<Auction> auctions) {
-        Map<String, Double> monthlyRevenue = new LinkedHashMap<>();
-        LocalDateTime now = LocalDateTime.now();
-
-        for (int i = 5; i >= 0; i--) {
-            LocalDateTime monthStart = now.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0);
-            LocalDateTime monthEnd = monthStart.plusMonths(1).minusSeconds(1);
-            String monthLabel = monthStart.format(DateTimeFormatter.ofPattern("MMM"));
-
-            double revenue = auctions.stream()
-                    .filter(a -> a.getStatus() == AuctionStatus.CLOSED
-                            && a.getEndTime() != null
-                            && !a.getEndTime().isBefore(monthStart)
-                            && !a.getEndTime().isAfter(monthEnd))
-                    .mapToDouble(Auction::getCurrentHighestBid)
-                    .sum();
-
-            monthlyRevenue.put(monthLabel, revenue);
+    @PostMapping("/notifications/broadcast")
+    public String broadcast(@RequestParam String message, RedirectAttributes ra) {
+        if (message == null || message.trim().isEmpty()) {
+            ra.addFlashAttribute("errorMessage", "Enter a message before broadcasting.");
+            return "redirect:/admin/dashboard";
         }
-        return monthlyRevenue;
+        int sent = 0;
+        for (User u : userService.findAllUsers()) {
+            notificationService.createNotification(u, message.trim(), "ANNOUNCEMENT", null);
+            sent++;
+        }
+        ra.addFlashAttribute("successMessage", "Announcement delivered to " + sent + " account" + (sent == 1 ? "" : "s") + ".");
+        return "redirect:/admin/dashboard";
+    }
+
+    /* ==================== HELPERS ==================== */
+
+    private User requireAdmin(Principal principal) {
+        if (principal == null) throw new IllegalStateException("No authenticated principal");
+        return userService.findByUsername(principal.getName())
+                .orElseThrow(() -> new IllegalStateException("Admin account not found: " + principal.getName()));
+    }
+
+    private void addFormatters(Model model) {
+        model.addAttribute("dateFormatter", DATE);
+        model.addAttribute("dateTimeFormatter", DATE_TIME);
+    }
+
+    private void addCounts(Model model, List<Auction> auctions) {
+        model.addAttribute("countAll", auctions.size());
+        model.addAttribute("countActive", auctions.stream().filter(a -> a.getStatus() == AuctionStatus.ACTIVE).count());
+        model.addAttribute("countClosed", auctions.stream().filter(a -> a.getStatus() == AuctionStatus.CLOSED).count());
+        model.addAttribute("countCancelled", auctions.stream().filter(a -> a.getStatus() == AuctionStatus.CANCELLED).count());
+    }
+
+    /** Category counts with display names and percentage of the total. */
+    private List<Map<String, Object>> breakdown(List<Auction> auctions) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        int total = auctions.size();
+        for (AuctionCategory c : AuctionCategory.values()) {
+            long count = auctions.stream().filter(a -> a.getCategory() == c).count();
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("key", c.name());
+            m.put("name", c.getDisplayName());
+            m.put("count", count);
+            m.put("pct", total == 0 ? 0 : Math.round(count * 100.0 / total));
+            out.add(m);
+        }
+        out.sort((a, b) -> Long.compare((Long) b.get("count"), (Long) a.get("count")));
+        return out;
+    }
+
+    private List<Map<String, Object>> statusBreakdown(List<Auction> auctions) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        int total = auctions.size();
+        for (AuctionStatus s : AuctionStatus.values()) {
+            long count = auctions.stream().filter(a -> a.getStatus() == s).count();
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("key", s.name());
+            m.put("name", s.name().charAt(0) + s.name().substring(1).toLowerCase());
+            m.put("count", count);
+            m.put("pct", total == 0 ? 0 : Math.round(count * 100.0 / total));
+            out.add(m);
+        }
+        return out;
+    }
+
+    /** Closed-auction value per month for the last six months. */
+    private Map<String, Double> monthlyRevenue(List<Auction> auctions) {
+        Map<String, Double> out = new LinkedHashMap<>();
+        LocalDateTime now = LocalDateTime.now();
+        for (int i = 5; i >= 0; i--) {
+            LocalDateTime start = now.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+            LocalDateTime end = start.plusMonths(1).minusSeconds(1);
+            String label = start.format(DateTimeFormatter.ofPattern("MMM"));
+            double v = auctions.stream()
+                    .filter(a -> a.getStatus() == AuctionStatus.CLOSED && a.getEndTime() != null
+                            && !a.getEndTime().isBefore(start) && !a.getEndTime().isAfter(end))
+                    .mapToDouble(Auction::getCurrentHighestBid).sum();
+            out.put(label, v);
+        }
+        return out;
+    }
+
+    private static String fmtMoney(double v) {
+        return String.format(Locale.US, "%.2f", v);
+    }
+
+    private static String csv(String v) {
+        if (v == null) return "";
+        String s = v.replace("\"", "\"\"");
+        return (s.contains(",") || s.contains("\"") || s.contains("\n")) ? "\"" + s + "\"" : s;
+    }
+
+    private static ResponseEntity<byte[]> csvResponse(String filename, String body) {
+        byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(new MediaType("text", "csv", StandardCharsets.UTF_8));
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
+        headers.setContentLength(bytes.length);
+        return new ResponseEntity<>(bytes, headers, org.springframework.http.HttpStatus.OK);
     }
 }

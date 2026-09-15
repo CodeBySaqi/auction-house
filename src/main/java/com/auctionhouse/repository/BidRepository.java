@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,4 +24,23 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
     Optional<Double> findHighestBidAmount(@Param("auctionId") Long auctionId);
 
     long countByAuctionId(Long auctionId);
+
+    long countByBidderId(Long bidderId);
+
+    /* ---------- Admin console additions ---------- */
+
+    /** Newest bids first, for the admin activity feed. */
+    @Query("SELECT b FROM Bid b ORDER BY b.timestamp DESC")
+    List<Bid> findRecentBids(org.springframework.data.domain.Pageable pageable);
+
+    /** Bid volume since a point in time. */
+    long countByTimestampAfter(LocalDateTime since);
+
+    /** Every bid inside a window, oldest first, for day-by-day aggregation. */
+    @Query("SELECT b FROM Bid b WHERE b.timestamp >= :since ORDER BY b.timestamp ASC")
+    List<Bid> findBidsSince(@Param("since") LocalDateTime since);
+
+    /** Bid totals per bidder in one query, to avoid N+1 on the accounts table. */
+    @Query("SELECT b.bidder.id, COUNT(b) FROM Bid b GROUP BY b.bidder.id")
+    List<Object[]> countBidsGroupedByBidder();
 }

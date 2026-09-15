@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -35,4 +36,26 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     List<Auction> findTop6ByStatusOrderByEndTimeAsc(AuctionStatus status);
 
     List<Auction> findByCreatedByOrderByCreatedAtDesc(User createdBy);
+
+    /* ---------- Admin console additions ---------- */
+
+    /** Auctions whose end time falls inside a window (used for "ending soon"). */
+    @Query("SELECT a FROM Auction a WHERE a.status = :status AND a.endTime BETWEEN :from AND :to ORDER BY a.endTime ASC")
+    List<Auction> findEndingBetween(@Param("status") AuctionStatus status,
+                                    @Param("from") LocalDateTime from,
+                                    @Param("to") LocalDateTime to);
+
+    /** Count of items created since a point in time. */
+    long countByCreatedAtAfter(LocalDateTime since);
+
+    /** Everything, newest first, for the moderation table. */
+    List<Auction> findAllByOrderByCreatedAtDesc();
+
+    /** Count per category, without loading every row. */
+    @Query("SELECT a.category, COUNT(a) FROM Auction a GROUP BY a.category")
+    List<Object[]> countGroupedByCategory();
+
+    /** Count per status. */
+    @Query("SELECT a.status, COUNT(a) FROM Auction a GROUP BY a.status")
+    List<Object[]> countGroupedByStatus();
 }
