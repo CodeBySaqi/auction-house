@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - AuctionHouse Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'g-blue': '#1a73e8',
+                    'g-blue-hover': '#1765cc',
+                    'g-blue-light': '#e8f0fe',
+                    'g-red': '#ea4335',
+                    'g-yellow': '#fbbc04',
+                    'g-green': '#34a853',
+                    'g-surface': '#ffffff',
+                    'g-bg': '#f8f9fa',
+                    'g-text': '#202124',
+                    'g-text-secondary': '#5f6368',
+                    'g-border': '#dadce0',
+                    'g-hover': '#f1f3f4',
+                },
+                fontFamily: {
+                    'gsans': ['"Google Sans"', 'Roboto', 'system-ui', 'sans-serif'],
+                    'roboto': ['Roboto', 'system-ui', 'sans-serif'],
+                },
+                boxShadow: {
+                    'g-sm': '0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15)',
+                    'g-md': '0 1px 3px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15)',
+                    'g-lg': '0 1px 3px 0 rgba(60,64,67,.3), 0 8px 16px 6px rgba(60,64,67,.15)',
+                    'g-xl': '0 2px 6px 2px rgba(60,64,67,.3), 0 12px 28px 8px rgba(60,64,67,.15)',
+                }
+            }
+        }
+    }
+    </script>
+    <style>
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen">
+
+    <!-- App Bar -->
+    <nav class="bg-white border-b border-g-border sticky top-0 z-40">
+        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-g-blue rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-white text-xl">gavel</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-gsans font-medium text-xl text-g-text">Auction<span class="text-g-blue">House</span></span>
+                        <span class="px-2.5 py-1 bg-g-text text-white text-[10px] font-bold uppercase tracking-wider rounded-md">Admin</span>
+                    </div>
+                </div>
+
+                <div class="hidden md:flex flex-1 max-w-xl mx-8">
+                    <div class="relative w-full">
+                        <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-g-text-secondary">search</span>
+                        <input type="text" placeholder="Search..." 
+                               class="w-full pl-11 pr-4 py-2.5 bg-g-bg border border-g-border rounded-full text-sm placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white focus:shadow-g-sm transition-all">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button class="relative p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined">notifications</span>
+                        <span class="absolute top-1 right-1 w-4 h-4 bg-g-red rounded-full text-[10px] text-white font-bold flex items-center justify-center">3</span>
+                    </button>
+                    <button class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined">settings</span>
+                    </button>
+                    <div class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm">
+                        A
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div class="max-w-[1680px] mx-auto flex">
+        
+        <!-- Sidebar -->
+        <aside class="hidden lg:block w-64 flex-shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-hide py-6 pr-4">
+            <nav class="space-y-1">
+                <div class="px-3 mb-2">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Main</span>
+                </div>
+                <a href="admin-demo.html" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">dashboard</span>
+                    Dashboard
+                </a>
+                <a href="admin-auctions-demo.html" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">storefront</span>
+                    Auctions
+                    <span class="ml-auto px-2 py-0.5 bg-g-bg rounded-full text-xs font-semibold text-g-text-secondary">150</span>
+                </a>
+                <a href="admin-users-demo.html" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">people</span>
+                    Users
+                    <span class="ml-auto px-2 py-0.5 bg-g-bg rounded-full text-xs font-semibold text-g-text-secondary">100</span>
+                </a>
+                <a href="admin-bids-demo.html" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">gavel</span>
+                    Bids
+                </a>
+                
+                <div class="px-3 mt-6 mb-2">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Analytics</span>
+                </div>
+                <a href="admin-analytics-demo.html" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">analytics</span>
+                    Reports
+                </a>
+                
+                <div class="px-3 mt-6 mb-2">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Tools</span>
+                </div>
+                <a href="admin-settings-demo.html" class="flex items-center gap-3 px-4 py-2.5 rounded-full bg-g-blue-light text-g-blue font-medium text-sm">
+                    <span class="material-icons-outlined text-xl">settings</span>
+                    Settings
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+            
+            <!-- Page Header -->
+            <div class="mb-6">
+                <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">Settings</h1>
+                <p class="text-sm text-g-text-secondary mt-1">Configure platform settings and send announcements.</p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-6">
+                
+                <!-- Platform Settings -->
+                <div class="bg-white rounded-2xl border border-g-border p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-g-blue-light rounded-xl flex items-center justify-center">
+                            <span class="material-icons-outlined text-g-blue text-xl">tune</span>
+                        </div>
+                        <div>
+                            <h2 class="font-gsans text-lg font-medium text-g-text">Platform Settings</h2>
+                            <p class="text-xs text-g-text-secondary">Configure default values for new users and auctions</p>
+                        </div>
+                    </div>
+
+                    <form class="space-y-5">
+                        <!-- Site Name -->
+                        <div>
+                            <label class="block text-sm font-medium text-g-text mb-2">Site Name</label>
+                            <input type="text" value="AuctionHouse" 
+                                   class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all">
+                        </div>
+
+                        <!-- Admin Email -->
+                        <div>
+                            <label class="block text-sm font-medium text-g-text mb-2">Admin Email</label>
+                            <input type="email" value="admin@auctionhouse.com" 
+                                   class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all">
+                        </div>
+
+                        <!-- Default Wallet Balance -->
+                        <div>
+                            <label class="block text-sm font-medium text-g-text mb-2">Default Wallet Balance</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-g-text-secondary text-sm">$</span>
+                                <input type="number" value="100000" 
+                                       class="w-full pl-8 pr-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all tabular-nums">
+                            </div>
+                            <p class="text-xs text-g-text-secondary mt-1.5">Initial balance for new user accounts</p>
+                        </div>
+
+                        <!-- Default Auction Duration -->
+                        <div>
+                            <label class="block text-sm font-medium text-g-text mb-2">Default Auction Duration</label>
+                            <div class="relative">
+                                <input type="number" value="4320" 
+                                       class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all tabular-nums">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-g-text-secondary text-sm">minutes</span>
+                            </div>
+                            <p class="text-xs text-g-text-secondary mt-1.5">Default duration for new auctions (4320 min = 3 days)</p>
+                        </div>
+
+                        <!-- Minimum Bid Increment -->
+                        <div>
+                            <label class="block text-sm font-medium text-g-text mb-2">Minimum Bid Increment (%)</label>
+                            <div class="relative">
+                                <input type="number" value="5" 
+                                       class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all tabular-nums">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-g-text-secondary text-sm">%</span>
+                            </div>
+                            <p class="text-xs text-g-text-secondary mt-1.5">Minimum percentage increase for new bids</p>
+                        </div>
+
+                        <div class="pt-4 border-t border-g-border">
+                            <button type="submit" class="w-full px-6 py-3 bg-g-blue text-white rounded-full text-sm font-medium hover:bg-g-blue-hover transition-colors shadow-g-sm">
+                                Save Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Broadcast Announcement -->
+                <div class="space-y-6">
+                    <div class="bg-white rounded-2xl border border-g-border p-6">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                                <span class="material-icons-outlined text-amber-600 text-xl">campaign</span>
+                            </div>
+                            <div>
+                                <h2 class="font-gsans text-lg font-medium text-g-text">Broadcast Announcement</h2>
+                                <p class="text-xs text-g-text-secondary">Send a message to all users on the platform</p>
+                            </div>
+                        </div>
+
+                        <form class="space-y-5">
+                            <!-- Message Type -->
+                            <div>
+                                <label class="block text-sm font-medium text-g-text mb-2">Message Type</label>
+                                <select class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all">
+                                    <option>General Announcement</option>
+                                    <option>System Maintenance</option>
+                                    <option>New Feature</option>
+                                    <option>Important Update</option>
+                                </select>
+                            </div>
+
+                            <!-- Subject -->
+                            <div>
+                                <label class="block text-sm font-medium text-g-text mb-2">Subject</label>
+                                <input type="text" placeholder="Enter announcement subject..." 
+                                       class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all">
+                            </div>
+
+                            <!-- Message -->
+                            <div>
+                                <label class="block text-sm font-medium text-g-text mb-2">Message</label>
+                                <textarea rows="6" placeholder="Type your announcement message here..." 
+                                          class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all resize-none"></textarea>
+                                <p class="text-xs text-g-text-secondary mt-1.5">This message will be sent to all 100 users</p>
+                            </div>
+
+                            <!-- Preview -->
+                            <div class="bg-g-bg rounded-xl p-4 border border-g-border">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-icons-outlined text-g-text-secondary text-lg">visibility</span>
+                                    <span class="text-xs font-medium text-g-text-secondary uppercase tracking-wider">Preview</span>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 border border-g-border">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <span class="material-icons-outlined text-amber-600 text-sm">campaign</span>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-g-text">General Announcement</p>
+                                            <p class="text-xs text-g-text-secondary mt-1">Your message will appear here...</p>
+                                            <p class="text-[10px] text-g-text-secondary mt-2">Just now</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pt-4 border-t border-g-border">
+                                <button type="submit" class="w-full px-6 py-3 bg-amber-500 text-white rounded-full text-sm font-medium hover:bg-amber-600 transition-colors shadow-g-sm flex items-center justify-center gap-2">
+                                    <span class="material-icons-outlined text-lg">send</span>
+                                    Send Broadcast
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Recent Broadcasts -->
+                    <div class="bg-white rounded-2xl border border-g-border p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-gsans text-base font-medium text-g-text">Recent Broadcasts</h3>
+                            <span class="text-xs text-g-text-secondary">Last 5 messages</span>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3 p-3 bg-g-bg rounded-xl">
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="material-icons-outlined text-g-green text-sm">check_circle</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-g-text">System Maintenance Scheduled</p>
+                                    <p class="text-xs text-g-text-secondary mt-0.5">Sent to 100 users • Sep 14, 2026</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 bg-g-bg rounded-xl">
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="material-icons-outlined text-g-green text-sm">check_circle</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-g-text">New Feature: Dark Mode</p>
+                                    <p class="text-xs text-g-text-secondary mt-0.5">Sent to 98 users • Sep 12, 2026</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 bg-g-bg rounded-xl">
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="material-icons-outlined text-g-green text-sm">check_circle</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-g-text">Welcome to AuctionHouse!</p>
+                                    <p class="text-xs text-g-text-secondary mt-0.5">Sent to 95 users • Sep 10, 2026</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Data Export Section -->
+            <div class="mt-6 bg-white rounded-2xl border border-g-border p-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-purple-600 text-xl">download</span>
+                    </div>
+                    <div>
+                        <h2 class="font-gsans text-lg font-medium text-g-text">Export Data</h2>
+                        <p class="text-xs text-g-text-secondary">Download platform data in CSV format</p>
+                    </div>
+                </div>
+
+                <div class="grid sm:grid-cols-3 gap-4">
+                    <button class="flex items-center gap-3 p-4 bg-g-bg border border-g-border rounded-xl hover:bg-g-hover hover:border-g-blue transition-all group">
+                        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center group-hover:bg-g-blue-light transition-colors">
+                            <span class="material-icons-outlined text-g-text-secondary group-hover:text-g-blue text-xl">storefront</span>
+                        </div>
+                        <div class="flex-1 text-left">
+                            <p class="text-sm font-medium text-g-text">Export Auctions</p>
+                            <p class="text-xs text-g-text-secondary">150 records</p>
+                        </div>
+                        <span class="material-icons-outlined text-g-text-secondary group-hover:text-g-blue">download</span>
+                    </button>
+
+                    <button class="flex items-center gap-3 p-4 bg-g-bg border border-g-border rounded-xl hover:bg-g-hover hover:border-g-blue transition-all group">
+                        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center group-hover:bg-g-blue-light transition-colors">
+                            <span class="material-icons-outlined text-g-text-secondary group-hover:text-g-blue text-xl">people</span>
+                        </div>
+                        <div class="flex-1 text-left">
+                            <p class="text-sm font-medium text-g-text">Export Users</p>
+                            <p class="text-xs text-g-text-secondary">100 records</p>
+                        </div>
+                        <span class="material-icons-outlined text-g-text-secondary group-hover:text-g-blue">download</span>
+                    </button>
+
+                    <button class="flex items-center gap-3 p-4 bg-g-bg border border-g-border rounded-xl hover:bg-g-hover hover:border-g-blue transition-all group">
+                        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center group-hover:bg-g-blue-light transition-colors">
+                            <span class="material-icons-outlined text-g-text-secondary group-hover:text-g-blue text-xl">gavel</span>
+                        </div>
+                        <div class="flex-1 text-left">
+                            <p class="text-sm font-medium text-g-text">Export Bids</p>
+                            <p class="text-xs text-g-text-secondary">1,247 records</p>
+                        </div>
+                        <span class="material-icons-outlined text-g-text-secondary group-hover:text-g-blue">download</span>
+                    </button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>
