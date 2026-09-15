@@ -118,7 +118,7 @@
                 <div class="px-3 mb-2">
                     <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Main</span>
                 </div>
-                <a th:href="@{/admin}" class="flex items-center gap-3 px-4 py-2.5 rounded-full bg-g-blue-light text-g-blue font-medium text-sm">
+                <a th:href="@{/admin/console}" class="flex items-center gap-3 px-4 py-2.5 rounded-full bg-g-blue-light text-g-blue font-medium text-sm">
                     <span class="material-icons-outlined text-xl">dashboard</span>
                     Dashboard
                 </a>
@@ -140,11 +140,11 @@
                 <div class="px-3 mt-6 mb-2">
                     <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Analytics</span>
                 </div>
-                <a th:href="@{/admin/reports}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                <a th:href="@{/admin/analytics}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
                     <span class="material-icons-outlined text-xl text-g-text-secondary">analytics</span>
                     Reports
                 </a>
-                <a th:href="@{/admin/activity}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                <a th:href="@{/admin/analytics}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
                     <span class="material-icons-outlined text-xl text-g-text-secondary">trending_up</span>
                     Activity
                 </a>
@@ -152,13 +152,17 @@
                 <div class="px-3 mt-6 mb-2">
                     <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Tools</span>
                 </div>
-                <a th:href="@{/admin/broadcast}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                <a th:href="@{/admin/settings}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
                     <span class="material-icons-outlined text-xl text-g-text-secondary">campaign</span>
                     Broadcast
                 </a>
-                <a th:href="@{/admin/export}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                <a th:href="@{/admin/export/auctions.csv}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
                     <span class="material-icons-outlined text-xl text-g-text-secondary">download</span>
-                    Export Data
+                    Export Auctions
+                </a>
+                <a th:href="@{/admin/export/users.csv}" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                    <span class="material-icons-outlined text-xl text-g-text-secondary">download</span>
+                    Export Users
                 </a>
             </nav>
         </aside>

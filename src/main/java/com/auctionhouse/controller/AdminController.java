@@ -66,6 +66,11 @@ public class AdminController {
 
     /* ==================== NEW ADMIN CONSOLE ==================== */
 
+    @GetMapping({"", "/", "/dashboard"})
+    public String adminDashboardRedirect() {
+        return "redirect:/admin/console";
+    }
+
     @GetMapping("/console")
     public String adminConsole(Model model, Principal principal) {
         User admin = requireAdmin(principal);
@@ -238,127 +243,6 @@ public class AdminController {
         if (hours < 24) return hours + "h ago";
         long days = hours / 24;
         return days + "d ago";
-    }
-
-    /* ==================== OVERVIEW ==================== */
-
-    @GetMapping({"", "/", "/dashboard"})
-    public String adminDashboard(Model model, Principal principal) {
-        User admin = requireAdmin(principal);
-        List<User> allUsers = userService.findAllUsers();
-        List<Auction> allAuctions = auctionService.getAllAuctions();
-        LocalDateTime now = LocalDateTime.now();
-
-        model.addAttribute("admin", admin);
-
-        // --- headline metrics ---
-        long active = allAuctions.stream().filter(a -> a.getStatus() == AuctionStatus.ACTIVE).count();
-        long closed = allAuctions.stream().filter(a -> a.getStatus() == AuctionStatus.CLOSED).count();
-        long cancelled = allAuctions.stream().filter(a -> a.getStatus() == AuctionStatus.CANCELLED).count();
-        double closedValue = allAuctions.stream()
-                .filter(a -> a.getStatus() == AuctionStatus.CLOSED)
-                .mapToDouble(Auction::getCurrentHighestBid).sum();
-        double liveValue = allAuctions.stream()
-                .filter(a -> a.getStatus() == AuctionStatus.ACTIVE)
-                .mapToDouble(Auction::getCurrentHighestBid).sum();
-        int totalBids = allAuctions.stream().mapToInt(Auction::getBidCount).sum();
-        long endingSoon = allAuctions.stream()
-                .filter(a -> a.getStatus() == AuctionStatus.ACTIVE
-                        && a.getEndTime() != null
-                        && !a.getEndTime().isAfter(now.plusHours(24)))
-                .count();
-        long newUsers7d = allUsers.stream()
-                .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().isAfter(now.minusDays(7)))
-                .count();
-        long banned = allUsers.stream().filter(u -> "ROLE_BANNED".equals(u.getRole())).count();
-
-        model.addAttribute("totalUsers", allUsers.size());
-        model.addAttribute("totalAuctions", allAuctions.size());
-        model.addAttribute("activeAuctions", active);
-        model.addAttribute("closedAuctions", closed);
-        model.addAttribute("cancelledAuctions", cancelled);
-        model.addAttribute("totalBids", totalBids);
-        model.addAttribute("totalRevenue", closedValue);
-        model.addAttribute("liveValue", liveValue);
-        model.addAttribute("endingSoonCount", endingSoon);
-        model.addAttribute("newUsers7d", newUsers7d);
-        model.addAttribute("bannedUsers", banned);
-        model.addAttribute("avgBidsPerAuction", allAuctions.isEmpty() ? 0d : (double) totalBids / allAuctions.size());
-        model.addAttribute("walletFloat", userRepository.sumWalletBalance());
-
-        // --- activity series (trailing 14 days, from real bids and closures) ---
-        List<Bid> recentBidsAll = bidRepository.findBidsSince(now.minusDays(ACTIVITY_DAYS).toLocalDate().atStartOfDay());
-        Map<LocalDate, Long> bidsByDay = recentBidsAll.stream()
-                .filter(b -> b.getTimestamp() != null)
-                .collect(Collectors.groupingBy(b -> b.getTimestamp().toLocalDate(), Collectors.counting()));
-        Map<LocalDate, Double> gmvByDay = allAuctions.stream()
-                .filter(a -> a.getStatus() == AuctionStatus.CLOSED && a.getEndTime() != null)
-                .collect(Collectors.groupingBy(a -> a.getEndTime().toLocalDate(),
-                        Collectors.summingDouble(Auction::getCurrentHighestBid)));
-
-        LocalDate today = LocalDate.now();
-        List<Map<String, Object>> activity = new ArrayList<>();
-        long maxBids = 1L;
-        double maxGmv = 1d;
-        for (int i = ACTIVITY_DAYS - 1; i >= 0; i--) {
-            LocalDate d = today.minusDays(i);
-            long b = bidsByDay.getOrDefault(d, 0L);
-            double g = gmvByDay.getOrDefault(d, 0d);
-            maxBids = Math.max(maxBids, b);
-            maxGmv = Math.max(maxGmv, g);
-            Map<String, Object> row = new LinkedHashMap<>();
-            row.put("label", d.format(DAY_LABEL));
-            row.put("bids", b);
-            row.put("gmv", g);
-            activity.add(row);
-        }
-        for (Map<String, Object> row : activity) {
-            row.put("bidPct", Math.round(((Number) row.get("bids")).doubleValue() / maxBids * 100));
-            row.put("gmvPct", Math.round(((Number) row.get("gmv")).doubleValue() / maxGmv * 100));
-        }
-        model.addAttribute("activity", activity);
-        model.addAttribute("activityDays", ACTIVITY_DAYS);
-        model.addAttribute("activityTotalBids", activity.stream().mapToLong(r -> ((Number) r.get("bids")).longValue()).sum());
-        model.addAttribute("activityTotalGmv", activity.stream().mapToDouble(r -> ((Number) r.get("gmv")).doubleValue()).sum());
-
-        // --- category mix ---
-        model.addAttribute("categoryBreakdown", breakdown(allAuctions));
-        model.addAttribute("statusBreakdown", statusBreakdown(allAuctions));
-
-        // --- activity feed + watch list ---
-        model.addAttribute("recentBids", bidRepository.findRecentBids(PageRequest.of(0, 8)));
-        model.addAttribute("endingSoon", allAuctions.stream()
-                .filter(a -> a.getStatus() == AuctionStatus.ACTIVE && a.getEndTime() != null)
-                .sorted(Comparator.comparing(Auction::getEndTime))
-                .limit(5).collect(Collectors.toList()));
-
-        // --- leaderboard ---
-        Map<Long, Long> bidsPerUser = new HashMap<>();
-        for (Object[] row : bidRepository.countBidsGroupedByBidder()) {
-            if (row[0] != null) bidsPerUser.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
-        }
-        List<Map<String, Object>> leaders = allUsers.stream()
-                .sorted(Comparator.comparingLong((User u) -> bidsPerUser.getOrDefault(u.getId(), 0L)).reversed())
-                .limit(5)
-                .map(u -> {
-                    Map<String, Object> m = new LinkedHashMap<>();
-                    m.put("username", u.getUsername());
-                    m.put("bids", bidsPerUser.getOrDefault(u.getId(), 0L));
-                    m.put("balance", u.getWalletBalance());
-                    return m;
-                })
-                .collect(Collectors.toList());
-        model.addAttribute("topBidders", leaders);
-
-        model.addAttribute("recentUsers", allUsers.stream()
-                .filter(u -> u.getCreatedAt() != null)
-                .sorted(Comparator.comparing(User::getCreatedAt).reversed())
-                .limit(5).collect(Collectors.toList()));
-
-        addCounts(model, allAuctions);
-        addFormatters(model);
-        model.addAttribute("activeTab", "dashboard");
-        return "admin-dashboard";
     }
 
     /* ==================== AUCTIONS ==================== */
