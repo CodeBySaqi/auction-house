@@ -20,7 +20,9 @@
     <div class="bg-white rounded-3xl border border-g-border p-6 sm:p-8 mb-6">
         <div class="flex items-center gap-4">
             <div class="w-16 h-16 rounded-full bg-g-blue flex items-center justify-center text-white text-2xl font-medium overflow-hidden shrink-0">
-                <img th:if="${user.hasProfilePic()}" th:src="@{'/uploads/' + ${user.profilePicPath}}" class="w-full h-full object-cover" alt="Profile">
+                <img th:if="${user.hasProfilePic()}" 
+                     th:src="${user.profilePicPath.startsWith('http')} ? @{${user.profilePicPath}} : @{'/uploads/' + ${user.profilePicPath}}" 
+                     class="w-full h-full object-cover" alt="Profile">
                 <img th:unless="${user.hasProfilePic()}" th:src="@{/images/default-avatar.png}" class="w-full h-full object-cover" alt="Default Profile">
             </div>
             <div>

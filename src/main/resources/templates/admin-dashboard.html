@@ -34,7 +34,7 @@
                 <!-- Profile Dropdown -->
                 <div class="relative" id="profileDropdown">
                     <button onclick="toggleProfileMenu()" class="flex items-center gap-3 pl-4 pr-2 py-1.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-                        <img th:src="${admin.hasProfilePic()} ? @{'/uploads/' + ${admin.profilePicPath}} : @{/images/default-avatar.png}" class="w-8 h-8 rounded-full">
+                        <img th:src="${admin.hasProfilePic()} ? (${admin.profilePicPath.startsWith('http')} ? @{${admin.profilePicPath}} : @{'/uploads/' + ${admin.profilePicPath}}) : @{/images/default-avatar.png}" class="w-8 h-8 rounded-full">
                         <div class="text-left">
                             <p class="font-semibold text-sm text-gray-800" th:text="${admin.username}">Admin</p>
                             <p class="text-xs text-gray-500">Super Admin</p>
@@ -149,7 +149,7 @@
                 <div class="divide-y divide-gray-100">
                     <div th:each="user : ${recentUsers}" class="p-4 hover:bg-gray-50 transition-colors">
                         <div class="flex items-center gap-3">
-                            <img th:src="${user.hasProfilePic()} ? @{'/uploads/' + ${user.profilePicPath}} : @{/images/default-avatar.png}" class="w-10 h-10 rounded-full">
+                            <img th:src="${user.hasProfilePic()} ? (${user.profilePicPath.startsWith('http')} ? @{${user.profilePicPath}} : @{'/uploads/' + ${user.profilePicPath}}) : @{/images/default-avatar.png}" class="w-10 h-10 rounded-full">
                             <div class="flex-1">
                                 <p class="font-semibold text-gray-800 text-sm" th:text="${user.username}">Username</p>
                                 <p class="text-xs text-gray-500" th:text="${user.email}">email@example.com</p>
@@ -304,7 +304,7 @@
                     <tr th:each="user : ${users}" class="hover:bg-gray-50">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
-                                <img th:src="${user.hasProfilePic()} ? @{'/uploads/' + ${user.profilePicPath}} : @{/images/default-avatar.png}" class="w-10 h-10 rounded-full">
+                                <img th:src="${user.hasProfilePic()} ? (${user.profilePicPath.startsWith('http')} ? @{${user.profilePicPath}} : @{'/uploads/' + ${user.profilePicPath}}) : @{/images/default-avatar.png}" class="w-10 h-10 rounded-full">
                                 <p class="font-semibold text-gray-800" th:text="${user.username}">Username</p>
                             </div>
                         </td>

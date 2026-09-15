@@ -92,7 +92,9 @@
                         <button onclick="document.getElementById('dropdownMenu').classList.toggle('hidden')"
                                 class="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-g-hover transition-colors">
                             <div class="w-8 h-8 rounded-full bg-g-blue flex items-center justify-center overflow-hidden">
-                                <img th:if="${currentUser != null and currentUser.hasProfilePic()}" th:src="@{'/uploads/' + ${currentUser.profilePicPath}}" class="w-full h-full object-cover" alt="">
+                                <img th:if="${currentUser != null and currentUser.hasProfilePic()}" 
+                                     th:src="${currentUser.profilePicPath.startsWith('http')} ? @{${currentUser.profilePicPath}} : @{'/uploads/' + ${currentUser.profilePicPath}}" 
+                                     class="w-full h-full object-cover" alt="">
                                 <img th:unless="${currentUser != null and currentUser.hasProfilePic()}" th:src="@{/images/default-avatar.png}" class="w-full h-full object-cover" alt="Default">
                             </div>
                         </button>
