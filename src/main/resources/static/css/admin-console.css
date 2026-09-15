@@ -111,6 +111,29 @@
 .adm .shell{max-width:1680px; margin:0 auto; display:flex; align-items:flex-start; padding:0 16px}
 .adm .sidebar{display:none}
 .adm .sidebar__inner{display:flex; flex-direction:column; gap:20px}
+
+/* ---------- mobile menu button ---------- */
+.adm .menu-btn{display:grid; place-items:center; width:40px; height:40px; border-radius:999px;
+  color:var(--g-text-secondary); transition:background-color var(--tr)}
+.adm .menu-btn:hover{background:var(--g-hover); color:var(--g-text)}
+.adm .menu-btn .mi{font-size:24px}
+
+/* ---------- mobile drawer ---------- */
+.adm .drawer{position:fixed; top:0; left:0; width:280px; height:100vh; background:#fff;
+  box-shadow:var(--sh-xl); z-index:100; transform:translateX(-100%); transition:transform var(--tr);
+  overflow-y:auto; padding:20px}
+.adm .drawer.is-open{transform:translateX(0)}
+.adm .drawer__head{display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;
+  padding-bottom:16px; border-bottom:1px solid var(--g-border)}
+.adm .drawer__close{display:grid; place-items:center; width:36px; height:36px; border-radius:999px;
+  color:var(--g-text-secondary); transition:background-color var(--tr)}
+.adm .drawer__close:hover{background:var(--g-hover); color:var(--g-text)}
+.adm .drawer-scrim{position:fixed; inset:0; background:rgba(32,33,36,.5); z-index:99; display:none}
+.adm .drawer-scrim.is-open{display:block}
+
+/* ---------- mobile search ---------- */
+.adm .mobile-search{display:none; padding:12px 16px; border-bottom:1px solid var(--g-border)}
+.adm .mobile-search .field{width:100%; min-width:0}
 .adm .nav{display:flex; flex-direction:column; gap:2px}
 .adm .nav__label{padding:0 14px 8px; font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--g-text-secondary)}
 .adm .nav__item{display:flex; align-items:center; gap:14px; padding:10px 14px; border-radius:999px; font-size:14px;
@@ -258,17 +281,48 @@
 
 /* ---------- modal ---------- */
 .adm .scrim{position:fixed; inset:0; background:rgba(32,33,36,.5); z-index:80}
-.adm .modal{position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-  width:min(460px,calc(100vw - 32px)); background:#fff; border:1px solid var(--g-border);
+.adm .modal{position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) translateZ(0);
+  width:min(460px,calc(100vw - 32px)); max-height:calc(100vh - 64px); overflow-y:auto;
+  background:#fff; border:1px solid var(--g-border);
   border-radius:var(--r-2xl); box-shadow:var(--sh-xl); padding:22px; z-index:96}
 .adm .modal h3{font-size:17px; margin-bottom:6px}
 .adm .modal__field{margin-top:14px}
 .adm .modal__actions{display:flex; gap:10px; justify-content:flex-end; margin-top:20px}
 
+/* ---------- form validation states ---------- */
+.adm .finput.is-error{border-color:var(--g-red); background:var(--red-50)}
+.adm .finput.is-error:focus{box-shadow:0 0 0 3px rgba(234,67,53,.15)}
+.adm .finput.is-success{border-color:var(--g-green); background:var(--green-50)}
+.adm .finput.is-success:focus{box-shadow:0 0 0 3px rgba(52,168,83,.15)}
+.adm .ferror{font-size:12px; color:var(--g-red); margin-top:5px; display:flex; align-items:center; gap:4px}
+.adm .ferror .mi{font-size:14px}
+.adm .fsuccess{font-size:12px; color:var(--g-green); margin-top:5px; display:flex; align-items:center; gap:4px}
+.adm .fsuccess .mi{font-size:14px}
+
 /* ---------- toast ---------- */
 .adm .toast{position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:var(--g-text); color:#fff;
-  padding:12px 18px; border-radius:999px; font-size:13px; box-shadow:var(--sh-lg); z-index:99;
+  padding:12px 18px; border-radius:999px; font-size:13px; box-shadow:var(--sh-lg); z-index:110;
   display:inline-flex; align-items:center; gap:8px; max-width:calc(100vw - 32px)}
+
+/* ---------- loading states ---------- */
+.adm .spinner{width:20px; height:20px; border:2px solid var(--g-border); border-top-color:var(--g-blue);
+  border-radius:50%; animation:spin 0.6s linear infinite}
+.adm .spinner-sm{width:14px; height:14px; border-width:1.5px}
+.adm .spinner-lg{width:32px; height:32px; border-width:3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.adm .loading-overlay{position:absolute; inset:0; background:rgba(255,255,255,.8); display:grid;
+  place-items:center; z-index:50; border-radius:inherit}
+.adm .btn-loading{position:relative; color:transparent !important; pointer-events:none}
+.adm .btn-loading::after{content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:16px; height:16px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff;
+  border-radius:50%; animation:spin 0.6s linear infinite}
+
+/* ---------- table scroll indicators ---------- */
+.adm .tablewrap{position:relative}
+.adm .tablewrap::after{content:''; position:absolute; right:0; top:0; bottom:0; width:20px;
+  background:linear-gradient(to left, rgba(0,0,0,.05), transparent); pointer-events:none; opacity:0;
+  transition:opacity var(--tr)}
+.adm .tablewrap.is-scrollable::after{opacity:1}
 
 /* ---------- footer ---------- */
 .adm .footer{background:#fff; border-top:1px solid var(--g-border); margin-top:8px}
@@ -284,7 +338,13 @@
   .adm .sidebar{display:block; width:252px; flex:none; padding:24px 8px 40px 0; position:sticky;
     top:var(--appbar); max-height:calc(100vh - var(--appbar)); overflow-y:auto}
   .adm .menu-btn{display:none}
+  .adm .mobile-search{display:none !important}
   .adm .content{padding-left:24px}
+}
+@media (max-width:1023px){
+  .adm .mobile-search{display:block}
+  .adm .appbar__search{display:none}
+  .adm .pill-hide{display:none}
 }
 @media (min-width:1280px){
   .adm .grid2{display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); gap:18px; align-items:start}
@@ -304,10 +364,6 @@
 @media (max-width:1099px){
   .adm #queueTable th:nth-child(4),.adm #queueTable td:nth-child(4){display:none}
   .adm #usersTable th:nth-child(2),.adm #usersTable td:nth-child(2){display:none}
-}
-@media (max-width:1023px){
-  .adm .appbar__search{display:none}
-  .adm .pill-hide{display:none}
 }
 @media (max-width:767px){
   .adm .brand__tag{display:none}
