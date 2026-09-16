@@ -4,6 +4,7 @@ import com.auctionhouse.dto.UserRegistrationDTO;
 import com.auctionhouse.service.UserService;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -51,6 +52,10 @@ public class AuthController {
             return "redirect:/login?registered=true";
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());
+            return "register";
+        } catch (DataIntegrityViolationException e) {
+            // Concurrent duplicate registration hit the unique constraint
+            model.addAttribute("error", "Username or email already taken. Please choose different values.");
             return "register";
         }
     }
