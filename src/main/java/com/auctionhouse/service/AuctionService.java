@@ -5,12 +5,15 @@ import com.auctionhouse.model.AuctionCategory;
 import com.auctionhouse.model.AuctionStatus;
 import com.auctionhouse.model.User;
 import com.auctionhouse.repository.AuctionRepository;
+import com.auctionhouse.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -23,14 +26,17 @@ import java.util.Optional;
 public class AuctionService {
 
     private final AuctionRepository auctionRepository;
+    private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final PaymentReleaseService paymentReleaseService;
 
     @Autowired
-    public AuctionService(AuctionRepository auctionRepository, 
+    public AuctionService(AuctionRepository auctionRepository,
+                         UserRepository userRepository,
                          NotificationService notificationService,
                          @Lazy PaymentReleaseService paymentReleaseService) {
         this.auctionRepository = auctionRepository;
+        this.userRepository = userRepository;
         this.notificationService = notificationService;
         this.paymentReleaseService = paymentReleaseService;
     }
@@ -111,6 +117,8 @@ public class AuctionService {
 
                 // Create payment release record for won auctions
                 paymentReleaseService.createPaymentRelease(auction);
+            } else {
+                notifySellerUnsold(auction);
             }
         }
     }
@@ -188,10 +196,97 @@ public class AuctionService {
     }
 
     /**
-     * Delete auction by ID.
+     * Cancel an auction and refund the highest bidder if present.
+     */
+    @Transactional
+    public void cancelAuction(Auction auction) {
+        refundHighestBidder(auction);
+        auction.setStatus(AuctionStatus.CANCELLED);
+        auction.setHighestBidder(null);
+        auction.setCurrentHighestBid(0);
+        auctionRepository.save(auction);
+    }
+
+    /**
+     * Manually close an auction (admin action). Determines winner same as scheduled job,
+     * creates PaymentRelease if there is a winner.
+     */
+    @Transactional
+    public void closeAuctionManually(Auction auction) {
+        User winner = auction.closeAuction();
+        auctionRepository.save(auction);
+
+        if (winner != null) {
+            notificationService.createNotification(
+                    winner,
+                    "🏆 Congratulations! You won \"" + auction.getTitle() + "\" for $" +
+                            String.format("%,.2f", auction.getCurrentHighestBid()) + "!",
+                    "WON",
+                    auction.getId()
+            );
+            paymentReleaseService.createPaymentRelease(auction);
+        } else {
+            notifySellerUnsold(auction);
+        }
+    }
+
+    /**
+     * Delete auction by ID. Refunds the highest bidder first if present.
      */
     @Transactional
     public void deleteById(Long id) {
+        Optional<Auction> opt = auctionRepository.findById(id);
+        if (opt.isPresent()) {
+            refundHighestBidder(opt.get());
+        }
         auctionRepository.deleteById(id);
+    }
+
+    /**
+     * Refund the current highest bid back to the highest bidder's wallet.
+     * Re-fetches the user from the repository to avoid stale data.
+     * No-op if there is no highest bidder or bid amount is zero.
+     */
+    private void refundHighestBidder(Auction auction) {
+        User highestBidder = auction.getHighestBidder();
+        double bidAmount = auction.getCurrentHighestBid();
+
+        if (highestBidder == null || bidAmount <= 0) {
+            return;
+        }
+
+        // Re-fetch user to get fresh wallet balance
+        User freshBidder = userRepository.findById(highestBidder.getId())
+                .orElseThrow(() -> new RuntimeException("Highest bidder not found: " + highestBidder.getId()));
+
+        BigDecimal refund = BigDecimal.valueOf(bidAmount).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal currentBalance = BigDecimal.valueOf(freshBidder.getWalletBalance()).setScale(2, RoundingMode.HALF_UP);
+        freshBidder.setWalletBalance(currentBalance.add(refund).doubleValue());
+        userRepository.save(freshBidder);
+
+        // Keep the in-memory reference in sync for callers that use auction.getHighestBidder() after this
+        auction.setHighestBidder(freshBidder);
+
+        notificationService.createNotification(
+                freshBidder,
+                "💸 Auction \"" + auction.getTitle() + "\" was cancelled/closed. $" +
+                        String.format("%,.2f", refund.doubleValue()) + " has been refunded to your wallet.",
+                "REFUND",
+                auction.getId()
+        );
+    }
+
+    /**
+     * Notify the seller that their auction closed with no winner.
+     */
+    private void notifySellerUnsold(Auction auction) {
+        if (auction.getCreatedBy() != null) {
+            notificationService.createNotification(
+                    auction.getCreatedBy(),
+                    "📦 Your auction \"" + auction.getTitle() + "\" has ended with no winning bids.",
+                    "UNSOLD",
+                    auction.getId()
+            );
+        }
     }
 }

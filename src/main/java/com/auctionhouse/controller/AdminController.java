@@ -305,14 +305,14 @@ public class AdminController {
         try {
             Auction auction = auctionService.findById(id).orElseThrow(() -> new IllegalArgumentException("Auction not found"));
             if (auction.getStatus() == AuctionStatus.ACTIVE) {
-                auction.setStatus(AuctionStatus.CLOSED);
+                auctionService.closeAuctionManually(auction);
                 ra.addFlashAttribute("successMessage", "Closed \"" + auction.getTitle() + "\".");
             } else {
                 auction.setStatus(AuctionStatus.ACTIVE);
                 auction.setEndTime(LocalDateTime.now().plusDays(7));
+                auctionService.save(auction);
                 ra.addFlashAttribute("successMessage", "Reopened \"" + auction.getTitle() + "\" and set it to run for 7 days.");
             }
-            auctionService.save(auction);
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Could not update the auction: " + e.getMessage());
         }
@@ -341,14 +341,8 @@ public class AdminController {
     public String cancelAuction(@PathVariable Long id, RedirectAttributes ra) {
         try {
             Auction auction = auctionService.findById(id).orElseThrow(() -> new IllegalArgumentException("Auction not found"));
-            auction.setStatus(AuctionStatus.CANCELLED);
-            auctionService.save(auction);
-            if (auction.getHighestBidder() != null) {
-                notificationService.createNotification(auction.getHighestBidder(),
-                        "The auction \"" + auction.getTitle() + "\" was cancelled by an administrator.",
-                        "CANCELLED", auction.getId());
-            }
-            ra.addFlashAttribute("successMessage", "Cancelled \"" + auction.getTitle() + "\" and notified the leading bidder.");
+            auctionService.cancelAuction(auction);
+            ra.addFlashAttribute("successMessage", "Cancelled \"" + auction.getTitle() + "\" and refunded the highest bidder.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Could not cancel the auction: " + e.getMessage());
         }
@@ -383,8 +377,7 @@ public class AdminController {
                 Auction a = opt.get();
                 switch (action) {
                     case "close":
-                        a.setStatus(AuctionStatus.CLOSED);
-                        auctionService.save(a);
+                        auctionService.closeAuctionManually(a);
                         break;
                     case "reopen":
                         a.setStatus(AuctionStatus.ACTIVE);
@@ -392,8 +385,7 @@ public class AdminController {
                         auctionService.save(a);
                         break;
                     case "cancel":
-                        a.setStatus(AuctionStatus.CANCELLED);
-                        auctionService.save(a);
+                        auctionService.cancelAuction(a);
                         break;
                     case "delete":
                         auctionService.deleteById(a.getId());
