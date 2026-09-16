@@ -1,5 +1,6 @@
 package com.auctionhouse.controller;
 
+import com.auctionhouse.dto.BidDTO;
 import com.auctionhouse.model.Bid;
 import com.auctionhouse.model.User;
 import com.auctionhouse.service.BidService;
@@ -8,10 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import javax.validation.Valid;
 
 /**
  * BidController - handles bid placement.
@@ -31,8 +34,8 @@ public class BidController {
     }
 
     @PostMapping("/place")
-    public String placeBid(@RequestParam Long auctionId,
-                           @RequestParam double amount,
+    public String placeBid(@Valid BidDTO bidDTO,
+                           BindingResult bindingResult,
                            @AuthenticationPrincipal UserDetails userDetails,
                            RedirectAttributes redirectAttributes) {
         // Validation: User must be authenticated
@@ -41,11 +44,18 @@ public class BidController {
             return "redirect:/login";
         }
 
+        // Form-level validation from BidDTO annotations
+        if (bindingResult.hasErrors()) {
+            String errorMsg = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            redirectAttributes.addFlashAttribute("error", errorMsg != null ? errorMsg : "Invalid bid input.");
+            return "redirect:/auctions/detail/" + bidDTO.getAuctionId();
+        }
+
         try {
             User bidder = userService.getCurrentUser(userDetails.getUsername());
-            
-            // Place the bid (all validation happens in service layer)
-            Bid bid = bidService.placeBid(auctionId, bidder, amount);
+
+            // Place the bid (additional validation happens in service layer)
+            Bid bid = bidService.placeBid(bidDTO.getAuctionId(), bidder, bidDTO.getAmount());
 
             redirectAttributes.addFlashAttribute("success",
                     String.format("Bid of $%,.2f placed successfully!", bid.getAmount()));
@@ -53,6 +63,6 @@ public class BidController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
 
-        return "redirect:/auctions/detail/" + auctionId;
+        return "redirect:/auctions/detail/" + bidDTO.getAuctionId();
     }
 }
