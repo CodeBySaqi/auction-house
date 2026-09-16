@@ -26,14 +26,14 @@
                 <span class="material-icons-outlined text-g-blue text-xl">info</span>
                 <span class="text-sm text-blue-800">You have been signed out.</span>
             </div>
-            <div th:if="${param.error == 'banned'}" class="flex items-center gap-3 p-4 mb-6 bg-red-50 rounded-2xl border border-red-200">
+            <div th:if="${param.error != null and param.error[0] == 'banned'}" class="flex items-center gap-3 p-4 mb-6 bg-red-50 rounded-2xl border border-red-200">
                 <span class="material-icons-outlined text-g-red text-xl">block</span>
                 <div>
                     <p class="text-sm font-medium text-red-800">Your account has been banned</p>
                     <p class="text-xs text-red-700 mt-0.5">This account has been deactivated by an administrator. If you believe this is a mistake, please contact support.</p>
                 </div>
             </div>
-            <div th:if="${param.error != null and param.error != 'banned'}" class="flex items-center gap-3 p-4 mb-6 bg-red-50 rounded-2xl border border-red-200">
+            <div th:if="${param.error != null and param.error[0] != 'banned'}" class="flex items-center gap-3 p-4 mb-6 bg-red-50 rounded-2xl border border-red-200">
                 <span class="material-icons-outlined text-g-red text-xl">error</span>
                 <span class="text-sm text-red-800">Invalid username or password.</span>
             </div>

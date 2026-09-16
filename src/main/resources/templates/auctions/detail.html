@@ -137,7 +137,7 @@
                             <div class="relative">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-g-text-secondary font-medium">$</span>
                                 <input type="number" name="amount" required
-                                       th:min="${minimumBid}" step="0.01" th:placeholder="${#numbers.formatDecimal(minimumBid, 1, 'COMMA', 2, 'POINT')}"
+                                       th:min="${minimumBid}" step="any" th:placeholder="${#numbers.formatDecimal(minimumBid, 1, 'COMMA', 2, 'POINT')}"
                                        class="w-full pl-8 pr-4 py-3.5 bg-white border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all font-gsans font-medium text-lg">
                             </div>
                             <p class="text-xs text-g-text-secondary mt-1.5">Minimum: $<span th:text="${#numbers.formatDecimal(minimumBid, 1, 'COMMA', 2, 'POINT')}">0</span></p>
