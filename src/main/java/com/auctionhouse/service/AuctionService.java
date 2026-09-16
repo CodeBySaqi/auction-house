@@ -6,6 +6,7 @@ import com.auctionhouse.model.AuctionStatus;
 import com.auctionhouse.model.User;
 import com.auctionhouse.repository.AuctionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,11 +24,15 @@ public class AuctionService {
 
     private final AuctionRepository auctionRepository;
     private final NotificationService notificationService;
+    private final PaymentReleaseService paymentReleaseService;
 
     @Autowired
-    public AuctionService(AuctionRepository auctionRepository, NotificationService notificationService) {
+    public AuctionService(AuctionRepository auctionRepository, 
+                         NotificationService notificationService,
+                         @Lazy PaymentReleaseService paymentReleaseService) {
         this.auctionRepository = auctionRepository;
         this.notificationService = notificationService;
+        this.paymentReleaseService = paymentReleaseService;
     }
 
     /**
@@ -85,7 +90,7 @@ public class AuctionService {
 
     /**
      * Scheduled task: close expired auctions every minute.
-     * Determines winners and sends notifications.
+     * Determines winners, sends notifications, and creates payment release records.
      */
     @Scheduled(fixedRate = 60000)
     @Transactional
@@ -103,6 +108,9 @@ public class AuctionService {
                         "WON",
                         auction.getId()
                 );
+
+                // Create payment release record for won auctions
+                paymentReleaseService.createPaymentRelease(auction);
             }
         }
     }
