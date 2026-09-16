@@ -353,10 +353,10 @@
                             <div th:each="scheduled : ${scheduledBroadcasts}" class="p-3 bg-g-bg rounded-xl border border-g-border">
                                 <div class="flex items-center gap-2 mb-1">
                                     <span class="material-icons-outlined text-g-blue text-sm">schedule_send</span>
-                                    <span class="text-xs font-medium text-g-blue" th:text="${scheduled.scheduledTime}">Sep 18, 2026 • 10:00 AM</span>
+                                    <span class="text-xs font-medium text-g-blue" th:text="${scheduled.formattedScheduledTime}">Sep 18, 2026 • 10:00 AM</span>
                                 </div>
                                 <p class="text-sm font-medium text-g-text truncate" th:text="${scheduled.subject}">Weekend Auction Event</p>
-                                <p class="text-xs text-g-text-secondary mt-1" th:text="${scheduled.audience}">All Users (100)</p>
+                                <p class="text-xs text-g-text-secondary mt-1" th:text="${scheduled.audienceLabel}">All Users (100)</p>
                             </div>
                         </div>
                         <div th:if="${scheduledBroadcasts == null or scheduledBroadcasts.isEmpty()}" class="text-center py-6">

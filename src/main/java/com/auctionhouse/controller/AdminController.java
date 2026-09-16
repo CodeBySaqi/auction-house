@@ -2,6 +2,7 @@ package com.auctionhouse.controller;
 
 import com.auctionhouse.model.*;
 import com.auctionhouse.repository.BidRepository;
+import com.auctionhouse.repository.BroadcastRepository;
 import com.auctionhouse.repository.UserRepository;
 import com.auctionhouse.service.AuctionService;
 import com.auctionhouse.service.ChatService;
@@ -52,6 +53,7 @@ public class AdminController {
     private final PasswordEncoder passwordEncoder;
     private final PaymentReleaseService paymentReleaseService;
     private final ChatService chatService;
+    private final BroadcastRepository broadcastRepository;
 
     @Autowired
     public AdminController(UserService userService,
@@ -61,7 +63,8 @@ public class AdminController {
                            NotificationService notificationService,
                            PasswordEncoder passwordEncoder,
                            PaymentReleaseService paymentReleaseService,
-                           ChatService chatService) {
+                           ChatService chatService,
+                           BroadcastRepository broadcastRepository) {
         this.userService = userService;
         this.auctionService = auctionService;
         this.bidRepository = bidRepository;
@@ -70,6 +73,7 @@ public class AdminController {
         this.passwordEncoder = passwordEncoder;
         this.paymentReleaseService = paymentReleaseService;
         this.chatService = chatService;
+        this.broadcastRepository = broadcastRepository;
     }
 
     /* ==================== NEW ADMIN CONSOLE ==================== */
@@ -814,14 +818,28 @@ public class AdminController {
         long biddersCount = bidRepository.countBidsGroupedByBidder().size();
         model.addAttribute("topBiddersCount", biddersCount);
 
-        // Recent broadcasts (last 10 notifications of type ANNOUNCEMENT sent to all users)
-        // For now, show empty - will be populated when broadcasts are sent
-        model.addAttribute("totalBroadcasts", 0);
-        model.addAttribute("messagesDelivered", 0);
-        model.addAttribute("scheduledCount", 0);
-        model.addAttribute("lastBroadcastTime", "Never");
-        model.addAttribute("recentBroadcasts", List.of());
-        model.addAttribute("scheduledBroadcasts", List.of());
+        // Broadcast stats from database
+        long totalBroadcasts = broadcastRepository.count();
+        long messagesDelivered = broadcastRepository.sumDeliveredMessages();
+        long scheduledCount = broadcastRepository.countByScheduled(true);
+
+        model.addAttribute("totalBroadcasts", totalBroadcasts);
+        model.addAttribute("messagesDelivered", String.format("%,d", messagesDelivered));
+        model.addAttribute("scheduledCount", scheduledCount);
+
+        // Last broadcast time
+        List<Broadcast> sentBroadcasts = broadcastRepository.findSentBroadcasts();
+        if (!sentBroadcasts.isEmpty()) {
+            model.addAttribute("lastBroadcastTime", sentBroadcasts.get(0).getTimeAgo());
+        } else {
+            model.addAttribute("lastBroadcastTime", "Never");
+        }
+
+        // Recent broadcasts (last 10)
+        model.addAttribute("recentBroadcasts", sentBroadcasts.stream().limit(10).collect(Collectors.toList()));
+
+        // Scheduled broadcasts
+        model.addAttribute("scheduledBroadcasts", broadcastRepository.findScheduledBroadcasts());
 
         // All users for the "specific user" search
         model.addAttribute("allUsersList", allUsers);
@@ -906,6 +924,19 @@ public class AdminController {
             notificationService.createNotification(u, fullMessage, "ANNOUNCEMENT", null);
             sent++;
         }
+
+        // Save broadcast record
+        User adminUser = requireAdmin(principal);
+        Broadcast broadcast = new Broadcast();
+        broadcast.setSubject(subject.trim());
+        broadcast.setMessage(message.trim());
+        broadcast.setType(type);
+        broadcast.setAudience(audience);
+        broadcast.setRecipientCount(sent);
+        broadcast.setSentBy(adminUser);
+        broadcast.setSentAt(LocalDateTime.now());
+        broadcast.setScheduled(false);
+        broadcastRepository.save(broadcast);
 
         ra.addFlashAttribute("success", "Announcement delivered to " + audienceLabel + "!");
         return "redirect:/admin/broadcast";
