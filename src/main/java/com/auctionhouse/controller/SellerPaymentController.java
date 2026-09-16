@@ -3,6 +3,7 @@ package com.auctionhouse.controller;
 import com.auctionhouse.model.PaymentRelease;
 import com.auctionhouse.model.PlatformCommission;
 import com.auctionhouse.model.User;
+import com.auctionhouse.service.FileStorageService;
 import com.auctionhouse.service.PaymentReleaseService;
 import com.auctionhouse.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,11 +27,14 @@ public class SellerPaymentController {
 
     private final PaymentReleaseService paymentReleaseService;
     private final UserService userService;
+    private final FileStorageService fileStorageService;
 
     @Autowired
-    public SellerPaymentController(PaymentReleaseService paymentReleaseService, UserService userService) {
+    public SellerPaymentController(PaymentReleaseService paymentReleaseService, UserService userService,
+                                    FileStorageService fileStorageService) {
         this.paymentReleaseService = paymentReleaseService;
         this.userService = userService;
+        this.fileStorageService = fileStorageService;
     }
 
     /**
@@ -89,8 +93,8 @@ public class SellerPaymentController {
             // Handle file upload
             String proofPath = null;
             if (proofFile != null && !proofFile.isEmpty()) {
-                // TODO: Implement file upload to storage service
-                proofPath = "/uploads/proof/seller_" + paymentReleaseId + "_" + proofFile.getOriginalFilename();
+                String filename = fileStorageService.storeProofFile(proofFile, "seller_" + paymentReleaseId);
+                proofPath = "/uploads/proof/" + filename;
             }
 
             // Parse shipment date

@@ -22,14 +22,17 @@ public class FileStorageService {
 
     private Path uploadPath;
     private Path auctionUploadPath;
+    private Path proofUploadPath;
 
     @PostConstruct
     public void init() {
         uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         auctionUploadPath = Paths.get(uploadDir).getParent().resolve("auctions").toAbsolutePath().normalize();
+        proofUploadPath = Paths.get(uploadDir).getParent().resolve("proof").toAbsolutePath().normalize();
         try {
             Files.createDirectories(uploadPath);
             Files.createDirectories(auctionUploadPath);
+            Files.createDirectories(proofUploadPath);
         } catch (IOException e) {
             throw new RuntimeException("Could not create upload directory", e);
         }
@@ -53,6 +56,20 @@ public class FileStorageService {
         validateImage(file);
         String filename = generateFilename(file);
         Path targetPath = auctionUploadPath.resolve(filename);
+        Files.copy(file.getInputStream(), targetPath);
+        return filename;
+    }
+
+    /**
+     * Store a payment proof file (delivery/receipt) and return the filename.
+     * @param file the uploaded file
+     * @param prefix a descriptive prefix (e.g. "seller_123" or "buyer_456")
+     */
+    public String storeProofFile(MultipartFile file, String prefix) throws IOException {
+        validateImage(file);
+        String extension = extensionForContentType(file.getContentType());
+        String filename = prefix + "_" + UUID.randomUUID().toString() + extension;
+        Path targetPath = proofUploadPath.resolve(filename);
         Files.copy(file.getInputStream(), targetPath);
         return filename;
     }

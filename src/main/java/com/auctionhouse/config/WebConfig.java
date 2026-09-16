@@ -24,6 +24,12 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/uploads/auctions/**")
                 .addResourceLocations(auctionPath);
 
+        // Payment proof files (delivery/receipt proofs)
+        String proofPath = Paths.get(uploadDir)
+                .getParent().resolve("proof").toAbsolutePath().normalize().toUri().toString();
+        registry.addResourceHandler("/uploads/proof/**")
+                .addResourceLocations(proofPath);
+
         // Profile pictures (catch-all for /uploads/*)
         String profilePath = Paths.get(uploadDir)
                 .toAbsolutePath().normalize().toUri().toString();
