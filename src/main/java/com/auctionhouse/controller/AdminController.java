@@ -915,7 +915,12 @@ public class AdminController {
 
     private static String csv(String v) {
         if (v == null) return "";
-        String s = v.replace("\"", "\"\"");
+        String s = v;
+        // Formula injection guard: prefix with single quote if starts with = + - @
+        if (!s.isEmpty() && "=+-@".indexOf(s.charAt(0)) >= 0) {
+            s = "'" + s;
+        }
+        s = s.replace("\"", "\"\"");
         return (s.contains(",") || s.contains("\"") || s.contains("\n")) ? "\"" + s + "\"" : s;
     }
 

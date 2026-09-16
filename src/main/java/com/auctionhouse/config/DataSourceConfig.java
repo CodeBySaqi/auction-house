@@ -31,8 +31,14 @@ public class DataSourceConfig {
         try {
             URI dbUri = new URI(databaseUrl);
             
-            String username = dbUri.getUserInfo() != null ? dbUri.getUserInfo().split(":")[0] : "postgres";
-            String password = dbUri.getUserInfo() != null ? dbUri.getUserInfo().split(":")[1] : "";
+            String username = "postgres";
+            String password = "";
+            if (dbUri.getUserInfo() != null) {
+                String userInfo = dbUri.getUserInfo();
+                int firstColon = userInfo.indexOf(':');
+                username = firstColon >= 0 ? userInfo.substring(0, firstColon) : userInfo;
+                password = firstColon >= 0 ? userInfo.substring(firstColon + 1) : "";
+            }
             String host = dbUri.getHost();
             int port = dbUri.getPort() != -1 ? dbUri.getPort() : 5432;
             String database = dbUri.getPath().substring(1); // Remove leading '/'
