@@ -2,6 +2,8 @@ package com.auctionhouse.service;
 
 import com.auctionhouse.dto.UserRegistrationDTO;
 import com.auctionhouse.model.User;
+import com.auctionhouse.repository.AuctionRepository;
+import com.auctionhouse.repository.BidRepository;
 import com.auctionhouse.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,11 +25,18 @@ import java.util.Optional;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final AuctionRepository auctionRepository;
+    private final BidRepository bidRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository,
+                       AuctionRepository auctionRepository,
+                       BidRepository bidRepository,
+                       PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.auctionRepository = auctionRepository;
+        this.bidRepository = bidRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -129,9 +138,29 @@ public class UserService implements UserDetailsService {
 
     /**
      * Delete user by ID.
+     * Guards against deleting users who have created auctions or placed bids.
      */
     @Transactional
     public void deleteById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // Check for auctions created by this user
+        long auctionCount = auctionRepository.findByCreatedByOrderByCreatedAtDesc(user).size();
+        if (auctionCount > 0) {
+            throw new IllegalStateException(
+                    "Cannot delete user \"" + user.getUsername() + "\" — they have " + auctionCount +
+                    " auction(s). Deactivate the account instead.");
+        }
+
+        // Check for bids placed by this user
+        long bidCount = bidRepository.countByBidderId(id);
+        if (bidCount > 0) {
+            throw new IllegalStateException(
+                    "Cannot delete user \"" + user.getUsername() + "\" — they have " + bidCount +
+                    " bid(s). Deactivate the account instead.");
+        }
+
         userRepository.deleteById(id);
     }
 }
