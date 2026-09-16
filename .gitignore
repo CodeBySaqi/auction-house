@@ -27,3 +27,9 @@ uploads/
 # Logs
 *.log
 cookies.txt
+
+# Demo HTML files (not for production)
+*-demo*.html
+CHAT_FEATURE_COMPLETE.md
+SKILLS-REFERENCE.md
+blueprint/security-audit/
