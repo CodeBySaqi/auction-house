@@ -94,8 +94,9 @@ public class BidService {
         }
 
         // Validation 6: User cannot place consecutive bids on the same auction
+        // This prevents self-bidding wars and protects bidders from over-committing
         if (auction.getHighestBidder() != null && auction.getHighestBidder().getId().equals(bidder.getId())) {
-            throw new BidTooLowException("You cannot bid again until another user places a higher bid.");
+            throw new BidTooLowException("You are already the highest bidder on this auction. Wait for another bidder before placing a new bid.");
         }
 
         // Store previous highest bidder for refund + notification

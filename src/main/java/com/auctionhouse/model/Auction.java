@@ -156,10 +156,12 @@ public abstract class Auction {
         long days = ChronoUnit.DAYS.between(now, endTime);
         long hours = ChronoUnit.HOURS.between(now, endTime) % 24;
         long minutes = ChronoUnit.MINUTES.between(now, endTime) % 60;
+        long seconds = ChronoUnit.SECONDS.between(now, endTime) % 60;
 
         if (days > 0) return days + "d " + hours + "h";
         if (hours > 0) return hours + "h " + minutes + "m";
-        return minutes + "m";
+        if (minutes > 0) return minutes + "m " + seconds + "s";
+        return seconds + "s";
     }
 
     public long getTimeRemainingSeconds() {

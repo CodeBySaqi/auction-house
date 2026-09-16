@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpSession;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -149,14 +151,35 @@ public class ProfileController {
 
     /**
      * Add $50,000 demo money to user's wallet.
+     * Limited to once per 24 hours per user to prevent abuse.
      */
     @PostMapping("/profile/add-money")
     public String addDemoMoney(@AuthenticationPrincipal UserDetails userDetails,
+                               HttpSession session,
                                RedirectAttributes redirectAttributes) {
+        // Check cooldown (24 hours = 86400000 ms)
+        String sessionKey = "lastDemoMoney_" + userDetails.getUsername();
+        Long lastClaimTime = (Long) session.getAttribute(sessionKey);
+        long now = System.currentTimeMillis();
+        
+        if (lastClaimTime != null && (now - lastClaimTime) < 86400000L) {
+            long remainingMs = 86400000L - (now - lastClaimTime);
+            long remainingHours = remainingMs / 3600000L;
+            long remainingMinutes = (remainingMs % 3600000L) / 60000L;
+            redirectAttributes.addFlashAttribute("error", 
+                String.format("You can claim demo money again in %d hours and %d minutes.", 
+                    remainingHours, remainingMinutes));
+            return "redirect:/dashboard";
+        }
+        
         User user = userService.getCurrentUser(userDetails.getUsername());
         user.setWalletBalance(user.getWalletBalance() + 50000.0);
         userService.updateProfile(user);
-        redirectAttributes.addFlashAttribute("success", "💰 $50,000 added to your wallet! Go bid on something awesome.");
+        
+        // Update cooldown timestamp
+        session.setAttribute(sessionKey, now);
+        
+        redirectAttributes.addFlashAttribute("success", "💰 $50,000 added to your wallet! Go bid on something awesome. Next claim available in 24 hours.");
         return "redirect:/dashboard";
     }
 

@@ -280,17 +280,16 @@ public class DemoDataSeeder implements CommandLineRunner {
 
             // Set common properties
             auction.setDescription("High-quality item in excellent condition. Perfect for collectors and enthusiasts.");
-            auction.setEndTime(LocalDateTime.now().plusDays(random.nextInt(14) - 7)); // -7 to +7 days
             auction.setCreatedBy(users.get(random.nextInt(users.size())));
             
             // 70% active, 30% closed
             if (random.nextInt(100) < 70) {
                 auction.setStatus(AuctionStatus.ACTIVE);
-                if (auction.getEndTime().isBefore(LocalDateTime.now())) {
-                    auction.setEndTime(LocalDateTime.now().plusDays(random.nextInt(7) + 1));
-                }
+                // Active auctions always have future end times (1-14 days from now)
+                auction.setEndTime(LocalDateTime.now().plusDays(random.nextInt(14) + 1));
             } else {
                 auction.setStatus(AuctionStatus.CLOSED);
+                // Closed auctions have past end times (1-7 days ago)
                 auction.setEndTime(LocalDateTime.now().minusDays(random.nextInt(7) + 1));
             }
 

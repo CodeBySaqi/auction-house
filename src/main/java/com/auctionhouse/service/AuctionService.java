@@ -197,9 +197,15 @@ public class AuctionService {
 
     /**
      * Cancel an auction and refund the highest bidder if present.
+     * Prevents double-cancellation by checking status first.
      */
     @Transactional
     public void cancelAuction(Auction auction) {
+        // Prevent double-cancellation
+        if (auction.getStatus() == AuctionStatus.CANCELLED) {
+            throw new IllegalStateException("Auction is already cancelled");
+        }
+        
         refundHighestBidder(auction);
         auction.setStatus(AuctionStatus.CANCELLED);
         auction.setHighestBidder(null);

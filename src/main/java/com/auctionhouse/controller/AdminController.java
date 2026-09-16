@@ -393,6 +393,11 @@ public class AdminController {
                         auctionService.closeAuctionManually(a);
                         break;
                     case "reopen":
+                        // Skip if already ACTIVE
+                        if (a.getStatus() == AuctionStatus.ACTIVE) {
+                            ra.addFlashAttribute("errorMessage", "Auction \"" + a.getTitle() + "\" is already active.");
+                            continue;
+                        }
                         // Check for existing PaymentRelease - block if found (safer option)
                         Optional<PaymentRelease> existingPR = paymentReleaseService.findByAuctionId(a.getId());
                         if (existingPR.isPresent()) {
@@ -567,7 +572,14 @@ public class AdminController {
     public String adjustBalance(@PathVariable Long id, @RequestParam double amount, RedirectAttributes ra) {
         try {
             User user = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
-            user.setWalletBalance(user.getWalletBalance() + amount);
+            double newBalance = user.getWalletBalance() + amount;
+            if (newBalance < 0) {
+                ra.addFlashAttribute("errorMessage", "Cannot reduce balance below $0.00. Current: $" 
+                        + String.format("%,.2f", user.getWalletBalance()) + ", attempted deduction: $" 
+                        + String.format("%,.2f", Math.abs(amount)) + ".");
+                return "redirect:/admin/users";
+            }
+            user.setWalletBalance(newBalance);
             userService.updateProfile(user);
             ra.addFlashAttribute("successMessage", "Adjusted " + user.getUsername() + " by "
                     + String.format("%,.2f", amount) + ". New balance $" + String.format("%,.2f", user.getWalletBalance()) + ".");
