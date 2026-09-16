@@ -4,6 +4,8 @@ import com.auctionhouse.model.PaymentRelease;
 import com.auctionhouse.model.PlatformCommission;
 import com.auctionhouse.model.User;
 import com.auctionhouse.model.VerificationStatus;
+import com.auctionhouse.model.Auction;
+import com.auctionhouse.service.AuctionService;
 import com.auctionhouse.service.PaymentReleaseService;
 import com.auctionhouse.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,11 +30,13 @@ public class AdminPaymentController {
 
     private final PaymentReleaseService paymentReleaseService;
     private final UserService userService;
+    private final AuctionService auctionService;
 
     @Autowired
-    public AdminPaymentController(PaymentReleaseService paymentReleaseService, UserService userService) {
+    public AdminPaymentController(PaymentReleaseService paymentReleaseService, UserService userService, AuctionService auctionService) {
         this.paymentReleaseService = paymentReleaseService;
         this.userService = userService;
+        this.auctionService = auctionService;
     }
 
     /**
@@ -62,6 +66,7 @@ public class AdminPaymentController {
         model.addAttribute("totalWinningAmount", paymentReleaseService.getTotalWinningAmount());
         model.addAttribute("commissionCount", paymentReleaseService.getCommissionCount());
         
+        addSidebarAttributes(model);
         return "admin/payment-releases";
     }
 
@@ -172,5 +177,12 @@ public class AdminPaymentController {
             redirectAttributes.addFlashAttribute("error", "Failed to reject: " + e.getMessage());
             return "redirect:/admin/payments/" + id;
         }
+    }
+
+    private void addSidebarAttributes(Model model) {
+        model.addAttribute("totalAuctions", auctionService.getAllAuctions().size());
+        model.addAttribute("pendingCount", auctionService.getPendingAuctions().size());
+        model.addAttribute("pendingPaymentCount", paymentReleaseService.countPendingReview());
+        model.addAttribute("totalUsers", userService.findAllUsers().size());
     }
 }

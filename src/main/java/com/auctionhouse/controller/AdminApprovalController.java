@@ -3,6 +3,7 @@ package com.auctionhouse.controller;
 import com.auctionhouse.model.Auction;
 import com.auctionhouse.model.User;
 import com.auctionhouse.service.AuctionService;
+import com.auctionhouse.service.PaymentReleaseService;
 import com.auctionhouse.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,11 +27,13 @@ public class AdminApprovalController {
 
     private final AuctionService auctionService;
     private final UserService userService;
+    private final PaymentReleaseService paymentReleaseService;
 
     @Autowired
-    public AdminApprovalController(AuctionService auctionService, UserService userService) {
+    public AdminApprovalController(AuctionService auctionService, UserService userService, PaymentReleaseService paymentReleaseService) {
         this.auctionService = auctionService;
         this.userService = userService;
+        this.paymentReleaseService = paymentReleaseService;
     }
 
     /**
@@ -41,6 +44,7 @@ public class AdminApprovalController {
         List<Auction> pendingAuctions = auctionService.getPendingAuctions();
         model.addAttribute("pendingAuctions", pendingAuctions);
         model.addAttribute("currentUser", userService.getCurrentUser(userDetails.getUsername()));
+        addSidebarAttributes(model);
         return "admin/approvals";
     }
 
@@ -126,5 +130,12 @@ public class AdminApprovalController {
             redirectAttributes.addFlashAttribute("error", "Failed to reject auction: " + e.getMessage());
             return "redirect:/admin/approvals/" + id;
         }
+    }
+
+    private void addSidebarAttributes(Model model) {
+        model.addAttribute("totalAuctions", auctionService.getAllAuctions().size());
+        model.addAttribute("pendingCount", auctionService.getPendingAuctions().size());
+        model.addAttribute("pendingPaymentCount", paymentReleaseService.countPendingReview());
+        model.addAttribute("totalUsers", userService.findAllUsers().size());
     }
 }

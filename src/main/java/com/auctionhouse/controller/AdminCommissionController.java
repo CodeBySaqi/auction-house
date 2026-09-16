@@ -1,7 +1,10 @@
 package com.auctionhouse.controller;
 
 import com.auctionhouse.model.PlatformCommission;
+import com.auctionhouse.model.Auction;
+import com.auctionhouse.service.AuctionService;
 import com.auctionhouse.service.PaymentReleaseService;
+import com.auctionhouse.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -21,10 +24,14 @@ import java.util.List;
 public class AdminCommissionController {
 
     private final PaymentReleaseService paymentReleaseService;
+    private final AuctionService auctionService;
+    private final UserService userService;
 
     @Autowired
-    public AdminCommissionController(PaymentReleaseService paymentReleaseService) {
+    public AdminCommissionController(PaymentReleaseService paymentReleaseService, AuctionService auctionService, UserService userService) {
         this.paymentReleaseService = paymentReleaseService;
+        this.auctionService = auctionService;
+        this.userService = userService;
     }
 
     /**
@@ -41,6 +48,14 @@ public class AdminCommissionController {
         model.addAttribute("commissionCount", paymentReleaseService.getCommissionCount());
         model.addAttribute("commissionRate", PlatformCommission.COMMISSION_RATE);
 
+        addSidebarAttributes(model);
         return "admin/commissions";
+    }
+
+    private void addSidebarAttributes(Model model) {
+        model.addAttribute("totalAuctions", auctionService.getAllAuctions().size());
+        model.addAttribute("pendingCount", auctionService.getPendingAuctions().size());
+        model.addAttribute("pendingPaymentCount", paymentReleaseService.countPendingReview());
+        model.addAttribute("totalUsers", userService.findAllUsers().size());
     }
 }

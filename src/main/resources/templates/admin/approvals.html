@@ -28,7 +28,7 @@
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-g-bg font-roboto text-g-text min-h-screen">
+<body class="bg-g-bg font-roboto text-g-text h-screen overflow-hidden flex flex-col">
 
     <!-- Flash Messages -->
     <div th:if="${success}" class="fixed top-20 right-4 z-50 bg-green-50 border border-green-200 text-green-800 px-6 py-3 rounded-2xl shadow-g-md flex items-center gap-3 animate-slide-in">
@@ -60,9 +60,7 @@
                         <span class="material-icons-outlined dark:hidden">dark_mode</span>
                         <span class="material-icons-outlined hidden dark:inline">light_mode</span>
                     </button>
-                    <a th:href="@{/admin/console}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Back to Dashboard">
-                        <span class="material-icons-outlined">dashboard</span>
-                    </a>
+                    
                     <div class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm">
                         A
                     </div>
@@ -71,8 +69,15 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+    <!-- Main Layout -->
+    <div class="max-w-[1680px] mx-auto flex flex-1 overflow-hidden w-full">
+
+        <!-- Sidebar -->
+        <aside th:replace="~{fragments/admin-sidebar :: sidebar('approvals')}"></aside>
+        <div th:replace="~{fragments/admin-sidebar :: mobile-nav('approvals')}"></div>
+
+        <!-- Main Content -->
+        <main class="flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         
         <!-- Page Header -->
         <div class="flex items-center justify-between mb-6">
@@ -80,10 +85,7 @@
                 <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">Pending Auction Approvals</h1>
                 <p class="text-sm text-g-text-secondary mt-1">Review and approve or reject new auction submissions.</p>
             </div>
-            <a th:href="@{/admin/console}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-g-border rounded-full text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
-                <span class="material-icons-outlined text-lg">arrow_back</span>
-                Back to Dashboard
-            </a>
+
         </div>
 
         <!-- Stats Card -->
@@ -167,7 +169,8 @@
             </div>
         </div>
 
-    </main>
+        </main>
+    </div>
 
     <script>
         function toggleTheme() {
