@@ -146,10 +146,37 @@
                         <span class="material-icons-outlined dark:hidden">dark_mode</span>
                         <span class="material-icons-outlined hidden dark:inline">light_mode</span>
                     </button>
-                    <a href="/notifications" class="relative p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
-                        <span class="material-icons-outlined">notifications</span>
-                        <span th:if="${unreadCount > 0}" class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-g-red rounded-full text-[10px] text-white font-medium flex items-center justify-center" th:text="${unreadCount}">0</span>
-                    </a>
+                    <!-- Notification Bell + Popover -->
+                    <div class="relative" id="notifBell">
+                        <button onclick="toggleNotifPopover()" class="relative p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                            <span class="material-icons-outlined">notifications</span>
+                            <span id="notifBadge" th:if="${unreadCount > 0}" class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-g-red rounded-full text-[10px] text-white font-medium flex items-center justify-center" th:text="${unreadCount}">0</span>
+                        </button>
+
+                        <!-- Notification Popover -->
+                        <div id="notifPopover" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-g-xl border border-g-border z-50 overflow-hidden">
+                            <!-- Header -->
+                            <div class="px-4 py-3 border-b border-g-border flex items-center justify-between">
+                                <h3 class="font-gsans font-medium text-sm text-g-text">Notifications</h3>
+                                <span id="notifUnreadLabel" class="text-[10px] font-semibold text-g-blue bg-g-blue-light px-2 py-0.5 rounded-full hidden">0 new</span>
+                            </div>
+                            <!-- Notification List -->
+                            <div id="notifList" class="max-h-80 overflow-y-auto divide-y divide-g-border scrollbar-hide">
+                                <!-- Loading state -->
+                                <div id="notifLoading" class="p-6 text-center">
+                                    <div class="w-6 h-6 border-2 border-g-blue border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                                    <p class="text-xs text-g-text-secondary">Loading...</p>
+                                </div>
+                            </div>
+                            <!-- Footer -->
+                            <div class="border-t border-g-border px-4 py-2.5">
+                                <a href="/notifications" class="flex items-center justify-center gap-1.5 text-sm font-medium text-g-blue hover:text-g-blue-hover transition-colors py-1">
+                                    View all notifications
+                                    <span class="material-icons-outlined text-base">arrow_forward</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Profile Dropdown -->
                     <div class="relative" id="profileDropdown">
@@ -259,7 +286,100 @@
             if (dropdown && menu && !dropdown.contains(e.target)) {
                 menu.classList.add('hidden');
             }
+            // Close notification popover when clicking outside
+            const bell = document.getElementById('notifBell');
+            const popover = document.getElementById('notifPopover');
+            if (bell && popover && !bell.contains(e.target)) {
+                popover.classList.add('hidden');
+            }
         });
+
+        // ===== Notification Popover =====
+        let notifLoaded = false;
+
+        function toggleNotifPopover() {
+            const popover = document.getElementById('notifPopover');
+            const isOpen = !popover.classList.contains('hidden');
+            popover.classList.toggle('hidden');
+            if (!isOpen && !notifLoaded) {
+                fetchNotifications();
+            }
+        }
+
+        function fetchNotifications() {
+            const list = document.getElementById('notifList');
+            document.getElementById('notifLoading').style.display = 'block';
+
+            fetch('/api/notifications/recent')
+                .then(r => r.json())
+                .then(data => {
+                    notifLoaded = true;
+                    document.getElementById('notifLoading').style.display = 'none';
+                    renderNotifications(data.notifications, data.unreadCount);
+                    // Update badge
+                    const badge = document.getElementById('notifBadge');
+                    if (badge) {
+                        if (data.unreadCount > 0) {
+                            badge.textContent = data.unreadCount > 99 ? '99+' : data.unreadCount;
+                            badge.style.display = 'flex';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                    // Update label
+                    const label = document.getElementById('notifUnreadLabel');
+                    if (label) {
+                        if (data.unreadCount > 0) {
+                            label.textContent = data.unreadCount + ' new';
+                            label.classList.remove('hidden');
+                        } else {
+                            label.classList.add('hidden');
+                        }
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('notifLoading').innerHTML = '<p class="text-xs text-g-red">Failed to load</p>';
+                });
+        }
+
+        function renderNotifications(notifications, unreadCount) {
+            const list = document.getElementById('notifList');
+            // Remove old items (keep loading div)
+            list.querySelectorAll('.notif-item').forEach(el => el.remove());
+
+            if (!notifications || notifications.length === 0) {
+                list.insertAdjacentHTML('beforeend',
+                    '<div class="notif-item p-6 text-center">' +
+                    '<span class="material-icons-outlined text-g-text-secondary text-3xl">notifications_none</span>' +
+                    '<p class="text-sm text-g-text-secondary mt-2">All caught up!</p></div>');
+                return;
+            }
+
+            notifications.forEach(function(n) {
+                var iconBg = n.type === 'WON' ? 'bg-green-100' : (n.type === 'OUTBID' ? 'bg-red-100' : (n.type === 'REFUND' ? 'bg-amber-100' : 'bg-blue-100'));
+                var iconColor = n.type === 'WON' ? 'text-g-green' : (n.type === 'OUTBID' ? 'text-g-red' : (n.type === 'REFUND' ? 'text-amber-600' : 'text-g-blue'));
+                var icon = n.type === 'WON' ? 'emoji_events' : (n.type === 'OUTBID' ? 'trending_down' : (n.type === 'REFUND' ? 'payments' : 'campaign'));
+                var isUnread = !n.read;
+
+                var html = '<div class="notif-item px-4 py-3 flex items-start gap-3 hover:bg-g-hover transition-colors cursor-pointer' + (isUnread ? ' bg-blue-50/40' : '') + '"' +
+                    (n.auctionId ? ' onclick="window.location=\'/auctions/detail/' + n.auctionId + '\'"' : '') + '>' +
+                    '<div class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center ' + iconBg + '">' +
+                    '<span class="material-icons-outlined text-base ' + iconColor + '">' + icon + '</span></div>' +
+                    '<div class="flex-1 min-w-0">' +
+                    '<p class="text-xs leading-relaxed line-clamp-2 ' + (isUnread ? 'font-medium text-g-text' : 'text-g-text-secondary') + '">' + escapeHtml(n.message) + '</p>' +
+                    '<p class="text-[10px] text-g-text-secondary mt-1">' + n.timeAgo + '</p>' +
+                    '</div>' +
+                    (isUnread ? '<span class="w-2 h-2 bg-g-blue rounded-full shrink-0 mt-1.5"></span>' : '') +
+                    '</div>';
+                list.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
     </script>
 </div>
 
