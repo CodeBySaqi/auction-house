@@ -769,8 +769,103 @@ public class AdminController {
         return "redirect:/admin/settings";
     }
 
+    /* ==================== BROADCAST ==================== */
+
+    @GetMapping("/broadcast")
+    public String broadcastPage(Model model, Principal principal) {
+        User admin = requireAdmin(principal);
+        model.addAttribute("admin", admin);
+        addCounts(model, auctionService.getAllAuctions());
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
+
+        // Sidebar counts
+        List<Auction> allAuctions = auctionService.getAllAuctions();
+        model.addAttribute("totalAuctions", allAuctions.size());
+        model.addAttribute("pendingCount", auctionService.getPendingAuctions().size());
+        model.addAttribute("pendingPaymentCount", paymentReleaseService.countPendingReview());
+
+        // Stats
+        List<User> allUsers = userService.findAllUsers();
+        model.addAttribute("totalUsers", allUsers.size());
+        model.addAttribute("activeUsers", allUsers.stream().filter(User::isActive).count());
+        model.addAttribute("topBiddersCount", allUsers.stream().filter(u -> u.getBids() != null && !u.getBids().isEmpty()).count());
+
+        // Recent broadcasts (last 10 notifications of type ANNOUNCEMENT sent to all users)
+        // For now, show empty - will be populated when broadcasts are sent
+        model.addAttribute("totalBroadcasts", 0);
+        model.addAttribute("messagesDelivered", 0);
+        model.addAttribute("scheduledCount", 0);
+        model.addAttribute("lastBroadcastTime", "Never");
+        model.addAttribute("recentBroadcasts", List.of());
+        model.addAttribute("scheduledBroadcasts", List.of());
+
+        return "admin-broadcast";
+    }
+
+    @PostMapping("/broadcast/send")
+    public String sendBroadcast(@RequestParam String type,
+                                @RequestParam String subject,
+                                @RequestParam String message,
+                                @RequestParam(defaultValue = "all") String audience,
+                                Principal principal,
+                                RedirectAttributes ra) {
+        requireAdmin(principal);
+
+        if (subject == null || subject.trim().isEmpty()) {
+            ra.addFlashAttribute("error", "Subject is required.");
+            return "redirect:/admin/broadcast";
+        }
+        if (message == null || message.trim().isEmpty()) {
+            ra.addFlashAttribute("error", "Message is required.");
+            return "redirect:/admin/broadcast";
+        }
+
+        // Build the notification message with type prefix
+        String typePrefix = switch (type) {
+            case "alert" -> "⚠️ ";
+            case "update" -> "🔄 ";
+            case "new_feature" -> "✨ ";
+            default -> "📢 ";
+        };
+        String fullMessage = typePrefix + "**" + subject.trim() + "**\n\n" + message.trim();
+
+        // Determine recipients based on audience
+        List<User> allUsers = userService.findAllUsers();
+        List<User> recipients;
+        String audienceLabel;
+        switch (audience) {
+            case "active":
+                recipients = allUsers.stream().filter(User::isActive).collect(java.util.stream.Collectors.toList());
+                audienceLabel = recipients.size() + " active users";
+                break;
+            case "bidders":
+                recipients = allUsers.stream()
+                        .filter(u -> u.getBids() != null && !u.getBids().isEmpty())
+                        .sorted((a, b) -> Integer.compare(
+                                b.getBids() != null ? b.getBids().size() : 0,
+                                a.getBids() != null ? a.getBids().size() : 0))
+                        .limit(25)
+                        .collect(java.util.stream.Collectors.toList());
+                audienceLabel = recipients.size() + " top bidders";
+                break;
+            default: // "all"
+                recipients = allUsers;
+                audienceLabel = "all " + recipients.size() + " users";
+                break;
+        }
+
+        int sent = 0;
+        for (User u : recipients) {
+            notificationService.createNotification(u, fullMessage, "ANNOUNCEMENT", null);
+            sent++;
+        }
+
+        ra.addFlashAttribute("success", "Announcement delivered to " + audienceLabel + "!");
+        return "redirect:/admin/broadcast";
+    }
+
     @PostMapping("/notifications/broadcast")
-    public String broadcast(@RequestParam String message, RedirectAttributes ra) {
+    public String legacyBroadcast(@RequestParam String message, RedirectAttributes ra) {
         if (message == null || message.trim().isEmpty()) {
             ra.addFlashAttribute("errorMessage", "Enter a message before broadcasting.");
             return "redirect:/admin/settings";

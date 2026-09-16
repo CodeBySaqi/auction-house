@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broadcast - AuctionHouse Admin</title>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                colors: {
+                    'g-blue': 'var(--g-blue)',
+                    'g-blue-hover': 'var(--g-blue-hover)',
+                    'g-blue-light': 'var(--g-blue-light)',
+                    'g-red': 'var(--g-red)',
+                    'g-yellow': 'var(--g-yellow)',
+                    'g-green': 'var(--g-green)',
+                    'g-surface': 'var(--g-surface)',
+                    'g-bg': 'var(--g-bg)',
+                    'g-text': 'var(--g-text)',
+                    'g-text-secondary': 'var(--g-text-secondary)',
+                    'g-border': 'var(--g-border)',
+                    'g-hover': 'var(--g-hover)',
+                },
+                fontFamily: {
+                    'gsans': ['"Google Sans"', 'Roboto', 'system-ui', 'sans-serif'],
+                    'roboto': ['Roboto', 'system-ui', 'sans-serif'],
+                },
+                boxShadow: {
+                    'g-sm': '0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15)',
+                    'g-md': '0 1px 3px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15)',
+                    'g-lg': '0 1px 3px 0 rgba(60,64,67,.3), 0 8px 16px 6px rgba(60,64,67,.15)',
+                    'g-xl': '0 2px 6px 2px rgba(60,64,67,.3), 0 12px 28px 8px rgba(60,64,67,.15)',
+                }
+            }
+        }
+    }
+    </script>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .user-list { max-height: 200px; overflow-y: auto; }
+        .user-list::-webkit-scrollbar { width: 4px; }
+        .user-list::-webkit-scrollbar-thumb { background: #dadce0; border-radius: 4px; }
+        .animate-slide-in { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-g-bg font-roboto text-g-text h-screen overflow-hidden flex flex-col">
+
+    <!-- Flash Messages -->
+    <div th:if="${success}" class="fixed top-20 right-4 z-50 bg-green-50 border border-green-200 text-green-800 px-6 py-3 rounded-2xl shadow-g-md flex items-center gap-3 animate-slide-in">
+        <span class="material-icons-outlined text-g-green">check_circle</span>
+        <span class="text-sm font-medium" th:text="${success}">Announcement delivered successfully.</span>
+    </div>
+    <div th:if="${error}" class="fixed top-20 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-6 py-3 rounded-2xl shadow-g-md flex items-center gap-3 animate-slide-in">
+        <span class="material-icons-outlined text-g-red">error</span>
+        <span class="text-sm font-medium" th:text="${error}">Error message</span>
+    </div>
+
+    <!-- App Bar -->
+    <nav class="bg-white border-b border-g-border sticky top-0 z-40 flex-shrink-0">
+        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-g-blue rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-white text-xl">gavel</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-gsans font-medium text-xl text-g-text">Auction<span class="text-g-blue">House</span></span>
+                        <span class="px-2.5 py-1 bg-g-text text-white text-[10px] font-bold uppercase tracking-wider rounded-md">Admin</span>
+                    </div>
+                </div>
+
+                <div class="hidden md:flex flex-1 max-w-xl mx-8">
+                    <form th:action="@{/admin/search}" method="get" class="relative w-full">
+                        <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-g-text-secondary">search</span>
+                        <input type="text" name="q" placeholder="Search..."
+                               class="w-full pl-11 pr-4 py-2.5 bg-g-bg border border-g-border rounded-full text-sm placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white focus:shadow-g-sm transition-all">
+                    </form>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleTheme()" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined dark:hidden">dark_mode</span>
+                        <span class="material-icons-outlined hidden dark:inline">light_mode</span>
+                    </button>
+                    <a th:href="@{/admin/notifications}" class="relative p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined">notifications</span>
+                        <span th:if="${unreadCount > 0}" class="absolute top-1 right-1 w-4 h-4 bg-g-red rounded-full text-[10px] text-white font-bold flex items-center justify-center" th:text="${unreadCount}">3</span>
+                    </a>
+                    <a th:href="@{/admin/settings}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined">settings</span>
+                    </a>
+                    <div class="relative">
+                        <button onclick="toggleProfileDropdown()" class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm hover:shadow-g-sm transition-shadow cursor-pointer">
+                            A
+                        </button>
+                        <div id="profileDropdown" class="hidden absolute right-0 top-12 w-56 bg-white border border-g-border rounded-2xl shadow-g-lg z-50 py-2">
+                            <div class="px-4 py-3 border-b border-g-border mb-1">
+                                <p class="text-sm font-medium text-g-text" th:text="${admin.username}">Admin User</p>
+                                <p class="text-xs text-g-text-secondary truncate" th:text="${admin.email}">admin@auctionhouse.com</p>
+                            </div>
+                            <a th:href="@{/profile/edit}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                <span class="material-icons-outlined text-lg text-g-text-secondary">person</span>
+                                My Profile
+                            </a>
+                            <a th:href="@{/}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                <span class="material-icons-outlined text-lg text-g-text-secondary">home</span>
+                                View Site
+                            </a>
+                            <div class="border-t border-g-border my-1"></div>
+                            <a th:href="@{/logout}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-red hover:bg-red-50 transition-colors">
+                                <span class="material-icons-outlined text-lg">logout</span>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div class="max-w-[1680px] mx-auto flex flex-1 overflow-hidden w-full">
+
+        <!-- Sidebar -->
+        <aside th:replace="~{fragments/admin-sidebar :: sidebar('broadcast')}"></aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+
+            <!-- Page Header -->
+            <div class="mb-6">
+                <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">Broadcast</h1>
+                <p class="text-sm text-g-text-secondary mt-1">Send announcements and notifications to users on the platform.</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-2xl border border-g-border p-5">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center">
+                            <span class="material-icons-outlined text-amber-600 text-xl">campaign</span>
+                        </div>
+                    </div>
+                    <p class="font-gsans text-2xl font-medium text-g-text tabular-nums" th:text="${totalBroadcasts}">24</p>
+                    <p class="text-xs text-g-text-secondary mt-1">Total Broadcasts</p>
+                </div>
+                <div class="bg-white rounded-2xl border border-g-border p-5">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center">
+                            <span class="material-icons-outlined text-g-green text-xl">check_circle</span>
+                        </div>
+                    </div>
+                    <p class="font-gsans text-2xl font-medium text-g-text tabular-nums" th:text="${messagesDelivered}">2,400</p>
+                    <p class="text-xs text-g-text-secondary mt-1">Messages Delivered</p>
+                </div>
+                <div class="bg-white rounded-2xl border border-g-border p-5">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-9 h-9 bg-g-blue-light rounded-xl flex items-center justify-center">
+                            <span class="material-icons-outlined text-g-blue text-xl">schedule_send</span>
+                        </div>
+                    </div>
+                    <p class="font-gsans text-2xl font-medium text-g-text tabular-nums" th:text="${scheduledCount}">3</p>
+                    <p class="text-xs text-g-text-secondary mt-1">Scheduled</p>
+                </div>
+                <div class="bg-white rounded-2xl border border-g-border p-5">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center">
+                            <span class="material-icons-outlined text-purple-600 text-xl">schedule</span>
+                        </div>
+                    </div>
+                    <p class="font-gsans text-2xl font-medium text-g-text tabular-nums" th:text="${lastBroadcastTime != null ? lastBroadcastTime : 'Never'}">2h ago</p>
+                    <p class="text-xs text-g-text-secondary mt-1">Last Broadcast</p>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-6">
+
+                <!-- Compose Broadcast -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white rounded-2xl border border-g-border p-6">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                                <span class="material-icons-outlined text-amber-600 text-xl">edit</span>
+                            </div>
+                            <div>
+                                <h2 class="font-gsans text-lg font-medium text-g-text">Compose Announcement</h2>
+                                <p class="text-xs text-g-text-secondary">Create and send a message to selected users</p>
+                            </div>
+                        </div>
+
+                        <form th:action="@{/admin/broadcast/send}" method="post" class="space-y-5">
+                            <!-- Message Type -->
+                            <div>
+                                <label class="block text-sm font-medium text-g-text mb-2">Message Type</label>
+                                <select name="type" id="msgType" onchange="updatePreviewType()" class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all">
+                                    <option value="announcement">📢 Announcement</option>
+                                    <option value="alert">⚠️ Alert</option>
+                                    <option value="update">🔄 Update</option>
+                                    <option value="new_feature">✨ New Feature</option>
+                                </select>
+                            </div>
+
+                            <!-- Subject -->
+                            <div>
+                                <label class="block text-sm font-medium text-g-text mb-2">Subject</label>
+                                <input name="subject" id="subjectInput" type="text" oninput="updatePreview()" placeholder="e.g., New Feature Release, Maintenance Notice..."
+                                       class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all" required>
+                            </div>
+
+                            <!-- Message -->
+                            <div>
+                                <label class="block text-sm font-medium text-g-text mb-2">Message</label>
+                                <textarea name="message" id="messageInput" rows="6" oninput="updatePreview(); updateCharCount()" placeholder="Type your announcement message here..."
+                                          class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all resize-none" required maxlength="1000"></textarea>
+                                <div class="flex items-center justify-between mt-2">
+                                    <p class="text-xs text-g-text-secondary">Supports plain text, links, and emojis</p>
+                                    <p id="charCount" class="text-xs text-g-text-secondary tabular-nums">0 / 1000 characters</p>
+                                </div>
+                            </div>
+
+                            <!-- Recipients -->
+                            <div>
+                                <label class="block text-sm font-medium text-g-text mb-2">Recipients</label>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <button type="button" onclick="setAudience('all')" id="audienceAll" class="px-3 py-1.5 bg-g-blue text-white text-xs font-medium rounded-full transition-colors">
+                                        All Users (<span th:text="${totalUsers}">100</span>)
+                                    </button>
+                                    <button type="button" onclick="setAudience('active')" id="audienceActive" class="px-3 py-1.5 bg-g-bg border border-g-border text-g-text text-xs font-medium rounded-full hover:bg-g-hover transition-colors">
+                                        Active Users (<span th:text="${activeUsers}">87</span>)
+                                    </button>
+                                    <button type="button" onclick="setAudience('bidders')" id="audienceBidders" class="px-3 py-1.5 bg-g-bg border border-g-border text-g-text text-xs font-medium rounded-full hover:bg-g-hover transition-colors">
+                                        Top Bidders (<span th:text="${topBiddersCount}">25</span>)
+                                    </button>
+                                </div>
+                                <input type="hidden" name="audience" id="audienceInput" value="all">
+                            </div>
+
+                            <!-- Preview -->
+                            <div class="border-t border-g-border pt-5">
+                                <button type="button" onclick="togglePreview()" class="inline-flex items-center gap-2 px-4 py-2 bg-g-bg border border-g-border rounded-lg text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
+                                    <span class="material-icons-outlined text-lg">visibility</span>
+                                    Preview Message
+                                </button>
+                            </div>
+
+                            <!-- Preview Card -->
+                            <div id="previewCard" class="hidden bg-g-bg border border-g-border rounded-xl p-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="material-icons-outlined text-amber-600">campaign</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span id="previewBadge" class="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-semibold uppercase rounded">Announcement</span>
+                                            <span class="text-xs text-g-text-secondary">Just now</span>
+                                        </div>
+                                        <p id="previewSubject" class="text-sm font-medium text-g-text mb-1">Untitled</p>
+                                        <p id="previewMessage" class="text-sm text-g-text-secondary whitespace-pre-line">No message</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="flex items-center justify-between pt-4 border-t border-g-border">
+                                <div id="recipientInfo" class="flex items-center gap-2 text-sm text-g-text-secondary">
+                                    <span class="material-icons-outlined text-lg">people</span>
+                                    <span>Sending to <strong class="text-g-text">all <span th:text="${totalUsers}">100</span></strong> users</span>
+                                </div>
+                                <button type="submit" class="px-6 py-2.5 bg-amber-500 text-white rounded-full text-sm font-medium hover:bg-amber-600 transition-colors shadow-g-sm flex items-center gap-2">
+                                    <span class="material-icons-outlined text-lg">send</span>
+                                    Send Now
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Right Column: Recent Broadcasts + Scheduled -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Scheduled Broadcasts -->
+                    <div class="bg-white rounded-2xl border border-g-border p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-gsans text-base font-medium text-g-text">Scheduled</h3>
+                            <span class="px-2 py-0.5 bg-g-blue-light text-g-blue text-xs font-semibold rounded-full" th:text="${scheduledCount}">3</span>
+                        </div>
+                        <div class="space-y-3" th:if="${scheduledBroadcasts != null and !scheduledBroadcasts.isEmpty()}">
+                            <div th:each="scheduled : ${scheduledBroadcasts}" class="p-3 bg-g-bg rounded-xl border border-g-border">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="material-icons-outlined text-g-blue text-sm">schedule_send</span>
+                                    <span class="text-xs font-medium text-g-blue" th:text="${scheduled.scheduledTime}">Sep 18, 2026 • 10:00 AM</span>
+                                </div>
+                                <p class="text-sm font-medium text-g-text truncate" th:text="${scheduled.subject}">Weekend Auction Event</p>
+                                <p class="text-xs text-g-text-secondary mt-1" th:text="${scheduled.audience}">All Users (100)</p>
+                            </div>
+                        </div>
+                        <div th:if="${scheduledBroadcasts == null or scheduledBroadcasts.isEmpty()}" class="text-center py-6">
+                            <span class="material-icons-outlined text-g-text-secondary text-3xl">schedule_send</span>
+                            <p class="text-sm text-g-text-secondary mt-2">No scheduled broadcasts</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Broadcasts -->
+                    <div class="bg-white rounded-2xl border border-g-border p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-gsans text-base font-medium text-g-text">Recent Broadcasts</h3>
+                        </div>
+                        <div class="space-y-4" th:if="${recentBroadcasts != null and !recentBroadcasts.isEmpty()}">
+                            <div th:each="broadcast, stat : ${recentBroadcasts}" th:classappend="${!stat.last} ? 'pb-4 border-b border-g-border'">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <span class="material-icons-outlined text-g-green text-lg">check_circle</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-g-text truncate" th:text="${broadcast.subject}">Maintenance Scheduled</p>
+                                        <p class="text-xs text-g-text-secondary mt-1">Delivered to <span th:text="${broadcast.recipientCount}">100</span> users</p>
+                                        <p class="text-xs text-g-text-secondary mt-1" th:text="${broadcast.timeAgo}">2 hours ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${recentBroadcasts == null or recentBroadcasts.isEmpty()}" class="text-center py-6">
+                            <span class="material-icons-outlined text-g-text-secondary text-3xl">campaign</span>
+                            <p class="text-sm text-g-text-secondary mt-2">No broadcasts sent yet</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.add('theme-transition');
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            setTimeout(() => html.classList.remove('theme-transition'), 350);
+        }
+
+        function toggleProfileDropdown() {
+            document.getElementById('profileDropdown').classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('profileDropdown');
+            const button = event.target.closest('button[onclick="toggleProfileDropdown()"]');
+            if (!button && !dropdown.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        function togglePreview() {
+            document.getElementById('previewCard').classList.toggle('hidden');
+            updatePreview();
+        }
+
+        function updatePreview() {
+            document.getElementById('previewSubject').textContent = document.getElementById('subjectInput').value || 'Untitled';
+            document.getElementById('previewMessage').textContent = document.getElementById('messageInput').value || 'No message';
+        }
+
+        function updatePreviewType() {
+            const type = document.getElementById('msgType').value;
+            const badge = document.getElementById('previewBadge');
+            const labels = { announcement: 'Announcement', alert: 'Alert', update: 'Update', new_feature: 'New Feature' };
+            badge.textContent = labels[type] || 'Announcement';
+        }
+
+        function updateCharCount() {
+            const len = document.getElementById('messageInput').value.length;
+            document.getElementById('charCount').textContent = len + ' / 1000 characters';
+        }
+
+        function setAudience(type) {
+            document.getElementById('audienceInput').value = type;
+            ['all', 'active', 'bidders'].forEach(a => {
+                const btn = document.getElementById('audience' + a.charAt(0).toUpperCase() + a.slice(1));
+                if (a === type) {
+                    btn.className = 'px-3 py-1.5 bg-g-blue text-white text-xs font-medium rounded-full transition-colors';
+                } else {
+                    btn.className = 'px-3 py-1.5 bg-g-bg border border-g-border text-g-text text-xs font-medium rounded-full hover:bg-g-hover transition-colors';
+                }
+            });
+        }
+
+        // Auto-hide flash messages
+        setTimeout(() => {
+            const msgs = document.querySelectorAll('.fixed.top-20');
+            msgs.forEach(msg => {
+                msg.style.transition = 'opacity 0.3s ease';
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 300);
+            });
+        }, 5000);
+    </script>
+
+</body>
+</html>

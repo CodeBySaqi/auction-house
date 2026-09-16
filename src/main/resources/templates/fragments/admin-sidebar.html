@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- Admin Sidebar Fragment -->
+<!-- Usage: <aside th:replace="~{fragments/admin-sidebar :: sidebar('dashboard')}"></aside> -->
+<!-- activePage values: dashboard, auctions, approvals, payments, commissions, users, bids, activity, broadcast -->
+
+<aside th:fragment="sidebar(activePage)"
+       class="hidden lg:flex lg:flex-col w-64 flex-shrink-0 h-full overflow-y-auto scrollbar-hide py-6 pr-4">
+    <nav class="space-y-1">
+        <div class="px-3 mb-2">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Main</span>
+        </div>
+        <a th:href="@{/admin/console}"
+           th:classappend="${activePage == 'dashboard'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'"
+           class="flex items-center gap-3 px-4 py-2.5 rounded-full font-medium text-sm transition-colors">
+            <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'dashboard'} ? '' : 'text-g-text-secondary'">dashboard</span>
+            Dashboard
+        </a>
+        <a th:href="@{/admin/auctions}"
+           th:classappend="${activePage == 'auctions'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'"
+           class="flex items-center gap-3 px-4 py-2.5 rounded-full font-medium text-sm transition-colors">
+            <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'auctions'} ? '' : 'text-g-text-secondary'">storefront</span>
+            Auctions
+            <span class="ml-auto px-2 py-0.5 bg-g-bg rounded-full text-xs font-semibold text-g-text-secondary" th:text="${totalAuctions}">150</span>
+        </a>
+        <a th:href="@{/admin/approvals}"
+           th:classappend="${activePage == 'approvals'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'"
+           class="flex items-center gap-3 px-4 py-2.5 rounded-full font-medium text-sm transition-colors">
+            <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'approvals'} ? '' : 'text-g-text-secondary'">pending_actions</span>
+            Approvals
+            <span th:if="${pendingCount > 0}" class="ml-auto px-2 py-0.5 bg-amber-100 rounded-full text-xs font-semibold text-amber-700" th:text="${pendingCount}">5</span>
+        </a>
+        <a th:href="@{/admin/payments}"
+           th:classappend="${activePage == 'payments'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'"
+           class="flex items-center gap-3 px-4 py-2.5 rounded-full font-medium text-sm transition-colors">
+            <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'payments'} ? '' : 'text-g-text-secondary'">payments</span>
+            Payment Releases
+            <span th:if="${pendingPaymentCount > 0}" class="ml-auto px-2 py-0.5 bg-amber-100 rounded-full text-xs font-semibold text-amber-700" th:text="${pendingPaymentCount}">3</span>
+        </a>
+        <a th:href="@{/admin/commissions}"
+           th:classappend="${activePage == 'commissions'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'"
+           class="flex items-center gap-3 px-4 py-2.5 rounded-full font-medium text-sm transition-colors">
+            <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'commissions'} ? '' : 'text-g-text-secondary'">account_balance</span>
+            Commissions
+        </a>
+        <a th:href="@{/admin/users}"
+           th:classappend="${activePage == 'users'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'"
+           class="flex items-center gap-3 px-4 py-2.5 rounded-full font-medium text-sm transition-colors">
+            <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'users'} ? '' : 'text-g-text-secondary'">people</span>
+            Users
+            <span class="ml-auto px-2 py-0.5 bg-g-bg rounded-full text-xs font-semibold text-g-text-secondary" th:text="${totalUsers}">100</span>
+        </a>
+        <a th:href="@{/admin/bids}"
+           th:classappend="${activePage == 'bids'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'"
+           class="flex items-center gap-3 px-4 py-2.5 rounded-full font-medium text-sm transition-colors">
+            <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'bids'} ? '' : 'text-g-text-secondary'">gavel</span>
+            Bids
+        </a>
+
+        <div class="px-3 mt-6 mb-2">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Analytics</span>
+        </div>
+        <a th:href="@{/admin/analytics}"
+           th:classappend="${activePage == 'activity'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'"
+           class="flex items-center gap-3 px-4 py-2.5 rounded-full font-medium text-sm transition-colors">
+            <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'activity'} ? '' : 'text-g-text-secondary'">trending_up</span>
+            Activity
+        </a>
+
+        <div class="px-3 mt-6 mb-2">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Tools</span>
+        </div>
+        <a th:href="@{/admin/broadcast}"
+           th:classappend="${activePage == 'broadcast'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'"
+           class="flex items-center gap-3 px-4 py-2.5 rounded-full font-medium text-sm transition-colors">
+            <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'broadcast'} ? '' : 'text-g-text-secondary'">campaign</span>
+            Broadcast
+        </a>
+        <a th:href="@{/admin/export/auctions.csv}"
+           class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+            <span class="material-icons-outlined text-xl text-g-text-secondary">download</span>
+            Export Auctions
+        </a>
+        <a th:href="@{/admin/export/users.csv}"
+           class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+            <span class="material-icons-outlined text-xl text-g-text-secondary">download</span>
+            Export Users
+        </a>
+    </nav>
+</aside>
+
+</html>
