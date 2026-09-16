@@ -2,6 +2,7 @@ package com.auctionhouse.service;
 
 import com.auctionhouse.model.*;
 import com.auctionhouse.repository.*;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,26 +86,33 @@ public class ChatServiceTest {
         outsider.setRole("ROLE_USER");
         outsider = userRepository.save(outsider);
 
-        // Create test auction
-        auction = new Auction();
-        auction.setTitle("Test Auction");
-        auction.setDescription("Test description");
-        auction.setStartingPrice(100.0);
-        auction.setCurrentHighestBid(150.0);
-        auction.setEndTime(LocalDateTime.now().plusDays(1));
-        auction.setStatus(AuctionStatus.CLOSED);
-        auction.setHighestBidder(buyer);
-        auction.setCreatedBy(seller);
-        auction.setImageUrl("http://example.com/image.jpg");
-        auction.setCategory(AuctionCategory.CARS);
-        auction = auctionRepository.save(auction);
+        // Create test auction (Auction is abstract, use CarAuction)
+        CarAuction carAuction = new CarAuction();
+        carAuction.setTitle("Test Auction");
+        carAuction.setDescription("Test description");
+        carAuction.setStartingPrice(100.0);
+        carAuction.setCurrentHighestBid(150.0);
+        carAuction.setEndTime(LocalDateTime.now().plusDays(1));
+        carAuction.setStatus(AuctionStatus.CLOSED);
+        carAuction.setHighestBidder(buyer);
+        carAuction.setCreatedBy(seller);
+        carAuction.setImageUrl("http://example.com/image.jpg");
+        carAuction.setCategory(AuctionCategory.CARS);
+        carAuction.setMake("Toyota");
+        carAuction.setModel("Camry");
+        carAuction.setYear(2020);
+        carAuction.setMileage(50000);
+        carAuction.setCondition("Good");
+        carAuction.setColor("Blue");
+        auction = auctionRepository.save(carAuction);
 
         // Create test payment release
         paymentRelease = new PaymentRelease();
         paymentRelease.setAuction(auction);
         paymentRelease.setBuyer(buyer);
         paymentRelease.setSeller(seller);
-        paymentRelease.setStatus("PENDING");
+        paymentRelease.setWinningAmount(BigDecimal.valueOf(150.0));
+        paymentRelease.setStatus(VerificationStatus.WAITING_FOR_DETAILS);
         paymentRelease.setCreatedAt(LocalDateTime.now());
         paymentRelease = paymentReleaseRepository.save(paymentRelease);
     }
@@ -309,7 +317,8 @@ public class ChatServiceTest {
         oldRelease.setAuction(auction);
         oldRelease.setBuyer(buyer);
         oldRelease.setSeller(seller);
-        oldRelease.setStatus("RELEASED");
+        oldRelease.setWinningAmount(BigDecimal.valueOf(150.0));
+        oldRelease.setStatus(VerificationStatus.PAYMENT_RELEASED);
         oldRelease.setPaymentReleased(true);
         oldRelease.setReleasedAt(LocalDateTime.now().minusDays(91)); // 91 days ago
         oldRelease = paymentReleaseRepository.save(oldRelease);
@@ -333,7 +342,8 @@ public class ChatServiceTest {
         recentRelease.setAuction(auction);
         recentRelease.setBuyer(buyer);
         recentRelease.setSeller(seller);
-        recentRelease.setStatus("RELEASED");
+        recentRelease.setWinningAmount(BigDecimal.valueOf(150.0));
+        recentRelease.setStatus(VerificationStatus.PAYMENT_RELEASED);
         recentRelease.setPaymentReleased(true);
         recentRelease.setReleasedAt(LocalDateTime.now().minusDays(89)); // 89 days ago
         recentRelease = paymentReleaseRepository.save(recentRelease);
