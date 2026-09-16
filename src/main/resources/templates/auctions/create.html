@@ -41,7 +41,7 @@
             <div class="grid sm:grid-cols-2 gap-5">
                 <div>
                     <label class="block text-sm font-medium text-g-text mb-1.5">Category</label>
-                    <select name="category" required class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+                    <select name="category" id="categorySelect" required class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
                         <option value="">Select a category</option>
                         <option th:each="cat : ${categories}" th:value="${cat.name()}" th:text="${cat.displayName}">Category</option>
                     </select>
@@ -53,6 +53,196 @@
                            placeholder="e.g. 10000">
                 </div>
             </div>
+
+            <!-- ====== CATEGORY-SPECIFIC FIELDS ====== -->
+
+            <!-- CARS -->
+            <fieldset id="fields-CARS" class="type-fields hidden space-y-4 p-5 bg-blue-50/50 rounded-2xl border border-blue-100">
+                <legend class="text-sm font-medium text-g-blue px-2">Vehicle Details</legend>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Make</label>
+                        <input type="text" name="carMake" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Ford">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Model</label>
+                        <input type="text" name="carModel" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Mustang Shelby GT500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Year</label>
+                        <input type="number" name="carYear" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 1967" min="1900" max="2030">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Mileage</label>
+                        <input type="number" name="carMileage" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 45000" min="0">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Condition</label>
+                        <select name="carCondition" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="">Select</option>
+                            <option value="Excellent">Excellent</option>
+                            <option value="Good">Good</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Restoration Needed">Restoration Needed</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Color</label>
+                        <input type="text" name="carColor" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Wimbledon White">
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- WATCHES -->
+            <fieldset id="fields-WATCHES" class="type-fields hidden space-y-4 p-5 bg-amber-50/50 rounded-2xl border border-amber-100">
+                <legend class="text-sm font-medium text-amber-700 px-2">Watch Details</legend>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Brand</label>
+                        <input type="text" name="watchBrand" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Rolex">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Model Name</label>
+                        <input type="text" name="watchModelName" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Submariner">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Movement</label>
+                        <select name="watchMovement" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="">Select</option>
+                            <option value="Automatic">Automatic</option>
+                            <option value="Manual">Manual</option>
+                            <option value="Quartz">Quartz</option>
+                            <option value="Spring Drive">Spring Drive</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Case Material</label>
+                        <input type="text" name="watchCaseMaterial" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Stainless Steel">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-g-text mb-1">Reference Number</label>
+                        <input type="text" name="watchReference" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 126610LN">
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- JEWELRY -->
+            <fieldset id="fields-JEWELRY" class="type-fields hidden space-y-4 p-5 bg-pink-50/50 rounded-2xl border border-pink-100">
+                <legend class="text-sm font-medium text-pink-700 px-2">Jewelry Details</legend>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Metal Type</label>
+                        <select name="jewelryMetal" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="">Select</option>
+                            <option value="Gold (18K)">Gold (18K)</option>
+                            <option value="Gold (14K)">Gold (14K)</option>
+                            <option value="Platinum">Platinum</option>
+                            <option value="Silver">Silver</option>
+                            <option value="White Gold">White Gold</option>
+                            <option value="Rose Gold">Rose Gold</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Gemstone</label>
+                        <input type="text" name="jewelryGemstone" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Diamond">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Carat Weight</label>
+                        <input type="number" name="jewelryCarat" step="0.01" min="0" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 2.5">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Designer</label>
+                        <input type="text" name="jewelryDesigner" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Tiffany & Co.">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="flex items-center gap-2 text-sm text-g-text">
+                            <input type="checkbox" name="jewelryCertified" value="true" class="rounded border-g-border text-g-blue focus:ring-g-blue">
+                            <span>GIA Certified</span>
+                        </label>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- ART -->
+            <fieldset id="fields-ART" class="type-fields hidden space-y-4 p-5 bg-purple-50/50 rounded-2xl border border-purple-100">
+                <legend class="text-sm font-medium text-purple-700 px-2">Art Details</legend>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Artist</label>
+                        <input type="text" name="artArtist" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Pablo Picasso">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Medium</label>
+                        <select name="artMedium" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="">Select</option>
+                            <option value="Oil on Canvas">Oil on Canvas</option>
+                            <option value="Watercolor">Watercolor</option>
+                            <option value="Acrylic">Acrylic</option>
+                            <option value="Mixed Media">Mixed Media</option>
+                            <option value="Sculpture">Sculpture</option>
+                            <option value="Photography">Photography</option>
+                            <option value="Print">Print</option>
+                            <option value="Digital">Digital</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Year Created</label>
+                        <input type="number" name="artYearCreated" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 1962" min="1000" max="2030">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Dimensions</label>
+                        <input type="text" name="artDimensions" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 24&quot; × 36&quot;">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="flex items-center gap-2 text-sm text-g-text">
+                            <input type="checkbox" name="artAuthenticated" value="true" class="rounded border-g-border text-g-blue focus:ring-g-blue">
+                            <span>Authenticated / Verified Provenance</span>
+                        </label>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- COLLECTIBLES -->
+            <fieldset id="fields-COLLECTIBLES" class="type-fields hidden space-y-4 p-5 bg-green-50/50 rounded-2xl border border-green-100">
+                <legend class="text-sm font-medium text-g-green px-2">Collectible Details</legend>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Subcategory</label>
+                        <input type="text" name="colSubcategory" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Coins, Stamps, Cards">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Era / Period</label>
+                        <input type="text" name="colEra" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 1950s">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Condition</label>
+                        <select name="colCondition" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="">Select</option>
+                            <option value="Mint">Mint</option>
+                            <option value="Near Mint">Near Mint</option>
+                            <option value="Excellent">Excellent</option>
+                            <option value="Good">Good</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Poor">Poor</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Rarity</label>
+                        <select name="colRarity" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="">Select</option>
+                            <option value="Common">Common</option>
+                            <option value="Uncommon">Uncommon</option>
+                            <option value="Rare">Rare</option>
+                            <option value="Very Rare">Very Rare</option>
+                            <option value="One of a Kind">One of a Kind</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-g-text mb-1">Provenance</label>
+                        <input type="text" name="colProvenance" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. From the estate of...">
+                    </div>
+                </div>
+            </fieldset>
 
             <!-- Image Upload or URL -->
             <div>
@@ -113,18 +303,40 @@
 <div th:replace="~{fragments/layout :: scripts}"></div>
 
 <script>
-document.getElementById('createAuctionForm').addEventListener('submit', function(e) {
-    const fileInput = document.getElementById('imageFile');
-    const urlInput = document.getElementById('imageUrl');
-    const hasFile = fileInput.files && fileInput.files.length > 0;
-    const hasUrl = urlInput.value.trim() !== '';
+(function() {
+    var categorySelect = document.getElementById('categorySelect');
+    var allFieldsets = document.querySelectorAll('.type-fields');
 
-    if (!hasFile && !hasUrl) {
-        e.preventDefault();
-        alert('Please upload an image or paste an image URL.');
-        return false;
-    }
-});
+    categorySelect.addEventListener('change', function() {
+        var selected = this.value;
+        allFieldsets.forEach(function(fs) {
+            fs.classList.add('hidden');
+            // Disable required on hidden inputs so they don't block submission
+            fs.querySelectorAll('.type-input').forEach(function(inp) {
+                inp.removeAttribute('required');
+            });
+        });
+        if (selected) {
+            var target = document.getElementById('fields-' + selected);
+            if (target) {
+                target.classList.remove('hidden');
+            }
+        }
+    });
+
+    document.getElementById('createAuctionForm').addEventListener('submit', function(e) {
+        var fileInput = document.getElementById('imageFile');
+        var urlInput = document.getElementById('imageUrl');
+        var hasFile = fileInput.files && fileInput.files.length > 0;
+        var hasUrl = urlInput.value.trim() !== '';
+
+        if (!hasFile && !hasUrl) {
+            e.preventDefault();
+            alert('Please upload an image or paste an image URL.');
+            return false;
+        }
+    });
+})();
 </script>
 </body>
 </html>

@@ -3,9 +3,13 @@ package com.auctionhouse.controller;
 import com.auctionhouse.model.Auction;
 import com.auctionhouse.model.AuctionCategory;
 import com.auctionhouse.model.AuctionStatus;
+import com.auctionhouse.model.ArtAuction;
 import com.auctionhouse.model.Bid;
+import com.auctionhouse.model.CarAuction;
 import com.auctionhouse.model.CollectibleAuction;
+import com.auctionhouse.model.JewelryAuction;
 import com.auctionhouse.model.User;
+import com.auctionhouse.model.WatchAuction;
 import com.auctionhouse.service.AuctionService;
 import com.auctionhouse.service.BidService;
 import com.auctionhouse.service.FileStorageService;
@@ -126,6 +130,37 @@ public class AuctionController {
                                 @RequestParam(required = false) String imageUrl,
                                 @RequestParam(required = false) MultipartFile auctionImage,
                                 @RequestParam int durationMinutes,
+                                // Car fields
+                                @RequestParam(required = false) String carMake,
+                                @RequestParam(required = false) String carModel,
+                                @RequestParam(required = false, defaultValue = "0") int carYear,
+                                @RequestParam(required = false, defaultValue = "0") int carMileage,
+                                @RequestParam(required = false) String carCondition,
+                                @RequestParam(required = false) String carColor,
+                                // Watch fields
+                                @RequestParam(required = false) String watchBrand,
+                                @RequestParam(required = false) String watchModelName,
+                                @RequestParam(required = false) String watchMovement,
+                                @RequestParam(required = false) String watchCaseMaterial,
+                                @RequestParam(required = false) String watchReference,
+                                // Jewelry fields
+                                @RequestParam(required = false) String jewelryMetal,
+                                @RequestParam(required = false) String jewelryGemstone,
+                                @RequestParam(required = false, defaultValue = "0") double jewelryCarat,
+                                @RequestParam(required = false) String jewelryDesigner,
+                                @RequestParam(required = false, defaultValue = "false") boolean jewelryCertified,
+                                // Art fields
+                                @RequestParam(required = false) String artArtist,
+                                @RequestParam(required = false) String artMedium,
+                                @RequestParam(required = false, defaultValue = "0") int artYearCreated,
+                                @RequestParam(required = false) String artDimensions,
+                                @RequestParam(required = false, defaultValue = "false") boolean artAuthenticated,
+                                // Collectible fields
+                                @RequestParam(required = false) String colSubcategory,
+                                @RequestParam(required = false) String colEra,
+                                @RequestParam(required = false) String colCondition,
+                                @RequestParam(required = false) String colRarity,
+                                @RequestParam(required = false) String colProvenance,
                                 @AuthenticationPrincipal UserDetails userDetails,
                                 RedirectAttributes redirectAttributes) {
         try {
@@ -144,8 +179,64 @@ public class AuctionController {
                 finalImageUrl = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800";
             }
 
-            // Create a CollectibleAuction for user-created items
-            CollectibleAuction auction = new CollectibleAuction();
+            // Instantiate the correct subclass based on category
+            Auction auction;
+            switch (cat) {
+                case CARS: {
+                    CarAuction ca = new CarAuction();
+                    ca.setMake(safeStr(carMake, "Unknown"));
+                    ca.setModel(safeStr(carModel, "Unknown"));
+                    ca.setYear(carYear > 0 ? carYear : 2026);
+                    ca.setMileage(carMileage);
+                    ca.setCondition(safeStr(carCondition, "As described"));
+                    ca.setColor(safeStr(carColor, "Not specified"));
+                    auction = ca;
+                    break;
+                }
+                case WATCHES: {
+                    WatchAuction wa = new WatchAuction();
+                    wa.setBrand(safeStr(watchBrand, "Unknown"));
+                    wa.setModelName(safeStr(watchModelName, "Unknown"));
+                    wa.setMovement(safeStr(watchMovement, "Not specified"));
+                    wa.setCaseMaterial(safeStr(watchCaseMaterial, "Not specified"));
+                    wa.setReferenceNumber(safeStr(watchReference, "N/A"));
+                    auction = wa;
+                    break;
+                }
+                case JEWELRY: {
+                    JewelryAuction ja = new JewelryAuction();
+                    ja.setMetalType(safeStr(jewelryMetal, "Not specified"));
+                    ja.setGemstone(safeStr(jewelryGemstone, "Not specified"));
+                    ja.setCarat(jewelryCarat);
+                    ja.setDesigner(safeStr(jewelryDesigner, "Unknown"));
+                    ja.setCertified(jewelryCertified);
+                    auction = ja;
+                    break;
+                }
+                case ART: {
+                    ArtAuction aa = new ArtAuction();
+                    aa.setArtist(safeStr(artArtist, "Unknown"));
+                    aa.setMedium(safeStr(artMedium, "Not specified"));
+                    aa.setYearCreated(artYearCreated > 0 ? artYearCreated : 2026);
+                    aa.setDimensions(safeStr(artDimensions, "Not specified"));
+                    aa.setAuthenticated(artAuthenticated);
+                    auction = aa;
+                    break;
+                }
+                case COLLECTIBLES:
+                default: {
+                    CollectibleAuction ca = new CollectibleAuction();
+                    ca.setSubcategory(safeStr(colSubcategory, cat.getDisplayName()));
+                    ca.setEra(safeStr(colEra, "Modern"));
+                    ca.setCondition(safeStr(colCondition, "As described"));
+                    ca.setRarity(safeStr(colRarity, "User Listed"));
+                    ca.setProvenance(safeStr(colProvenance, ""));
+                    auction = ca;
+                    break;
+                }
+            }
+
+            // Set common fields
             auction.setTitle(title);
             auction.setDescription(description);
             auction.setStartingPrice(startingPrice);
@@ -153,10 +244,6 @@ public class AuctionController {
             auction.setCategory(cat);
             auction.setEndTime(LocalDateTime.now().plusMinutes(durationMinutes));
             auction.setCreatedBy(creator);
-            auction.setSubcategory(cat.getDisplayName());
-            auction.setEra("2026");
-            auction.setCondition("As described");
-            auction.setRarity("User Listed");
             // Status is already PENDING_APPROVAL by default from Auction constructor
 
             auctionService.save(auction);
@@ -166,5 +253,9 @@ public class AuctionController {
             redirectAttributes.addFlashAttribute("error", "Failed to create auction: " + e.getMessage());
             return "redirect:/auctions/create";
         }
+    }
+
+    private static String safeStr(String value, String fallback) {
+        return (value != null && !value.trim().isEmpty()) ? value.trim() : fallback;
     }
 }
