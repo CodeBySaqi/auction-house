@@ -59,6 +59,19 @@
         </h2>
         <div class="grid sm:grid-cols-2 gap-5">
             <div>
+                <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">User ID</label>
+                <div class="flex items-center gap-2">
+                    <input type="text" th:value="'#' + ${user.id}" disabled id="userIdField"
+                           class="flex-1 px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text font-mono">
+                    <button type="button" onclick="copyUserId()" id="copyIdBtn"
+                            class="px-3 py-3 bg-g-blue-light text-g-blue rounded-xl hover:bg-blue-100 transition-colors flex items-center gap-1.5 text-xs font-medium"
+                            title="Copy User ID">
+                        <span class="material-icons-outlined text-lg" id="copyIdIcon">content_copy</span>
+                        <span id="copyIdText">Copy</span>
+                    </button>
+                </div>
+            </div>
+            <div>
                 <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Username</label>
                 <input type="text" th:value="${user.username}" disabled class="w-full px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text">
             </div>
@@ -84,5 +97,26 @@
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 <div th:replace="~{fragments/layout :: scripts}"></div>
+<script>
+    function copyUserId() {
+        var field = document.getElementById('userIdField');
+        var userId = field.value;
+        navigator.clipboard.writeText(userId).then(function() {
+            var icon = document.getElementById('copyIdIcon');
+            var text = document.getElementById('copyIdText');
+            var btn = document.getElementById('copyIdBtn');
+            icon.textContent = 'check';
+            text.textContent = 'Copied!';
+            btn.classList.remove('bg-g-blue-light', 'text-g-blue');
+            btn.classList.add('bg-green-100', 'text-g-green');
+            setTimeout(function() {
+                icon.textContent = 'content_copy';
+                text.textContent = 'Copy';
+                btn.classList.remove('bg-green-100', 'text-g-green');
+                btn.classList.add('bg-g-blue-light', 'text-g-blue');
+            }, 2000);
+        });
+    }
+</script>
 </body>
 </html>

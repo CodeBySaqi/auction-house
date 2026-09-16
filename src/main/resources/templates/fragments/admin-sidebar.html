@@ -90,4 +90,106 @@
     </nav>
 </aside>
 
+<!-- Mobile Navigation Fragment (FAB + Slide-in Sidebar + Overlay) -->
+<!-- Usage: <div th:replace="~{fragments/admin-sidebar :: mobile-nav('dashboard')}"></div> -->
+<div th:fragment="mobile-nav(activePage)">
+    <!-- Overlay -->
+    <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay"></div>
+
+    <!-- Mobile Sidebar -->
+    <div class="mobile-sidebar" id="mobileSidebar">
+        <div class="px-5 py-4 border-b border-g-border flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-g-blue rounded-lg flex items-center justify-center">
+                    <span class="material-icons-outlined text-white text-lg">gavel</span>
+                </div>
+                <span class="font-gsans font-medium text-sm text-g-text">Admin Panel</span>
+            </div>
+            <button onclick="document.getElementById('mobileSidebarOverlay').click()" class="p-1.5 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                <span class="material-icons-outlined text-xl">close</span>
+            </button>
+        </div>
+        <nav class="py-3 px-3 space-y-0.5">
+            <div class="px-3 py-1.5"><span class="text-[10px] font-semibold uppercase tracking-wider text-g-text-secondary">Main</span></div>
+            <a th:href="@{/admin/console}" th:classappend="${activePage == 'dashboard'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'dashboard'} ? '' : 'text-g-text-secondary'">dashboard</span> Dashboard
+            </a>
+            <a th:href="@{/admin/auctions}" th:classappend="${activePage == 'auctions'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'auctions'} ? '' : 'text-g-text-secondary'">storefront</span> Auctions
+                <span class="ml-auto px-2 py-0.5 bg-g-bg rounded-full text-[10px] font-semibold text-g-text-secondary" th:text="${totalAuctions}">150</span>
+            </a>
+            <a th:href="@{/admin/approvals}" th:classappend="${activePage == 'approvals'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'approvals'} ? '' : 'text-g-text-secondary'">pending_actions</span> Approvals
+                <span th:if="${pendingCount > 0}" class="ml-auto px-2 py-0.5 bg-amber-100 rounded-full text-[10px] font-semibold text-amber-700" th:text="${pendingCount}">5</span>
+            </a>
+            <a th:href="@{/admin/payments}" th:classappend="${activePage == 'payments'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'payments'} ? '' : 'text-g-text-secondary'">payments</span> Payments
+            </a>
+            <a th:href="@{/admin/commissions}" th:classappend="${activePage == 'commissions'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'commissions'} ? '' : 'text-g-text-secondary'">account_balance</span> Commissions
+            </a>
+            <a th:href="@{/admin/users}" th:classappend="${activePage == 'users'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'users'} ? '' : 'text-g-text-secondary'">people</span> Users
+                <span class="ml-auto px-2 py-0.5 bg-g-bg rounded-full text-[10px] font-semibold text-g-text-secondary" th:text="${totalUsers}">100</span>
+            </a>
+            <a th:href="@{/admin/bids}" th:classappend="${activePage == 'bids'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'bids'} ? '' : 'text-g-text-secondary'">gavel</span> Bids
+            </a>
+            <div class="px-3 py-1.5 mt-3"><span class="text-[10px] font-semibold uppercase tracking-wider text-g-text-secondary">Analytics</span></div>
+            <a th:href="@{/admin/analytics}" th:classappend="${activePage == 'activity'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'activity'} ? '' : 'text-g-text-secondary'">trending_up</span> Activity
+            </a>
+            <div class="px-3 py-1.5 mt-3"><span class="text-[10px] font-semibold uppercase tracking-wider text-g-text-secondary">Tools</span></div>
+            <a th:href="@{/admin/broadcast}" th:classappend="${activePage == 'broadcast'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'broadcast'} ? '' : 'text-g-text-secondary'">campaign</span> Broadcast
+            </a>
+            <a th:href="@{/admin/export/auctions.csv}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl text-g-text-secondary">download</span> Export Auctions
+            </a>
+            <a th:href="@{/admin/export/users.csv}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl text-g-text-secondary">download</span> Export Users
+            </a>
+        </nav>
+        <div class="border-t border-g-border px-4 py-3 mt-auto">
+            <form th:action="@{/logout}" method="post" class="m-0">
+                <button type="submit" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-g-red hover:bg-red-50 rounded-xl transition-colors">
+                    <span class="material-icons-outlined text-lg">logout</span> Logout
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- FAB Button -->
+    <button class="admin-fab" id="adminFab" type="button" aria-label="Open admin menu">&#9776;</button>
+
+    <!-- FAB JS (self-contained, runs when fragment is included) -->
+    <script>
+    (function() {
+        var fab = document.getElementById('adminFab');
+        var sidebar = document.getElementById('mobileSidebar');
+        var overlay = document.getElementById('mobileSidebarOverlay');
+        if (!fab || !sidebar || !overlay) return;
+        var isOpen = false;
+        function toggle() {
+            isOpen = !isOpen;
+            sidebar.classList.toggle('open', isOpen);
+            overlay.classList.toggle('open', isOpen);
+            fab.classList.toggle('is-open', isOpen);
+            fab.textContent = isOpen ? '\u2715' : '\u2630';
+        }
+        function close() {
+            isOpen = false;
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            fab.classList.remove('is-open');
+            fab.textContent = '\u2630';
+        }
+        fab.addEventListener('click', toggle);
+        overlay.addEventListener('click', close);
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) close(); });
+        window.addEventListener('resize', function() { if (window.innerWidth > 960 && isOpen) close(); });
+    })();
+    </script>
+</div>
+
 </html>

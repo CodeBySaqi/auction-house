@@ -121,6 +121,7 @@
         
         <!-- Sidebar -->
         <aside th:replace="~{fragments/admin-sidebar :: sidebar('users')}"></aside>
+        <div th:replace="~{fragments/admin-sidebar :: mobile-nav('users')}"></div>
 
         <!-- Main Content -->
         <main class="flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
@@ -265,7 +266,7 @@
                                                     <option value="ROLE_ADMIN">ADMIN</option>
                                                 </select>
                                             </form>
-                                            <button th:if="${user.role != 'ROLE_ADMIN'}" onclick="openBalanceModal([[${user.id}]], [[${user.username}]])" class="p-2 rounded-lg text-g-text-secondary hover:bg-g-hover transition-colors" title="Adjust Balance">
+                                            <button th:if="${user.role != 'ROLE_ADMIN'}" th:data-userid="${user.id}" th:data-username="${user.username}" onclick="openBalanceModal(this.dataset.userid, this.dataset.username)" class="p-2 rounded-lg text-g-text-secondary hover:bg-g-hover transition-colors" title="Adjust Balance">
                                                 <span class="material-icons-outlined text-lg">account_balance_wallet</span>
                                             </button>
                                             <form th:if="${user.role != 'ROLE_ADMIN'}" th:action="@{'/admin/users/toggle/' + ${user.id}}" method="post" class="inline">

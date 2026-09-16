@@ -98,5 +98,50 @@
             </div>
         </div>
     </main>
+
+    <!-- Mobile Sidebar (FAB Nav) -->
+    <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay"></div>
+    <div class="mobile-sidebar" id="mobileSidebar">
+        <div class="px-5 py-4 border-b border-g-border flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                    <span class="material-icons-outlined text-white text-lg">shield</span>
+                </div>
+                <span class="font-gsans font-medium text-sm text-g-text">Super Admin</span>
+            </div>
+            <button onclick="document.getElementById('mobileSidebarOverlay').click()" class="p-1.5 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                <span class="material-icons-outlined text-xl">close</span>
+            </button>
+        </div>
+        <nav class="py-3 px-3 space-y-0.5">
+            <div class="px-3 py-1.5"><span class="text-[10px] font-semibold uppercase tracking-wider text-g-text-secondary">Management</span></div>
+            <a th:href="@{/super-admin}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl text-g-text-secondary">dashboard</span> Dashboard
+            </a>
+            <a th:href="@{/super-admin/users}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl text-g-text-secondary">people</span> Manage Users
+                <span class="ml-auto px-2 py-0.5 bg-g-bg rounded-full text-[10px] font-semibold text-g-text-secondary tabular-nums" th:text="${totalUsers}">0</span>
+            </a>
+            <a th:href="@{/super-admin/admins}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl text-g-text-secondary">admin_panel_settings</span> Manage Admins
+                <span class="ml-auto px-2 py-0.5 bg-g-bg rounded-full text-[10px] font-semibold text-g-text-secondary tabular-nums" th:text="${totalAdmins}">0</span>
+            </a>
+            <div class="px-3 py-1.5 mt-3"><span class="text-[10px] font-semibold uppercase tracking-wider text-g-text-secondary">Security</span></div>
+            <a th:href="@{/super-admin/audit-logs}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl text-g-text-secondary">history</span> Audit Logs
+            </a>
+        </nav>
+        <div class="border-t border-g-border px-4 py-3 mt-auto">
+            <form th:action="@{/logout}" method="post" class="m-0">
+                <button type="submit" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-g-red hover:bg-red-50 rounded-xl transition-colors">
+                    <span class="material-icons-outlined text-lg">logout</span> Logout
+                </button>
+            </form>
+        </div>
+    </div>
+    <button class="admin-fab super-admin" id="adminFab" type="button" aria-label="Open admin menu">&#9776;</button>
+
+    <script th:src="@{/js/main.js}"></script>
+
 </body>
 </html>

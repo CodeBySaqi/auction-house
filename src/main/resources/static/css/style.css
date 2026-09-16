@@ -287,3 +287,106 @@ input[type="number"] {
         display: none !important;
     }
 }
+
+/* ========================================================
+   FLOATING ADMIN NAV BUTTON (FAB) — Mobile/Tablet only
+   Shows at ≤ 960px, bottom-left corner
+   ======================================================== */
+
+.admin-fab {
+    position: fixed;
+    left: 14px;
+    bottom: 18px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    background: #1a73e8;
+    color: #fff;
+    font-size: 24px;
+    line-height: 1;
+    box-shadow: 0 6px 20px rgba(26,115,232,0.45);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.admin-fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 28px rgba(26,115,232,0.55);
+}
+.admin-fab:active {
+    transform: scale(0.92);
+}
+.admin-fab.is-open {
+    background: #ea4335;
+    box-shadow: 0 6px 20px rgba(234,67,53,0.45);
+}
+
+/* Super admin FAB uses purple */
+.admin-fab.super-admin {
+    background: #7c3aed;
+    box-shadow: 0 6px 20px rgba(124,58,237,0.45);
+}
+.admin-fab.super-admin:hover {
+    box-shadow: 0 8px 28px rgba(124,58,237,0.55);
+}
+.admin-fab.super-admin.is-open {
+    background: #ea4335;
+    box-shadow: 0 6px 20px rgba(234,67,53,0.45);
+}
+
+/* Mobile sidebar (slide in from left) */
+.mobile-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 260px;
+    background: #fff;
+    z-index: 190;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+    overflow-y: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.mobile-sidebar::-webkit-scrollbar { display: none; }
+.mobile-sidebar.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+}
+
+/* Mobile sidebar overlay */
+.mobile-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 185;
+    opacity: 0;
+    visibility: hidden;
+    backdrop-filter: blur(2px);
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.mobile-sidebar-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+@media (max-width: 960px) {
+    .admin-fab { display: flex; }
+}
+@media (min-width: 961px) {
+    .mobile-sidebar,
+    .mobile-sidebar-overlay { display: none !important; }
+}
+
+/* Dark mode support */
+.dark .mobile-sidebar {
+    background: #1f1f1f;
+}
+.dark .mobile-sidebar .border-g-border {
+    border-color: #3c4043;
+}

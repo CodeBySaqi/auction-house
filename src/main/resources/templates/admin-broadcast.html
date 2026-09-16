@@ -149,6 +149,7 @@
 
         <!-- Sidebar -->
         <aside th:replace="~{fragments/admin-sidebar :: sidebar('broadcast')}"></aside>
+        <div th:replace="~{fragments/admin-sidebar :: mobile-nav('broadcast')}"></div>
 
         <!-- Main Content -->
         <main class="flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
@@ -257,8 +258,47 @@
                                     <button type="button" onclick="setAudience('bidders')" id="audienceBidders" class="px-3 py-1.5 bg-g-bg border border-g-border text-g-text text-xs font-medium rounded-full hover:bg-g-hover transition-colors">
                                         Top Bidders (<span th:text="${topBiddersCount}">25</span>)
                                     </button>
+                                    <button type="button" onclick="setAudience('custom')" id="audienceCustom" class="px-3 py-1.5 bg-g-bg border border-g-border text-g-text text-xs font-medium rounded-full hover:bg-g-hover transition-colors">
+                                        <span class="material-icons-outlined text-xs align-middle mr-0.5">person_search</span>
+                                        Specific User
+                                    </button>
                                 </div>
                                 <input type="hidden" name="audience" id="audienceInput" value="all">
+
+                                <!-- Specific User Search Box (hidden by default) -->
+                                <div id="customUserBox" class="hidden">
+                                    <div class="relative mb-2">
+                                        <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">search</span>
+                                        <input type="text" id="userSearchInput" oninput="filterBroadcastUsers()" placeholder="Search by username, email, or ID..."
+                                               class="w-full pl-10 pr-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all"
+                                               autocomplete="off">
+                                    </div>
+                                    <!-- Selected users chips -->
+                                    <div id="selectedChips" class="flex flex-wrap gap-1.5 mb-2"></div>
+                                    <!-- User list -->
+                                    <div class="border border-g-border rounded-xl overflow-hidden">
+                                        <div id="userList" class="max-h-[200px] overflow-y-auto divide-y divide-g-border scrollbar-hide">
+                                            <div th:each="user : ${allUsersList}" class="broadcast-user-item flex items-center gap-3 px-4 py-2.5 hover:bg-g-hover cursor-pointer transition-colors"
+                                                 th:data-id="${user.id}" th:data-username="${user.username}" th:data-email="${user.email}"
+                                                 th:onclick="'toggleSelectUser(' + ${user.id} + ')'">
+                                                <div class="w-7 h-7 rounded-full bg-g-blue flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+                                                     th:text="${#strings.substring(user.username, 0, 1).toUpperCase()}">U</div>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-sm text-g-text truncate">
+                                                        <span th:text="${user.username}">username</span>
+                                                        <span class="text-[10px] text-g-text-secondary font-mono ml-1.5">#<span th:text="${user.id}">1</span></span>
+                                                    </p>
+                                                    <p class="text-[11px] text-g-text-secondary truncate" th:text="${user.email}">email</p>
+                                                </div>
+                                                <span class="material-icons-outlined text-lg text-g-text-secondary user-check-icon" th:id="'check-' + ${user.id}">radio_button_unchecked</span>
+                                            </div>
+                                        </div>
+                                        <div class="px-4 py-2 bg-g-bg border-t border-g-border flex items-center justify-between">
+                                            <span id="selectedCount" class="text-xs text-g-text-secondary">0 users selected</span>
+                                            <button type="button" onclick="clearSelectedUsers()" class="text-xs font-medium text-g-red hover:underline">Clear all</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Preview -->
@@ -402,15 +442,117 @@
 
         function setAudience(type) {
             document.getElementById('audienceInput').value = type;
-            ['all', 'active', 'bidders'].forEach(a => {
+            ['all', 'active', 'bidders', 'custom'].forEach(a => {
                 const btn = document.getElementById('audience' + a.charAt(0).toUpperCase() + a.slice(1));
+                if (!btn) return;
                 if (a === type) {
                     btn.className = 'px-3 py-1.5 bg-g-blue text-white text-xs font-medium rounded-full transition-colors';
                 } else {
                     btn.className = 'px-3 py-1.5 bg-g-bg border border-g-border text-g-text text-xs font-medium rounded-full hover:bg-g-hover transition-colors';
                 }
             });
+            // Show/hide custom user search box
+            document.getElementById('customUserBox').classList.toggle('hidden', type !== 'custom');
+            // Update recipient info text
+            updateRecipientInfo();
         }
+
+        // ---- Specific User Selection ----
+        var selectedUserIds = [];
+        var selectedUserNames = {};
+
+        function toggleSelectUser(userId) {
+            var idx = selectedUserIds.indexOf(userId);
+            if (idx > -1) {
+                selectedUserIds.splice(idx, 1);
+                delete selectedUserNames[userId];
+            } else {
+                selectedUserIds.push(userId);
+                // Get username from the DOM
+                var el = document.querySelector('[data-id="' + userId + '"]');
+                if (el) selectedUserNames[userId] = el.getAttribute('data-username');
+            }
+            renderChips();
+            updateCheckIcons();
+            updateSelectedCount();
+            updateRecipientInfo();
+        }
+
+        function renderChips() {
+            var container = document.getElementById('selectedChips');
+            container.innerHTML = '';
+            selectedUserIds.forEach(function(id) {
+                var chip = document.createElement('span');
+                chip.className = 'inline-flex items-center gap-1 px-2.5 py-1 bg-g-blue-light text-g-blue text-xs font-medium rounded-full';
+                chip.innerHTML = selectedUserNames[id] + ' <button type="button" onclick="toggleSelectUser(' + id + ')" class="ml-0.5 hover:text-g-red">&times;</button>';
+                container.appendChild(chip);
+            });
+        }
+
+        function updateCheckIcons() {
+            document.querySelectorAll('.user-check-icon').forEach(function(icon) {
+                var userId = parseInt(icon.id.replace('check-', ''));
+                icon.textContent = selectedUserIds.indexOf(userId) > -1 ? 'check_circle' : 'radio_button_unchecked';
+                icon.className = 'material-icons-outlined text-lg ' + (selectedUserIds.indexOf(userId) > -1 ? 'text-g-blue' : 'text-g-text-secondary');
+            });
+        }
+
+        function updateSelectedCount() {
+            document.getElementById('selectedCount').textContent = selectedUserIds.length + ' user' + (selectedUserIds.length !== 1 ? 's' : '') + ' selected';
+        }
+
+        function clearSelectedUsers() {
+            selectedUserIds = [];
+            selectedUserNames = {};
+            renderChips();
+            updateCheckIcons();
+            updateSelectedCount();
+            updateRecipientInfo();
+        }
+
+        function filterBroadcastUsers() {
+            var q = document.getElementById('userSearchInput').value.toLowerCase().trim();
+            document.querySelectorAll('.broadcast-user-item').forEach(function(item) {
+                var username = (item.getAttribute('data-username') || '').toLowerCase();
+                var email = (item.getAttribute('data-email') || '').toLowerCase();
+                var id = (item.getAttribute('data-id') || '').toLowerCase();
+                // Match by username, email, or user ID
+                var match = username.includes(q) || email.includes(q) || id === q;
+                // If query is purely numeric, also do prefix match on ID
+                if (/^\d+$/.test(q) && id.startsWith(q)) match = true;
+                item.style.display = match ? 'flex' : 'none';
+            });
+        }
+
+        function updateRecipientInfo() {
+            var type = document.getElementById('audienceInput').value;
+            var info = document.getElementById('recipientInfo');
+            if (type === 'custom') {
+                var count = selectedUserIds.length;
+                info.innerHTML = '<span class="material-icons-outlined text-lg">people</span><span>Sending to <strong class="text-g-text">' + count + '</strong> selected user' + (count !== 1 ? 's' : '') + '</span>';
+            }
+        }
+
+        // Before form submit, inject selected user IDs as hidden fields
+        document.querySelector('form[action*="broadcast/send"]').addEventListener('submit', function(e) {
+            var audience = document.getElementById('audienceInput').value;
+            if (audience === 'custom' && selectedUserIds.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one user.');
+                return false;
+            }
+            // Remove any existing userIds inputs
+            this.querySelectorAll('input[name="userIds"]').forEach(function(el) { el.remove(); });
+            if (audience === 'custom') {
+                selectedUserIds.forEach(function(id) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'userIds';
+                    input.value = id;
+                    e.target.appendChild(input);
+                });
+            }
+        });
 
         // Auto-hide flash messages
         setTimeout(() => {

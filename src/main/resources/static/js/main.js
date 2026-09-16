@@ -157,3 +157,47 @@ function startCountdown(el, totalSeconds) {
 function updateNotificationBadge() {
     // Could be enhanced with AJAX polling in the future
 }
+
+/**
+ * Admin/Super-Admin Floating Navigation Button (FAB)
+ * Toggles the mobile sidebar on screens ≤ 960px.
+ * Only activates if #mobileSidebar and #adminFab exist on the page.
+ */
+(function() {
+    var fab = document.getElementById('adminFab');
+    var sidebar = document.getElementById('mobileSidebar');
+    var overlay = document.getElementById('mobileSidebarOverlay');
+
+    if (!fab || !sidebar || !overlay) return;
+
+    var isOpen = false;
+
+    function toggleMobileSidebar() {
+        isOpen = !isOpen;
+        sidebar.classList.toggle('open', isOpen);
+        overlay.classList.toggle('open', isOpen);
+        fab.classList.toggle('is-open', isOpen);
+        fab.textContent = isOpen ? '\u2715' : '\u2630';
+    }
+
+    function closeMobileSidebar() {
+        isOpen = false;
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+        fab.classList.remove('is-open');
+        fab.textContent = '\u2630';
+    }
+
+    fab.addEventListener('click', toggleMobileSidebar);
+    overlay.addEventListener('click', closeMobileSidebar);
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && isOpen) closeMobileSidebar();
+    });
+
+    // Auto-close when resizing to desktop
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 960 && isOpen) closeMobileSidebar();
+    });
+})();

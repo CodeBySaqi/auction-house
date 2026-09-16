@@ -297,6 +297,7 @@ public class AdminController {
                                  @RequestParam(required = false) String category) {
         User admin = requireAdmin(principal);
         model.addAttribute("admin", admin);
+        addSidebarAttributes(model);
 
         List<Auction> auctions = auctionService.getAllAuctions();
 
@@ -475,6 +476,7 @@ public class AdminController {
                               @RequestParam(required = false) String role) {
         User admin = requireAdmin(principal);
         model.addAttribute("admin", admin);
+        addSidebarAttributes(model);
 
         List<User> users = userService.findAllUsers();
         if (search != null && !search.isEmpty()) {
@@ -692,11 +694,9 @@ public class AdminController {
     public String analytics(Model model, Principal principal) {
         User admin = requireAdmin(principal);
         model.addAttribute("admin", admin);
+        addSidebarAttributes(model);
         List<Auction> allAuctions = auctionService.getAllAuctions();
         List<User> allUsers = userService.findAllUsers();
-
-        model.addAttribute("totalUsers", allUsers.size());
-        model.addAttribute("totalAuctions", allAuctions.size());
         model.addAttribute("categoryBreakdown", breakdown(allAuctions));
         model.addAttribute("statusBreakdown", statusBreakdown(allAuctions));
         
@@ -779,8 +779,7 @@ public class AdminController {
     public String settings(Model model, Principal principal) {
         User admin = requireAdmin(principal);
         model.addAttribute("admin", admin);
-        addCounts(model, auctionService.getAllAuctions());
-        model.addAttribute("totalUsers", userService.findAllUsers().size());
+        addSidebarAttributes(model);
         model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
         return "admin-settings";
     }
@@ -804,20 +803,16 @@ public class AdminController {
     public String broadcastPage(Model model, Principal principal) {
         User admin = requireAdmin(principal);
         model.addAttribute("admin", admin);
-        addCounts(model, auctionService.getAllAuctions());
+        addSidebarAttributes(model);
         model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
-
-        // Sidebar counts
-        List<Auction> allAuctions = auctionService.getAllAuctions();
-        model.addAttribute("totalAuctions", allAuctions.size());
-        model.addAttribute("pendingCount", auctionService.getPendingAuctions().size());
-        model.addAttribute("pendingPaymentCount", paymentReleaseService.countPendingReview());
 
         // Stats
         List<User> allUsers = userService.findAllUsers();
-        model.addAttribute("totalUsers", allUsers.size());
         model.addAttribute("activeUsers", allUsers.stream().filter(User::isActive).count());
-        model.addAttribute("topBiddersCount", allUsers.stream().filter(u -> u.getBids() != null && !u.getBids().isEmpty()).count());
+
+        // Count users who have bids (using repository query to avoid LazyInitException)
+        long biddersCount = bidRepository.countBidsGroupedByBidder().size();
+        model.addAttribute("topBiddersCount", biddersCount);
 
         // Recent broadcasts (last 10 notifications of type ANNOUNCEMENT sent to all users)
         // For now, show empty - will be populated when broadcasts are sent
@@ -828,6 +823,9 @@ public class AdminController {
         model.addAttribute("recentBroadcasts", List.of());
         model.addAttribute("scheduledBroadcasts", List.of());
 
+        // All users for the "specific user" search
+        model.addAttribute("allUsersList", allUsers);
+
         return "admin-broadcast";
     }
 
@@ -836,6 +834,7 @@ public class AdminController {
                                 @RequestParam String subject,
                                 @RequestParam String message,
                                 @RequestParam(defaultValue = "all") String audience,
+                                @RequestParam(required = false) List<Long> userIds,
                                 Principal principal,
                                 RedirectAttributes ra) {
         requireAdmin(principal);
@@ -868,14 +867,33 @@ public class AdminController {
                 audienceLabel = recipients.size() + " active users";
                 break;
             case "bidders":
+                // Use repository query to avoid LazyInitializationException on user.getBids()
+                Map<Long, Long> bidsPerUser = new HashMap<>();
+                for (Object[] row : bidRepository.countBidsGroupedByBidder()) {
+                    if (row[0] != null) bidsPerUser.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+                }
                 recipients = allUsers.stream()
-                        .filter(u -> u.getBids() != null && !u.getBids().isEmpty())
-                        .sorted((a, b) -> Integer.compare(
-                                b.getBids() != null ? b.getBids().size() : 0,
-                                a.getBids() != null ? a.getBids().size() : 0))
+                        .filter(u -> bidsPerUser.containsKey(u.getId()))
+                        .sorted((a, b) -> Long.compare(
+                                bidsPerUser.getOrDefault(b.getId(), 0L),
+                                bidsPerUser.getOrDefault(a.getId(), 0L)))
                         .limit(25)
                         .collect(java.util.stream.Collectors.toList());
                 audienceLabel = recipients.size() + " top bidders";
+                break;
+            case "custom":
+                if (userIds == null || userIds.isEmpty()) {
+                    ra.addFlashAttribute("error", "Please select at least one user.");
+                    return "redirect:/admin/broadcast";
+                }
+                recipients = allUsers.stream()
+                        .filter(u -> userIds.contains(u.getId()))
+                        .collect(java.util.stream.Collectors.toList());
+                if (recipients.isEmpty()) {
+                    ra.addFlashAttribute("error", "No matching users found.");
+                    return "redirect:/admin/broadcast";
+                }
+                audienceLabel = recipients.size() + " selected user" + (recipients.size() > 1 ? "s" : "");
                 break;
             default: // "all"
                 recipients = allUsers;
@@ -914,6 +932,7 @@ public class AdminController {
     public String manageBids(Model model, Principal principal) {
         User admin = requireAdmin(principal);
         model.addAttribute("admin", admin);
+        addSidebarAttributes(model);
         
         List<Auction> allAuctions = auctionService.getAllAuctions();
         int totalBids = allAuctions.stream().mapToInt(Auction::getBidCount).sum();
@@ -1029,6 +1048,18 @@ public class AdminController {
         model.addAttribute("countActive", auctions.stream().filter(a -> a.getStatus() == AuctionStatus.ACTIVE).count());
         model.addAttribute("countClosed", auctions.stream().filter(a -> a.getStatus() == AuctionStatus.CLOSED).count());
         model.addAttribute("countCancelled", auctions.stream().filter(a -> a.getStatus() == AuctionStatus.CANCELLED).count());
+    }
+
+    /**
+     * Adds model attributes required by the shared admin sidebar fragment.
+     * Call this from every admin page controller method.
+     */
+    private void addSidebarAttributes(Model model) {
+        List<Auction> allAuctions = auctionService.getAllAuctions();
+        model.addAttribute("totalAuctions", allAuctions.size());
+        model.addAttribute("pendingCount", auctionService.getPendingAuctions().size());
+        model.addAttribute("pendingPaymentCount", paymentReleaseService.countPendingReview());
+        model.addAttribute("totalUsers", userService.findAllUsers().size());
     }
 
     /** Category counts with display names and percentage of the total. */
