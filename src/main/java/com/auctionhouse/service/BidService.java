@@ -93,16 +93,18 @@ public class BidService {
                             auction.getStartingPrice()));
         }
 
+        // Validation 6: User cannot place consecutive bids on the same auction
+        if (auction.getHighestBidder() != null && auction.getHighestBidder().getId().equals(bidder.getId())) {
+            throw new BidTooLowException("You cannot bid again until another user places a higher bid.");
+        }
+
         // Store previous highest bidder for refund + notification
         User previousHighest = auction.getHighestBidder();
         double previousBidAmount = auction.getCurrentHighestBid();
 
-        // Check if the same user is bidding again on this auction
-        boolean sameUserBiddingAgain = previousHighest != null && previousHighest.getId().equals(bidder.getId());
-
         // REFUND the previous highest bidder (their money is unlocked)
-        // Only refund if it's a DIFFERENT user (not the same user increasing their bid)
-        if (previousHighest != null && !sameUserBiddingAgain) {
+        // Since consecutive bids are blocked, previousHighest is always a different user (or null)
+        if (previousHighest != null) {
             double refundAmount = roundToTwoDecimals(previousBidAmount);
             previousHighest.setWalletBalance(roundToTwoDecimals(previousHighest.getWalletBalance() + refundAmount));
             userRepository.save(previousHighest);
@@ -116,9 +118,8 @@ public class BidService {
             );
         }
 
-        // DEDUCT bid amount from current bidder's wallet
-        // If same user is bidding again, only deduct the DIFFERENCE
-        double amountToDeduct = sameUserBiddingAgain ? roundToTwoDecimals(amount - previousBidAmount) : amount;
+        // DEDUCT full bid amount from current bidder's wallet
+        double amountToDeduct = amount;
 
         // Refresh bidder from database to get latest wallet balance
         bidder = userRepository.findById(bidder.getId())
@@ -153,10 +154,7 @@ public class BidService {
         Bid savedBid = bidRepository.save(bid);
 
         // Notify the bidder their bid was placed
-        String bidMessage = sameUserBiddingAgain
-                ? "✅ Your bid on \"" + auction.getTitle() + "\" increased to $" + String.format("%,.2f", amount) +
-                  "! $" + String.format("%,.2f", amountToDeduct) + " additional locked from your wallet."
-                : "✅ Your bid of $" + String.format("%,.2f", amount) +
+        String bidMessage = "✅ Your bid of $" + String.format("%,.2f", amount) +
                   " on \"" + auction.getTitle() + "\" is now the highest! $" +
                   String.format("%,.2f", amount) + " locked from your wallet.";
 
