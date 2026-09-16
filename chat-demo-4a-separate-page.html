@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat UI Option 4A — Separate Messages Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; }
+        .font-gsans { font-family: 'Google Sans', sans-serif; }
+        .bg-g-bg { background-color: #f8f9fa; }
+        .bg-g-blue { background-color: #1a73e8; }
+        .bg-g-blue-hover:hover { background-color: #1557b0; }
+        .text-g-text { color: #202124; }
+        .text-g-text-secondary { color: #5f6368; }
+        .border-g-border { border-color: #dadce0; }
+        .bg-g-hover:hover { background-color: #f1f3f4; }
+        .bg-g-green { background-color: #188038; }
+    </style>
+</head>
+<body class="bg-g-bg min-h-screen">
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-g-border sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <span class="material-icons-outlined text-g-blue text-3xl">storefront</span>
+                    <span class="font-gsans text-xl font-medium text-g-text">AuctionHouse</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="#" class="text-sm text-g-text-secondary hover:text-g-text no-underline flex items-center gap-1">
+                        <span class="material-icons-outlined">storefront</span> Browse
+                    </a>
+                    <a href="#" class="text-sm text-g-blue font-medium no-underline flex items-center gap-1 bg-blue-50 px-3 py-1.5 rounded-full">
+                        <span class="material-icons-outlined">chat</span> Messages
+                        <span class="bg-g-blue text-white text-xs rounded-full px-2 py-0.5">3</span>
+                    </a>
+                    <a href="#" class="text-sm text-g-text-secondary hover:text-g-text no-underline flex items-center gap-1">
+                        <span class="material-icons-outlined">person</span> Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 class="font-gsans text-2xl font-medium text-g-text mb-6 flex items-center gap-2">
+            <span class="material-icons-outlined text-g-blue">chat</span>
+            Messages
+            <span class="bg-g-blue text-white text-sm rounded-full px-3 py-0.5">3 unread</span>
+        </h1>
+
+        <div class="grid lg:grid-cols-3 gap-6 h-[calc(100vh-180px)]">
+            <!-- Conversation List -->
+            <div class="bg-white rounded-2xl border border-g-border overflow-hidden flex flex-col">
+                <div class="px-5 py-4 border-b border-g-border">
+                    <h2 class="font-gsans font-medium text-g-text">Conversations</h2>
+                </div>
+                <div class="flex-1 overflow-y-auto divide-y divide-g-border">
+                    <!-- Active conversation -->
+                    <div class="p-4 bg-blue-50 border-l-4 border-g-blue cursor-pointer">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-medium shrink-0">JD</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <p class="font-medium text-g-text text-sm">johndoe</p>
+                                    <span class="text-[10px] text-g-text-secondary">2m ago</span>
+                                </div>
+                                <p class="text-xs text-g-text-secondary line-clamp-1 mt-0.5">1967 Ford Mustang Shelby GT500</p>
+                                <p class="text-xs text-g-blue font-medium mt-1">Can you ship internationally?</p>
+                            </div>
+                            <span class="bg-g-blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">2</span>
+                        </div>
+                    </div>
+                    <!-- Other conversations -->
+                    <div class="p-4 hover:bg-g-hover cursor-pointer transition-colors">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white font-medium shrink-0">SM</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <p class="font-medium text-g-text text-sm">smith42</p>
+                                    <span class="text-[10px] text-g-text-secondary">1h ago</span>
+                                </div>
+                                <p class="text-xs text-g-text-secondary line-clamp-1 mt-0.5">Rolex Daytona Platinum</p>
+                                <p class="text-xs text-g-text-secondary line-clamp-1 mt-1">Thanks! I'll ship it tomorrow.</p>
+                            </div>
+                            <span class="bg-g-blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">1</span>
+                        </div>
+                    </div>
+                    <div class="p-4 hover:bg-g-hover cursor-pointer transition-colors">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-white font-medium shrink-0">AC</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <p class="font-medium text-g-text text-sm">artcollector</p>
+                                    <span class="text-[10px] text-g-text-secondary">3d ago</span>
+                                </div>
+                                <p class="text-xs text-g-text-secondary line-clamp-1 mt-0.5">Banksy Signed Print</p>
+                                <p class="text-xs text-g-text-secondary line-clamp-1 mt-1">Got it, looks great!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Window -->
+            <div class="lg:col-span-2 bg-white rounded-2xl border border-g-border overflow-hidden flex flex-col">
+                <!-- Chat Header -->
+                <div class="px-5 py-4 border-b border-g-border flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-medium shrink-0">JD</div>
+                    <div class="flex-1">
+                        <p class="font-medium text-g-text text-sm">johndoe</p>
+                        <p class="text-xs text-g-text-secondary">Re: 1967 Ford Mustang Shelby GT500</p>
+                    </div>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 text-g-green text-xs font-medium rounded-full">
+                        <span class="w-2 h-2 bg-g-green rounded-full"></span> Online
+                    </span>
+                </div>
+
+                <!-- Messages -->
+                <div class="flex-1 overflow-y-auto p-5 space-y-4">
+                    <!-- Their message -->
+                    <div class="flex gap-2 max-w-[80%]">
+                        <div class="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white text-xs font-medium shrink-0">JD</div>
+                        <div>
+                            <div class="bg-g-bg rounded-2xl rounded-tl-sm px-4 py-2.5">
+                                <p class="text-sm text-g-text">Hey! I won the Mustang auction 🎉</p>
+                            </div>
+                            <p class="text-[10px] text-g-text-secondary mt-1 ml-1">Yesterday, 3:42 PM</p>
+                        </div>
+                    </div>
+                    <!-- Their message -->
+                    <div class="flex gap-2 max-w-[80%]">
+                        <div class="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white text-xs font-medium shrink-0 invisible">JD</div>
+                        <div>
+                            <div class="bg-g-bg rounded-2xl rounded-tl-sm px-4 py-2.5">
+                                <p class="text-sm text-g-text">Can you ship internationally to Germany?</p>
+                            </div>
+                            <p class="text-[10px] text-g-text-secondary mt-1 ml-1">2 minutes ago</p>
+                        </div>
+                    </div>
+                    <!-- My message -->
+                    <div class="flex gap-2 max-w-[80%] ml-auto flex-row-reverse">
+                        <div class="w-8 h-8 rounded-full bg-g-blue flex items-center justify-center text-white text-xs font-medium shrink-0">ME</div>
+                        <div>
+                            <div class="bg-g-blue text-white rounded-2xl rounded-tr-sm px-4 py-2.5">
+                                <p class="text-sm">Congratulations on winning! 🏆</p>
+                            </div>
+                            <p class="text-[10px] text-g-text-secondary mt-1 mr-1 text-right">Yesterday, 4:15 PM</p>
+                        </div>
+                    </div>
+                    <!-- My message -->
+                    <div class="flex gap-2 max-w-[80%] ml-auto flex-row-reverse">
+                        <div class="w-8 h-8 rounded-full bg-g-blue flex items-center justify-center text-white text-xs font-medium shrink-0 invisible">ME</div>
+                        <div>
+                            <div class="bg-g-blue text-white rounded-2xl rounded-tr-sm px-4 py-2.5">
+                                <p class="text-sm">Yes, I can ship to Germany! It'll be around $2,500 for insured freight. I'll include that in the shipping details.</p>
+                            </div>
+                            <p class="text-[10px] text-g-text-secondary mt-1 mr-1 text-right">Just now</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input -->
+                <div class="px-5 py-4 border-t border-g-border">
+                    <div class="flex items-center gap-3">
+                        <input type="text" placeholder="Type a message..." class="flex-1 px-4 py-2.5 bg-g-bg border border-g-border rounded-full text-sm focus:outline-none focus:border-g-blue transition-all">
+                        <button class="w-10 h-10 bg-g-blue rounded-full flex items-center justify-center text-white hover:bg-g-blue-hover transition-colors">
+                            <span class="material-icons-outlined">send</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pros/Cons -->
+    <div class="fixed bottom-4 left-4 right-4 bg-white rounded-2xl border-2 border-g-blue p-4 shadow-2xl max-w-2xl mx-auto">
+        <h3 class="font-gsans font-medium text-g-blue mb-2 flex items-center gap-2">
+            <span class="material-icons-outlined">info</span>
+            Option 4A: Separate Messages Page
+        </h3>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+                <p class="font-medium text-g-green mb-1">✅ Pros</p>
+                <ul class="text-g-text-secondary space-y-0.5 text-xs">
+                    <li>• Full-screen chat experience</li>
+                    <li>• Easy to see all conversations</li>
+                    <li>• Standard messaging app pattern</li>
+                    <li>• Good for power users</li>
+                </ul>
+            </div>
+            <div>
+                <p class="font-medium text-red-600 mb-1">❌ Cons</p>
+                <ul class="text-g-text-secondary space-y-0.5 text-xs">
+                    <li>• Requires navigating away from dashboard</li>
+                    <li>• Extra page to maintain</li>
+                    <li>• May feel heavy for simple chats</li>
+                    <li>• Adds a new nav item</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

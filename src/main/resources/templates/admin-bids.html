@@ -93,10 +93,12 @@
                                 View Site
                             </a>
                             <div class="border-t border-g-border my-1"></div>
-                            <a th:href="@{/logout}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-red hover:bg-red-50 transition-colors">
-                                <span class="material-icons-outlined text-lg">logout</span>
-                                Logout
-                            </a>
+                            <form th:action="@{/logout}" method="post" class="m-0">
+                                <button type="submit" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-red hover:bg-red-50 transition-colors w-full">
+                                    <span class="material-icons-outlined text-lg">logout</span>
+                                    Logout
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>

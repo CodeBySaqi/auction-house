@@ -259,6 +259,35 @@ public class AdminController {
         return days + "d ago";
     }
 
+    /* ==================== SEARCH ==================== */
+
+    @GetMapping("/search")
+    public String adminSearch(@RequestParam String q, Principal principal) {
+        requireAdmin(principal);
+        if (q == null || q.trim().isEmpty()) {
+            return "redirect:/admin/console";
+        }
+        String query = q.trim().toLowerCase();
+
+        // Check if search matches a user (username or email)
+        List<User> allUsers = userService.findAllUsers();
+        boolean userMatch = allUsers.stream().anyMatch(u ->
+                u.getUsername().toLowerCase().contains(query) ||
+                (u.getEmail() != null && u.getEmail().toLowerCase().contains(query)));
+
+        // Check if search matches an auction (title)
+        List<Auction> allAuctions = auctionService.getAllAuctions();
+        boolean auctionMatch = allAuctions.stream().anyMatch(a ->
+                a.getTitle().toLowerCase().contains(query));
+
+        // If only user matches, go to users page
+        if (userMatch && !auctionMatch) {
+            return "redirect:/admin/users?search=" + java.net.URLEncoder.encode(q.trim(), java.nio.charset.StandardCharsets.UTF_8);
+        }
+        // Default: go to auctions page (covers auction matches and no matches)
+        return "redirect:/admin/auctions?search=" + java.net.URLEncoder.encode(q.trim(), java.nio.charset.StandardCharsets.UTF_8);
+    }
+
     /* ==================== AUCTIONS ==================== */
 
     @GetMapping("/auctions")
