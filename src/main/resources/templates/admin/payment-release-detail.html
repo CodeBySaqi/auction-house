@@ -185,7 +185,38 @@
                         <p class="text-xl font-medium text-g-text tabular-nums">$<span th:text="${#numbers.formatDecimal(paymentRelease.winningAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
                     </div>
                 </div>
-                <p class="text-xs text-g-text-secondary">To be released to seller</p>
+                <p class="text-xs text-g-text-secondary">Buyer charged this amount</p>
+            </div>
+        </div>
+
+        <!-- Commission Breakdown -->
+        <div class="bg-white rounded-2xl border border-g-border p-6 mb-6">
+            <h2 class="font-gsans text-lg font-medium text-g-text mb-4 flex items-center gap-2">
+                <span class="material-icons-outlined text-g-text-secondary text-xl">calculate</span>
+                Commission Breakdown (10% Platform Fee)
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                    <p class="text-xs text-blue-700 font-medium mb-1">Winning Amount (100%)</p>
+                    <p class="text-2xl font-bold text-blue-900 tabular-nums">$<span th:text="${#numbers.formatDecimal(paymentRelease.winningAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                    <p class="text-xs text-blue-600 mt-1">What buyer paid</p>
+                </div>
+                <div class="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                    <p class="text-xs text-amber-700 font-medium mb-1">Platform Commission (10%)</p>
+                    <p class="text-2xl font-bold text-amber-900 tabular-nums">$<span th:text="${#numbers.formatDecimal(commissionAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                    <p class="text-xs text-amber-600 mt-1">Retained by platform</p>
+                </div>
+                <div class="bg-green-50 rounded-xl p-4 border border-green-200">
+                    <p class="text-xs text-green-700 font-medium mb-1">Seller Payout (90%)</p>
+                    <p class="text-2xl font-bold text-green-900 tabular-nums">$<span th:text="${#numbers.formatDecimal(sellerPayoutAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                    <p class="text-xs text-green-600 mt-1">Credited to seller's wallet</p>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-g-border">
+                <p class="text-xs text-g-text-secondary">
+                    <span class="material-icons-outlined text-xs align-middle">info</span>
+                    Commission is calculated server-side using BigDecimal. The seller receives 90% of the winning bid; the platform retains 10% as commission.
+                </p>
             </div>
         </div>
 
@@ -312,16 +343,50 @@
         <div th:if="${paymentRelease.status.name() == 'VERIFIED'}" class="bg-green-50 rounded-2xl border border-green-200 p-6 mb-6">
             <h2 class="font-gsans text-lg font-medium text-green-900 mb-2">Release Payment to Seller</h2>
             <p class="text-sm text-green-800 mb-4">
-                This case has been verified. Click the button below to release 
-                <strong class="tabular-nums">$<span th:text="${#numbers.formatDecimal(paymentRelease.winningAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></strong> 
-                to <strong th:text="${seller.username}">Seller</strong>'s wallet.
+                This case has been verified. Click the button below to release
+                <strong class="tabular-nums">$<span th:text="${#numbers.formatDecimal(sellerPayoutAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></strong>
+                (90%) to <strong th:text="${seller.username}">Seller</strong>'s wallet.
+                The platform retains
+                <strong class="tabular-nums">$<span th:text="${#numbers.formatDecimal(commissionAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></strong>
+                (10%) as commission.
             </p>
-            <form th:action="@{/admin/payments/{id}/release(id=${paymentRelease.id})}" method="post" onsubmit="return confirm('Are you sure you want to release payment? This action cannot be undone.')">
+            <form th:action="@{/admin/payments/{id}/release(id=${paymentRelease.id})}" method="post" onsubmit="return confirm('Are you sure you want to release payment? Seller will receive $90% and platform keeps 10% commission. This action cannot be undone.')">
                 <button type="submit" class="w-full px-6 py-4 bg-g-blue text-white rounded-xl text-sm font-medium hover:bg-g-blue-hover shadow-g-sm hover:shadow-g-md transition-all flex items-center justify-center gap-2">
                     <span class="material-icons-outlined text-lg">payments</span>
-                    Release Payment
+                    Release Payment ($<span th:text="${#numbers.formatDecimal(sellerPayoutAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span> to Seller)
                 </button>
             </form>
+        </div>
+
+        <!-- Commission Record (after release) -->
+        <div th:if="${paymentRelease.status.name() == 'PAYMENT_RELEASED' && commission != null}" class="bg-white rounded-2xl border border-g-border p-6 mb-6">
+            <h2 class="font-gsans text-lg font-medium text-g-text mb-4 flex items-center gap-2">
+                <span class="material-icons-outlined text-amber-600 text-xl">account_balance</span>
+                Commission Record
+            </h2>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p class="text-xs text-g-text-secondary mb-1">Winning Amount</p>
+                    <p class="font-medium text-g-text tabular-nums">$<span th:text="${#numbers.formatDecimal(commission.winningAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                </div>
+                <div>
+                    <p class="text-xs text-g-text-secondary mb-1">Commission Rate</p>
+                    <p class="font-medium text-g-text tabular-nums"><span th:text="${commission.commissionPercentage}">10</span>%</p>
+                </div>
+                <div>
+                    <p class="text-xs text-g-text-secondary mb-1">Commission Amount</p>
+                    <p class="font-medium text-amber-700 tabular-nums">$<span th:text="${#numbers.formatDecimal(commission.commissionAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                </div>
+                <div>
+                    <p class="text-xs text-g-text-secondary mb-1">Seller Payout</p>
+                    <p class="font-medium text-g-green tabular-nums">$<span th:text="${#numbers.formatDecimal(commission.sellerPayoutAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-g-border">
+                <p class="text-xs text-g-text-secondary">
+                    Commission recorded on <span th:text="${#temporals.format(commission.createdAt, 'MMM dd, yyyy HH:mm')}">Date</span>
+                </p>
+            </div>
         </div>
 
         <!-- Review History -->

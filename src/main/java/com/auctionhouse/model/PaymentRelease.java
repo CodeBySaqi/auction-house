@@ -99,6 +99,13 @@ public class PaymentRelease {
     @Column(name = "payment_released")
     private Boolean paymentReleased = false;
 
+    // Commission fields (populated when payment is released)
+    @Column(name = "commission_amount", precision = 12, scale = 2)
+    private BigDecimal commissionAmount;
+
+    @Column(name = "seller_payout_amount", precision = 12, scale = 2)
+    private BigDecimal sellerPayoutAmount;
+
     public PaymentRelease() {
         this.createdAt = LocalDateTime.now();
     }
@@ -205,4 +212,10 @@ public class PaymentRelease {
 
     public Boolean getPaymentReleased() { return paymentReleased; }
     public void setPaymentReleased(Boolean paymentReleased) { this.paymentReleased = paymentReleased; }
+
+    public BigDecimal getCommissionAmount() { return commissionAmount; }
+    public void setCommissionAmount(BigDecimal commissionAmount) { this.commissionAmount = commissionAmount; }
+
+    public BigDecimal getSellerPayoutAmount() { return sellerPayoutAmount; }
+    public void setSellerPayoutAmount(BigDecimal sellerPayoutAmount) { this.sellerPayoutAmount = sellerPayoutAmount; }
 }

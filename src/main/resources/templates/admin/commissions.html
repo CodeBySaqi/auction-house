@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Commissions - Admin Dashboard</title>
+    <script>
+        (function() {
+            var theme = localStorage.getItem('theme') || 'light';
+            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script th:replace="~{fragments/layout :: tailwindConfig}"></script>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen">
+
+    <!-- App Bar -->
+    <nav class="bg-white border-b border-g-border sticky top-0 z-40">
+        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-g-blue rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-white text-xl">gavel</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-gsans font-medium text-xl text-g-text">Auction<span class="text-g-blue">House</span></span>
+                        <span class="px-2.5 py-1 bg-g-text text-white text-[10px] font-bold uppercase tracking-wider rounded-md">Admin</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleTheme()" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Toggle dark mode">
+                        <span class="material-icons-outlined dark:hidden">dark_mode</span>
+                        <span class="material-icons-outlined hidden dark:inline">light_mode</span>
+                    </button>
+                    <a th:href="@{/admin/console}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined">dashboard</span>
+                    </a>
+                    <div class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm">A</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="flex items-center gap-2 text-sm text-g-text-secondary mb-2">
+                <a href="/admin/console" class="hover:text-g-blue transition-colors">Dashboard</a>
+                <span class="material-icons-outlined text-xs">chevron_right</span>
+                <span>Platform Commissions</span>
+            </div>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">Platform Commissions</h1>
+                    <p class="text-sm text-g-text-secondary mt-1">10% commission collected from each completed auction sale</p>
+                </div>
+                <a th:href="@{/admin/console}" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-g-border rounded-full text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
+                    <span class="material-icons-outlined text-lg">arrow_back</span>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-2xl border border-g-border p-5">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-amber-600 text-xl">account_balance</span>
+                    </div>
+                </div>
+                <p class="font-gsans text-2xl font-medium text-g-text tabular-nums">$<span th:text="${#numbers.formatDecimal(totalCommission, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                <p class="text-xs text-g-text-secondary">Total Commission (10%)</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-g-border p-5">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-g-green text-xl">payments</span>
+                    </div>
+                </div>
+                <p class="font-gsans text-2xl font-medium text-g-text tabular-nums">$<span th:text="${#numbers.formatDecimal(totalSellerPayout, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                <p class="text-xs text-g-text-secondary">Total Seller Payouts (90%)</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-g-border p-5">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-9 h-9 bg-g-blue-light rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-g-blue text-xl">trending_up</span>
+                    </div>
+                </div>
+                <p class="font-gsans text-2xl font-medium text-g-text tabular-nums">$<span th:text="${#numbers.formatDecimal(totalWinningAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                <p class="text-xs text-g-text-secondary">Total Volume</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-g-border p-5">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-purple-600 text-xl">receipt_long</span>
+                    </div>
+                </div>
+                <p class="font-gsans text-2xl font-medium text-g-text tabular-nums" th:text="${commissionCount}">0</p>
+                <p class="text-xs text-g-text-secondary">Commission Records</p>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${#lists.isEmpty(commissions)}" class="bg-white rounded-2xl border border-g-border p-12 text-center">
+            <div class="w-16 h-16 mx-auto mb-4 bg-amber-50 rounded-full flex items-center justify-center">
+                <span class="material-icons-outlined text-amber-600 text-3xl">account_balance</span>
+            </div>
+            <h3 class="font-gsans text-xl font-medium text-g-text mb-2">No Commission Records Yet</h3>
+            <p class="text-sm text-g-text-secondary">Commissions are created when admin releases payments to sellers.</p>
+        </div>
+
+        <!-- Commission Records Table -->
+        <div th:if="${!#lists.isEmpty(commissions)}" class="bg-white rounded-2xl border border-g-border overflow-hidden">
+            <div class="px-6 py-4 border-b border-g-border flex items-center justify-between">
+                <h2 class="font-gsans text-base font-medium text-g-text flex items-center gap-2">
+                    <span class="material-icons-outlined text-g-text-secondary text-xl">list</span>
+                    All Commission Records
+                </h2>
+                <span class="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-medium rounded-full" th:text="${commissionCount} + ' records'">0 records</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-g-bg border-b border-g-border">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Auction</th>
+                            <th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Seller</th>
+                            <th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Buyer</th>
+                            <th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Winning</th>
+                            <th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Commission (10%)</th>
+                            <th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Seller Payout (90%)</th>
+                            <th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-g-border">
+                        <tr th:each="c : ${commissions}" class="hover:bg-g-bg/50 transition-colors">
+                            <td class="px-6 py-4">
+                                <p class="text-sm font-medium text-g-text line-clamp-1" th:text="${c.auction.title}">Auction Title</p>
+                                <p class="text-xs text-g-text-secondary">ID #<span th:text="${c.auction.id}">1</span></p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <p class="text-sm text-g-text" th:text="${c.seller.username}">Seller</p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <p class="text-sm text-g-text" th:text="${c.buyer.username}">Buyer</p>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <p class="text-sm font-medium text-g-text tabular-nums">$<span th:text="${#numbers.formatDecimal(c.winningAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <p class="text-sm font-medium text-amber-700 tabular-nums">$<span th:text="${#numbers.formatDecimal(c.commissionAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <p class="text-sm font-medium text-g-green tabular-nums">$<span th:text="${#numbers.formatDecimal(c.sellerPayoutAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <p class="text-xs text-g-text-secondary" th:text="${#temporals.format(c.createdAt, 'MMM dd, yyyy')}">Date</p>
+                                <p class="text-xs text-g-text-secondary" th:text="${#temporals.format(c.createdAt, 'HH:mm')}">Time</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.add('theme-transition');
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            setTimeout(() => html.classList.remove('theme-transition'), 350);
+        }
+    </script>
+
+</body>
+</html>

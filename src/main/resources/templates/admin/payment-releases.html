@@ -93,21 +93,21 @@
             </div>
             <div class="bg-white rounded-2xl border border-g-border p-5">
                 <div class="flex items-center gap-3 mb-2">
-                    <div class="w-9 h-9 bg-g-blue-light rounded-xl flex items-center justify-center">
-                        <span class="material-icons-outlined text-g-blue text-xl">fact_check</span>
-                    </div>
-                </div>
-                <p class="font-gsans text-2xl font-medium text-g-text tabular-nums" th:text="${#lists.size(paymentReleases.?[status.name() == 'READY_FOR_ADMIN_REVIEW'])}">0</p>
-                <p class="text-xs text-g-text-secondary">Ready for Review</p>
-            </div>
-            <div class="bg-white rounded-2xl border border-g-border p-5">
-                <div class="flex items-center gap-3 mb-2">
                     <div class="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center">
                         <span class="material-icons-outlined text-g-green text-xl">payments</span>
                     </div>
                 </div>
                 <p class="font-gsans text-2xl font-medium text-g-text tabular-nums" th:text="${#lists.size(paymentReleases.?[status.name() == 'PAYMENT_RELEASED'])}">0</p>
                 <p class="text-xs text-g-text-secondary">Released</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-g-border p-5">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-amber-600 text-xl">account_balance</span>
+                    </div>
+                </div>
+                <p class="font-gsans text-2xl font-medium text-g-text tabular-nums">$<span th:text="${#numbers.formatDecimal(totalCommission, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                <p class="text-xs text-g-text-secondary">Total Commission</p>
             </div>
             <div class="bg-white rounded-2xl border border-g-border p-5">
                 <div class="flex items-center gap-3 mb-2">
@@ -160,6 +160,8 @@
                                     <span class="text-g-text">Seller: <strong th:text="${pr.seller.username}">Seller</strong></span>
                                     <span class="text-g-text">Buyer: <strong th:text="${pr.buyer.username}">Buyer</strong></span>
                                     <span class="text-g-text font-medium">Amount: <strong class="tabular-nums">$<span th:text="${#numbers.formatDecimal(pr.winningAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></strong></span>
+                                    <span th:if="${pr.sellerPayoutAmount != null}" class="text-g-green">Seller gets: <strong class="tabular-nums">$<span th:text="${#numbers.formatDecimal(pr.sellerPayoutAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></strong> (90%)</span>
+                                    <span th:if="${pr.commissionAmount != null}" class="text-amber-700">Commission: <strong class="tabular-nums">$<span th:text="${#numbers.formatDecimal(pr.commissionAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></strong> (10%)</span>
                                 </div>
                             </div>
                         </div>

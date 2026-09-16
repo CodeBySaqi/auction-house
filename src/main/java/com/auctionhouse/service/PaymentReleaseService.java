@@ -3,6 +3,7 @@ package com.auctionhouse.service;
 import com.auctionhouse.model.*;
 import com.auctionhouse.repository.AuctionRepository;
 import com.auctionhouse.repository.PaymentReleaseRepository;
+import com.auctionhouse.repository.PlatformCommissionRepository;
 import com.auctionhouse.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,18 +26,21 @@ public class PaymentReleaseService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final FileStorageService fileStorageService;
+    private final PlatformCommissionRepository platformCommissionRepository;
 
     @Autowired
     public PaymentReleaseService(PaymentReleaseRepository paymentReleaseRepository,
                                   AuctionRepository auctionRepository,
                                   UserRepository userRepository,
                                   NotificationService notificationService,
-                                  FileStorageService fileStorageService) {
+                                  FileStorageService fileStorageService,
+                                  PlatformCommissionRepository platformCommissionRepository) {
         this.paymentReleaseRepository = paymentReleaseRepository;
         this.auctionRepository = auctionRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
         this.fileStorageService = fileStorageService;
+        this.platformCommissionRepository = platformCommissionRepository;
     }
 
     /**
@@ -64,7 +68,7 @@ public class PaymentReleaseService {
         // Notify both parties
         notificationService.createNotification(
             seller,
-            "🎉 Your auction \"" + auction.getTitle() + "\" has been won! Please submit delivery details to receive payment.",
+            "🎉 Your auction \"" + auction.getTitle() + "\" has been won! Please submit delivery details. You will receive 90% of the winning bid (after 10% platform commission).",
             "AUCTION_WON_SELLER",
             auction.getId()
         );
@@ -238,7 +242,14 @@ public class PaymentReleaseService {
     }
 
     /**
-     * Admin releases payment to seller. IDEMPOTENT - can only release once.
+     * Admin releases payment to seller with 10% platform commission.
+     * IDEMPOTENT - can only release once.
+     * 
+     * Commission calculation (server-side, BigDecimal):
+     * - Commission = winningAmount × 10% (rounded HALF_UP to 2 decimals)
+     * - Seller payout = winningAmount - commission
+     * 
+     * Example: $100 winning → $10 commission → $90 seller payout
      */
     @Transactional
     public void releasePayment(Long paymentReleaseId, User admin) {
@@ -260,38 +271,62 @@ public class PaymentReleaseService {
             throw new IllegalStateException("Payment release must be verified before releasing payment.");
         }
 
-        // Credit seller's wallet
+        // IDEMPOTENT: Check if commission already exists (belt-and-suspenders)
+        if (platformCommissionRepository.existsByPaymentRelease(pr)) {
+            throw new IllegalStateException("Commission already recorded for this auction.");
+        }
+
+        // ---- COMMISSION CALCULATION (BigDecimal, server-side) ----
+        BigDecimal winningAmount = pr.getWinningAmount();
+        BigDecimal[] breakdown = PlatformCommission.calculate(winningAmount);
+        BigDecimal commissionAmount = breakdown[0];   // 10%
+        BigDecimal sellerPayoutAmount = breakdown[1]; // 90%
+
+        // ---- CREDIT SELLER'S WALLET (90% only, NOT full amount) ----
         User seller = userRepository.findById(pr.getSeller().getId())
             .orElseThrow(() -> new RuntimeException("Seller not found"));
 
-        BigDecimal amount = pr.getWinningAmount();
-        double currentBalance = seller.getWalletBalance();
-        double newBalance = currentBalance + amount.doubleValue();
-        
-        seller.setWalletBalance(newBalance);
+        BigDecimal currentBalance = BigDecimal.valueOf(seller.getWalletBalance());
+        BigDecimal newBalance = currentBalance.add(sellerPayoutAmount);
+        seller.setWalletBalance(newBalance.doubleValue());
         userRepository.save(seller);
 
-        // Update payment release record
+        // ---- UPDATE PAYMENT RELEASE RECORD ----
         pr.setReleasedBy(admin);
         pr.setReleasedAt(LocalDateTime.now());
         pr.setPaymentReleased(true);
         pr.setStatus(VerificationStatus.PAYMENT_RELEASED);
-
+        pr.setCommissionAmount(commissionAmount);
+        pr.setSellerPayoutAmount(sellerPayoutAmount);
         paymentReleaseRepository.save(pr);
 
-        // Notify seller
+        // ---- CREATE PERMANENT COMMISSION RECORD (idempotent) ----
+        PlatformCommission commission = new PlatformCommission(
+            pr,
+            pr.getAuction(),
+            pr.getBuyer(),
+            seller,
+            winningAmount,
+            PlatformCommission.COMMISSION_RATE,
+            commissionAmount,
+            sellerPayoutAmount
+        );
+        platformCommissionRepository.save(commission);
+
+        // ---- NOTIFICATIONS ----
         notificationService.createNotification(
             seller,
-            "💰 Payment of $" + String.format("%,.2f", amount.doubleValue()) + 
-            " has been released to your wallet for \"" + pr.getAuction().getTitle() + "\"!",
+            "💰 Payment of $" + String.format("%,.2f", sellerPayoutAmount.doubleValue()) +
+            " has been released to your wallet for \"" + pr.getAuction().getTitle() +
+            "\" (after 10% platform commission of $" + String.format("%,.2f", commissionAmount.doubleValue()) + ").",
             "PAYMENT_RELEASED",
             pr.getAuction().getId()
         );
 
-        // Notify buyer
         notificationService.createNotification(
             pr.getBuyer(),
-            "✅ Transaction complete for \"" + pr.getAuction().getTitle() + "\". Seller has been paid.",
+            "✅ Transaction complete for \"" + pr.getAuction().getTitle() +
+            "\". Seller has been paid.",
             "PAYMENT_RELEASED",
             pr.getAuction().getId()
         );
@@ -376,5 +411,49 @@ public class PaymentReleaseService {
      */
     private boolean isAdmin(User user) {
         return user.getRole().equals("ROLE_ADMIN") || user.getRole().equals("ROLE_SUPER_ADMIN");
+    }
+
+    // ---- COMMISSION QUERY METHODS ----
+
+    /**
+     * Get all platform commissions, newest first.
+     */
+    public List<PlatformCommission> getAllCommissions() {
+        return platformCommissionRepository.findAllOrderByCreatedAtDesc();
+    }
+
+    /**
+     * Get total commission collected across all auctions.
+     */
+    public BigDecimal getTotalCommission() {
+        return platformCommissionRepository.sumTotalCommission();
+    }
+
+    /**
+     * Get total seller payouts across all auctions.
+     */
+    public BigDecimal getTotalSellerPayout() {
+        return platformCommissionRepository.sumTotalSellerPayout();
+    }
+
+    /**
+     * Get total winning amounts across all commissioned auctions.
+     */
+    public BigDecimal getTotalWinningAmount() {
+        return platformCommissionRepository.sumTotalWinningAmount();
+    }
+
+    /**
+     * Get commission record for a specific payment release.
+     */
+    public Optional<PlatformCommission> getCommissionByPaymentRelease(PaymentRelease pr) {
+        return platformCommissionRepository.findByPaymentRelease(pr);
+    }
+
+    /**
+     * Get total number of commission records.
+     */
+    public long getCommissionCount() {
+        return platformCommissionRepository.count();
     }
 }

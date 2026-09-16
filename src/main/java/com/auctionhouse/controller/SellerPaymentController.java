@@ -1,6 +1,7 @@
 package com.auctionhouse.controller;
 
 import com.auctionhouse.model.PaymentRelease;
+import com.auctionhouse.model.PlatformCommission;
 import com.auctionhouse.model.User;
 import com.auctionhouse.service.PaymentReleaseService;
 import com.auctionhouse.service.UserService;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -54,6 +56,12 @@ public class SellerPaymentController {
 
             model.addAttribute("paymentRelease", pr);
             model.addAttribute("auction", pr.getAuction());
+
+            // Commission breakdown (server-side)
+            BigDecimal[] breakdown = PlatformCommission.calculate(pr.getWinningAmount());
+            model.addAttribute("commissionAmount", breakdown[0]);
+            model.addAttribute("sellerPayoutAmount", breakdown[1]);
+
             return "seller/submit-details";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());

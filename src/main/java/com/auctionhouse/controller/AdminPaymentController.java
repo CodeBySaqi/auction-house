@@ -1,6 +1,7 @@
 package com.auctionhouse.controller;
 
 import com.auctionhouse.model.PaymentRelease;
+import com.auctionhouse.model.PlatformCommission;
 import com.auctionhouse.model.User;
 import com.auctionhouse.model.VerificationStatus;
 import com.auctionhouse.service.PaymentReleaseService;
@@ -14,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -53,6 +55,12 @@ public class AdminPaymentController {
         model.addAttribute("paymentReleases", paymentReleases);
         model.addAttribute("currentFilter", filter != null ? filter : "all");
         model.addAttribute("pendingCount", paymentReleaseService.countPendingReview());
+
+        // Commission totals
+        model.addAttribute("totalCommission", paymentReleaseService.getTotalCommission());
+        model.addAttribute("totalSellerPayout", paymentReleaseService.getTotalSellerPayout());
+        model.addAttribute("totalWinningAmount", paymentReleaseService.getTotalWinningAmount());
+        model.addAttribute("commissionCount", paymentReleaseService.getCommissionCount());
         
         return "admin/payment-releases";
     }
@@ -72,7 +80,17 @@ public class AdminPaymentController {
             model.addAttribute("auction", pr.getAuction());
             model.addAttribute("buyer", pr.getBuyer());
             model.addAttribute("seller", pr.getSeller());
-            
+
+            // Commission breakdown (calculated server-side, never from frontend)
+            BigDecimal[] breakdown = PlatformCommission.calculate(pr.getWinningAmount());
+            model.addAttribute("commissionAmount", breakdown[0]);
+            model.addAttribute("sellerPayoutAmount", breakdown[1]);
+            model.addAttribute("commissionRate", PlatformCommission.COMMISSION_RATE);
+
+            // Existing commission record if payment already released
+            paymentReleaseService.getCommissionByPaymentRelease(pr)
+                .ifPresent(c -> model.addAttribute("commission", c));
+
             return "admin/payment-release-detail";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
