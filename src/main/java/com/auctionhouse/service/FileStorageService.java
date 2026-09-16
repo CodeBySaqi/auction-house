@@ -78,15 +78,29 @@ public class FileStorageService {
     }
 
     /**
-     * Generate a unique filename preserving the extension.
+     * Generate a unique filename using the content type to determine extension.
+     * This avoids path traversal attacks from attacker-controlled original filenames.
      */
     private String generateFilename(MultipartFile file) {
-        String originalFilename = file.getOriginalFilename();
-        String extension = "";
-        if (originalFilename != null && originalFilename.contains(".")) {
-            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-        }
+        String extension = extensionForContentType(file.getContentType());
         return UUID.randomUUID().toString() + extension;
+    }
+
+    /**
+     * Map a validated content type to a safe file extension.
+     * validateImage() already restricts contentType to these four values.
+     */
+    private String extensionForContentType(String contentType) {
+        if (contentType == null) {
+            throw new IllegalArgumentException("Content type is required");
+        }
+        switch (contentType) {
+            case "image/jpeg": return ".jpg";
+            case "image/png":  return ".png";
+            case "image/gif":  return ".gif";
+            case "image/webp": return ".webp";
+            default: throw new IllegalArgumentException("Unsupported content type: " + contentType);
+        }
     }
 
     /**
