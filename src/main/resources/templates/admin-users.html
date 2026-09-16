@@ -201,29 +201,22 @@
             </div>
 
             <!-- Users Table -->
-            <form th:action="@{/admin/users/bulk}" method="post" id="bulkForm">
-                <div class="bg-white rounded-2xl border border-g-border overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-g-bg border-b border-g-border">
-                                <tr>
-                                    <th class="px-4 py-3 text-left">
-                                        <input type="checkbox" id="selectAll" class="w-4 h-4 text-g-blue rounded border-g-border focus:ring-g-blue">
-                                    </th>
-                                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">User</th>
-                                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Role</th>
-                                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Wallet Balance</th>
-                                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Bids</th>
-                                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Joined</th>
-                                    <th class="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-g-border">
-                                <tr th:each="user : ${users}" class="hover:bg-g-bg/50 transition-colors" th:classappend="${!user.active} ? 'bg-red-50/30' : ''">
-                                    <td class="px-4 py-4">
-                                        <input type="checkbox" name="ids" th:value="${user.id}" class="w-4 h-4 text-g-blue rounded border-g-border focus:ring-g-blue user-checkbox">
-                                    </td>
-                                    <td class="px-4 py-4">
+            <div class="bg-white rounded-2xl border border-g-border overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-g-bg border-b border-g-border">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">User</th>
+                                <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Role</th>
+                                <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Wallet Balance</th>
+                                <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Bids</th>
+                                <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Joined</th>
+                                <th class="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-g-border">
+                            <tr th:each="user : ${users}" class="hover:bg-g-bg/50 transition-colors" th:classappend="${!user.active} ? 'bg-red-50/30' : ''">
+                                <td class="px-4 py-4">
                                         <div class="flex items-center gap-3">
                                             <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium text-sm flex-shrink-0"
                                                  th:classappend="${userStat.index % 5 == 0} ? 'bg-gradient-to-br from-blue-400 to-blue-600' : 
@@ -282,22 +275,13 @@
                         </table>
                     </div>
 
-                    <!-- Bulk Actions & Pagination -->
-                    <div class="px-6 py-4 border-t border-g-border flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <button type="submit" name="action" value="ban" class="px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg text-xs font-medium text-g-red hover:bg-red-100 transition-colors">
-                                Ban Selected
-                            </button>
-                            <button type="submit" name="action" value="unban" class="px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg text-xs font-medium text-g-green hover:bg-green-100 transition-colors">
-                                Unban Selected
-                            </button>
-                        </div>
+                    <!-- User Count -->
+                    <div class="px-6 py-4 border-t border-g-border">
                         <div class="text-sm text-g-text-secondary">
                             Showing <span class="font-medium text-g-text" th:text="${users.size()}">5</span> users
                         </div>
                     </div>
                 </div>
-            </form>
 
         </main>
     </div>
@@ -389,12 +373,6 @@
             if (!button && !dropdown.contains(event.target)) {
                 dropdown.classList.add('hidden');
             }
-        });
-
-        // Select all checkbox functionality
-        document.getElementById('selectAll').addEventListener('change', function() {
-            const checkboxes = document.querySelectorAll('.user-checkbox');
-            checkboxes.forEach(cb => cb.checked = this.checked);
         });
 
         // Balance modal
