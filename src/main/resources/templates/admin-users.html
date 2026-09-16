@@ -398,6 +398,7 @@
                 </button>
             </div>
             <form id="balanceForm" method="post" class="space-y-4">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 <p class="text-sm text-g-text-secondary">Adjust balance for: <span id="balanceUsername" class="font-medium text-g-text"></span></p>
                 <div>
                     <label class="block text-sm font-medium text-g-text mb-2">Amount (use negative to deduct)</label>

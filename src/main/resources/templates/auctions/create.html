@@ -20,7 +20,7 @@
     </div>
 
     <div class="bg-white rounded-3xl border border-g-border p-6 sm:p-8">
-        <form action="/auctions/create" method="post" enctype="multipart/form-data" class="space-y-6" id="createAuctionForm">
+        <form th:action="@{/auctions/create}" method="post" enctype="multipart/form-data" class="space-y-6" id="createAuctionForm">
             <!-- Title -->
             <div>
                 <label class="block text-sm font-medium text-g-text mb-1.5">Item title</label>
