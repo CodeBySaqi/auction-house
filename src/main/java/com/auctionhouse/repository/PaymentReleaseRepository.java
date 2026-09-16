@@ -36,6 +36,8 @@ public interface PaymentReleaseRepository extends JpaRepository<PaymentRelease, 
 
     boolean existsByAuction(Auction auction);
 
+    void deleteByAuctionId(Long auctionId);
+
     @Query("SELECT COUNT(pr) FROM PaymentRelease pr WHERE pr.status = 'READY_FOR_ADMIN_REVIEW'")
     long countPendingReview();
 }

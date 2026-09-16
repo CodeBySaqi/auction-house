@@ -22,13 +22,16 @@ public class SecurityConfig {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final CustomAuthenticationSuccessHandler successHandler;
+    private final CustomAuthenticationFailureHandler failureHandler;
 
     @Autowired
     public SecurityConfig(UserService userService, PasswordEncoder passwordEncoder, 
-                         CustomAuthenticationSuccessHandler successHandler) {
+                         CustomAuthenticationSuccessHandler successHandler,
+                         CustomAuthenticationFailureHandler failureHandler) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.successHandler = successHandler;
+        this.failureHandler = failureHandler;
     }
 
     @Bean
@@ -60,7 +63,7 @@ public class SecurityConfig {
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
                 .successHandler(successHandler)
-                .failureUrl("/login?error=true")
+                .failureHandler(failureHandler)
                 .permitAll()
             .and()
             .logout()

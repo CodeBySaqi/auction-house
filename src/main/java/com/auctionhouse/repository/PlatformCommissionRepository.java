@@ -22,6 +22,8 @@ public interface PlatformCommissionRepository extends JpaRepository<PlatformComm
 
     boolean existsByAuction(Auction auction);
 
+    void deleteByAuctionId(Long auctionId);
+
     @Query("SELECT COALESCE(SUM(pc.commissionAmount), 0) FROM PlatformCommission pc")
     BigDecimal sumTotalCommission();
 

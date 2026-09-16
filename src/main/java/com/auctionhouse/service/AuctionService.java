@@ -4,7 +4,13 @@ import com.auctionhouse.model.Auction;
 import com.auctionhouse.model.AuctionCategory;
 import com.auctionhouse.model.AuctionStatus;
 import com.auctionhouse.model.User;
+import com.auctionhouse.model.Conversation;
 import com.auctionhouse.repository.AuctionRepository;
+import com.auctionhouse.repository.BidRepository;
+import com.auctionhouse.repository.ChatMessageRepository;
+import com.auctionhouse.repository.ConversationRepository;
+import com.auctionhouse.repository.PaymentReleaseRepository;
+import com.auctionhouse.repository.PlatformCommissionRepository;
 import com.auctionhouse.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -29,16 +35,31 @@ public class AuctionService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final PaymentReleaseService paymentReleaseService;
+    private final BidRepository bidRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final ConversationRepository conversationRepository;
+    private final PaymentReleaseRepository paymentReleaseRepository;
+    private final PlatformCommissionRepository platformCommissionRepository;
 
     @Autowired
     public AuctionService(AuctionRepository auctionRepository,
                          UserRepository userRepository,
                          NotificationService notificationService,
-                         @Lazy PaymentReleaseService paymentReleaseService) {
+                         @Lazy PaymentReleaseService paymentReleaseService,
+                         BidRepository bidRepository,
+                         ChatMessageRepository chatMessageRepository,
+                         ConversationRepository conversationRepository,
+                         PaymentReleaseRepository paymentReleaseRepository,
+                         PlatformCommissionRepository platformCommissionRepository) {
         this.auctionRepository = auctionRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
         this.paymentReleaseService = paymentReleaseService;
+        this.bidRepository = bidRepository;
+        this.chatMessageRepository = chatMessageRepository;
+        this.conversationRepository = conversationRepository;
+        this.paymentReleaseRepository = paymentReleaseRepository;
+        this.platformCommissionRepository = platformCommissionRepository;
     }
 
     /**
@@ -238,12 +259,33 @@ public class AuctionService {
 
     /**
      * Delete auction by ID. Refunds the highest bidder first if present.
+     * Cleans up all dependent records (bids, conversations, messages, payments, commissions)
+     * to avoid foreign key constraint violations.
      */
     @Transactional
     public void deleteById(Long id) {
         Optional<Auction> opt = auctionRepository.findById(id);
         if (opt.isPresent()) {
-            refundHighestBidder(opt.get());
+            Auction auction = opt.get();
+            refundHighestBidder(auction);
+            
+            // Clean up dependent records to avoid FK constraint violations
+            // 1. Delete chat messages for the conversation related to this auction
+            conversationRepository.findByAuctionId(id).ifPresent(conv -> {
+                chatMessageRepository.deleteByConversationId(conv.getId());
+            });
+            
+            // 2. Delete conversations
+            conversationRepository.deleteByAuctionId(id);
+            
+            // 3. Delete platform commissions
+            platformCommissionRepository.deleteByAuctionId(id);
+            
+            // 4. Delete payment releases
+            paymentReleaseRepository.deleteByAuctionId(id);
+            
+            // 5. Delete bids
+            bidRepository.deleteByAuctionId(id);
         }
         auctionRepository.deleteById(id);
     }

@@ -25,6 +25,8 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
 
     long countByAuctionId(Long auctionId);
 
+    void deleteByAuctionId(Long auctionId);
+
     long countByBidderId(Long bidderId);
 
     /* ---------- Admin console additions ---------- */

@@ -18,6 +18,8 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     
     @Query("SELECT m FROM ChatMessage m WHERE m.conversation.id = :conversationId ORDER BY m.createdAt ASC")
     List<ChatMessage> findByConversationId(@Param("conversationId") Long conversationId);
+
+    void deleteByConversationId(Long conversationId);
     
     @Query("SELECT COUNT(m) FROM ChatMessage m WHERE m.conversation.id = :conversationId")
     long countByConversationId(@Param("conversationId") Long conversationId);

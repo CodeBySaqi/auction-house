@@ -6,6 +6,7 @@ import com.auctionhouse.repository.AuctionRepository;
 import com.auctionhouse.repository.BidRepository;
 import com.auctionhouse.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -45,14 +46,19 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
-        // Block deactivated users from logging in
-        if (!user.isActive()) {
-            throw new UsernameNotFoundException("This account has been deactivated. Contact an administrator.");
-        }
+        // Return user with enabled=false if deactivated/banned.
+        // Spring Security's DefaultPreAuthenticationChecks will automatically throw
+        // DisabledException, which our CustomAuthenticationFailureHandler catches
+        // to show the "account banned" message on the login page.
+        boolean enabled = user.isActive();
 
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
+                enabled,    // enabled
+                true,       // accountNonExpired
+                true,       // credentialsNonExpired
+                true,       // accountNonLocked
                 Collections.singletonList(new SimpleGrantedAuthority(user.getRole()))
         );
     }

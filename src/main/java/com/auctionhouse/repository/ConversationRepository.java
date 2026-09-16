@@ -19,7 +19,9 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
     Optional<Conversation> findByPaymentRelease(PaymentRelease paymentRelease);
     
     Optional<Conversation> findByAuctionId(Long auctionId);
-    
+
+    void deleteByAuctionId(Long auctionId);
+
     boolean existsByPaymentRelease(PaymentRelease paymentRelease);
     
     @Query("SELECT c FROM Conversation c WHERE c.buyer.id = :userId OR c.seller.id = :userId ORDER BY c.createdAt DESC")
