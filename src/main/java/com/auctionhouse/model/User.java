@@ -39,6 +39,7 @@ public class User {
     private String role = "ROLE_USER";
 
     @Column(nullable = false)
+    @org.hibernate.annotations.ColumnDefault("true")
     private boolean active = true;
 
     @OneToMany(mappedBy = "bidder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
