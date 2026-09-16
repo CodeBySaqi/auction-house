@@ -380,6 +380,20 @@ public class AdminController {
                         auctionService.closeAuctionManually(a);
                         break;
                     case "reopen":
+                        // Check for existing PaymentRelease - block if found (safer option)
+                        Optional<PaymentRelease> existingPR = paymentReleaseService.findByAuctionId(a.getId());
+                        if (existingPR.isPresent()) {
+                            PaymentRelease pr = existingPR.get();
+                            if (pr.isPaymentReleased()) {
+                                ra.addFlashAttribute("errorMessage", "Cannot reopen \"" + a.getTitle() + "\" — payment has already been released to the seller.");
+                                continue;
+                            } else {
+                                ra.addFlashAttribute("errorMessage", "Cannot reopen \"" + a.getTitle() + "\" — payment release record exists. Please resolve payment release first.");
+                                continue;
+                            }
+                        }
+                        // Refund highest bidder and reset bid state (without "cancelled" notification)
+                        auctionService.clearAuctionBids(a);
                         a.setStatus(AuctionStatus.ACTIVE);
                         a.setEndTime(LocalDateTime.now().plusDays(7));
                         auctionService.save(a);

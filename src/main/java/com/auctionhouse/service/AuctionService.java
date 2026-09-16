@@ -277,6 +277,19 @@ public class AuctionService {
     }
 
     /**
+     * Refund the highest bidder and clear bid state without changing auction status.
+     * Used for reopen scenarios where we don't want to send a "cancelled" notification.
+     */
+    @Transactional
+    public void clearAuctionBids(Auction auction) {
+        refundHighestBidder(auction);
+        auction.setHighestBidder(null);
+        auction.setCurrentHighestBid(0);
+        auction.setBidCount(0);
+        auctionRepository.save(auction);
+    }
+
+    /**
      * Notify the seller that their auction closed with no winner.
      */
     private void notifySellerUnsold(Auction auction) {
