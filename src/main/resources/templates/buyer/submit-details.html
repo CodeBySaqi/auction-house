@@ -170,6 +170,9 @@
         </div>
     </div>
 
+    <!-- Chat Panel (embedded in payment flow) -->
+    <div th:replace="~{fragments/chat-panel :: chatPanel(${conversation})}"></div>
+
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>

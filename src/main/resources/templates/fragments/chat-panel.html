@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<!-- Chat Panel Fragment - Include in seller/buyer payment pages -->
+<div th:fragment="chatPanel(conversation)" th:if="${conversation != null}" class="mt-8">
+    
+    <!-- Chat Container -->
+    <div class="bg-white rounded-2xl border border-g-border overflow-hidden">
+        
+        <!-- Chat Header -->
+        <div class="bg-gradient-to-r from-g-blue to-g-blue-hover px-6 py-4 text-white">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-2xl">chat</span>
+                    <div>
+                        <h3 class="font-gsans font-medium text-lg">Chat with <span th:text="${conversation.buyer.username == #authentication.name ? conversation.seller.username : conversation.buyer.username}">Other Party</span></h3>
+                        <p class="text-xs text-white/80">Discuss delivery details and coordinate</p>
+                    </div>
+                </div>
+                <div id="chat-status" class="flex items-center gap-2">
+                    <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                    <span class="text-xs">Connected</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Container -->
+        <div id="chat-messages" class="h-96 overflow-y-auto p-6 bg-g-bg space-y-4">
+            <!-- Messages will be loaded here via JavaScript -->
+            <div class="flex justify-center">
+                <div class="text-center text-g-text-secondary text-sm">
+                    <span class="material-icons-outlined text-4xl mb-2">chat_bubble_outline</span>
+                    <p>Loading messages...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="border-t border-g-border p-4 bg-white">
+            <form id="chat-form" class="flex gap-3">
+                <input 
+                    type="text" 
+                    id="chat-input" 
+                    placeholder="Type your message..." 
+                    maxlength="2000"
+                    class="flex-1 px-4 py-2.5 bg-g-bg border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
+                    required
+                >
+                <button 
+                    type="submit" 
+                    class="px-6 py-2.5 bg-g-blue text-white rounded-xl text-sm font-medium hover:bg-g-blue-hover shadow-g-sm hover:shadow-g-md transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <span class="material-icons-outlined text-lg">send</span>
+                    Send
+                </button>
+            </form>
+            <p class="text-xs text-g-text-secondary mt-2 text-center">
+                Press Enter to send • Messages are visible to both parties and admins
+            </p>
+        </div>
+    </div>
+
+    <!-- Chat Info Notice -->
+    <div class="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div class="flex items-start gap-3">
+            <span class="material-icons-outlined text-g-blue text-xl">info</span>
+            <div>
+                <p class="text-xs font-medium text-blue-900 mb-1">Chat Guidelines</p>
+                <ul class="text-xs text-blue-800 space-y-1">
+                    <li>• Use this chat to coordinate delivery and discuss transaction details</li>
+                    <li>• All messages are logged and visible to admins for dispute resolution</li>
+                    <li>• Messages are automatically deleted 90 days after payment release</li>
+                    <li>• Be professional and respectful in all communications</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden data for JavaScript -->
+    <input type="hidden" id="conversation-id" th:value="${conversation.id}">
+    <input type="hidden" id="current-username" th:value="${#authentication.name}">
+
+    <!-- Load SockJS and STOMP client libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    
+    <!-- Chat client script -->
+    <script th:src="@{/js/chat-client.js}"></script>
+</div>
+
+<!-- No conversation placeholder -->
+<div th:fragment="chatPanel(conversation)" th:if="${conversation == null}" class="mt-8">
+    <div class="bg-gray-50 border border-gray-200 rounded-2xl p-8 text-center">
+        <span class="material-icons-outlined text-5xl text-gray-400 mb-3">chat_bubble_outline</span>
+        <p class="text-sm text-gray-600 font-medium">Chat Not Available</p>
+        <p class="text-xs text-gray-500 mt-1">Chat will be enabled once the auction is won and payment release is created.</p>
+    </div>
+</div>
+
+</body>
+</html>

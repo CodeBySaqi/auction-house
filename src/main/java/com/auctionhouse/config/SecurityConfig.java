@@ -51,7 +51,7 @@ public class SecurityConfig {
             .authorizeRequests()
                 .antMatchers("/", "/home", "/register", "/login", "/css/**", "/js/**", "/images/**",
                         "/uploads/**", "/h2-console/**", "/auctions", "/auctions/detail/**",
-                        "/auctions/search", "/api/auctions/**").permitAll()
+                        "/auctions/search", "/api/auctions/**", "/ws/**").permitAll()
                 .antMatchers("/super-admin/**").hasRole("SUPER_ADMIN")
                 .antMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .anyRequest().authenticated()
@@ -72,7 +72,7 @@ public class SecurityConfig {
             .and()
             .headers().frameOptions().sameOrigin()
             .and()
-            .csrf().ignoringAntMatchers("/h2-console/**", "/api/**", "/login", "/register", "/logout");
+            .csrf().ignoringAntMatchers("/h2-console/**", "/api/**", "/login", "/register", "/logout", "/ws/**");
 
         return http.build();
     }

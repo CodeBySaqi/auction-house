@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat History - Admin Console</title>
+    <!-- Theme initialization -->
+    <script>
+        (function() {
+            var theme = localStorage.getItem('theme') || 'light';
+            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script th:replace="~{fragments/layout :: tailwindConfig}"></script>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
+    </style>
+</head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen flex flex-col">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center gap-2 text-sm text-g-text-secondary mb-2">
+            <a href="/admin/console" class="hover:text-g-blue transition-colors">Admin Console</a>
+            <span class="material-icons-outlined text-xs">chevron_right</span>
+            <span>Chat History</span>
+        </div>
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">Chat History</h1>
+                <p class="text-sm text-g-text-secondary mt-1">Read-only view for dispute resolution</p>
+            </div>
+            <a href="/admin/console" class="px-4 py-2 bg-g-bg border border-g-border rounded-xl text-sm font-medium text-g-text hover:bg-g-hover transition-colors flex items-center gap-2">
+                <span class="material-icons-outlined text-lg">arrow_back</span>
+                Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div th:if="${error}" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+        <span class="material-icons-outlined text-4xl text-g-red mb-2">error</span>
+        <p class="text-sm text-red-800 font-medium" th:text="${error}">Error message</p>
+    </div>
+
+    <!-- Chat View -->
+    <div th:if="${conversation != null}">
+        
+        <!-- Conversation Info -->
+        <div class="bg-white rounded-2xl border border-g-border p-6 mb-6">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs text-g-text-secondary mb-1">Auction</p>
+                    <p class="text-sm font-medium text-g-text" th:text="${conversation.auction.title}">Auction Title</p>
+                </div>
+                <div>
+                    <p class="text-xs text-g-text-secondary mb-1">Status</p>
+                    <p class="text-sm font-medium" th:class="${conversation.paymentRelease.paymentReleased} ? 'text-g-green' : 'text-g-blue'"
+                       th:text="${conversation.paymentRelease.paymentReleased} ? 'Payment Released' : 'In Progress'">Status</p>
+                </div>
+                <div>
+                    <p class="text-xs text-g-text-secondary mb-1">Buyer</p>
+                    <p class="text-sm font-medium text-g-text" th:text="${conversation.buyer.username}">Buyer</p>
+                </div>
+                <div>
+                    <p class="text-xs text-g-text-secondary mb-1">Seller</p>
+                    <p class="text-sm font-medium text-g-text" th:text="${conversation.seller.username}">Seller</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Notice -->
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
+            <div class="flex items-start gap-3">
+                <span class="material-icons-outlined text-amber-600 text-xl">visibility</span>
+                <div>
+                    <p class="text-sm font-medium text-amber-900 mb-1">Read-Only View</p>
+                    <p class="text-xs text-amber-800">You are viewing this conversation in read-only mode for dispute resolution. Participants are not notified that you are viewing their chat.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="bg-white rounded-2xl border border-g-border overflow-hidden">
+            <div class="bg-gradient-to-r from-g-blue to-g-blue-hover px-6 py-4 text-white">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-2xl">chat</span>
+                    <div>
+                        <h3 class="font-gsans font-medium text-lg">Messages (<span th:text="${#lists.size(messages)}">0</span>)</h3>
+                        <p class="text-xs text-white/80">Complete conversation history</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-4 max-h-[600px] overflow-y-auto bg-g-bg" th:if="${!messages.isEmpty()}">
+                <div th:each="msg : ${messages}" class="flex"
+                     th:classappend="${msg.sender.id == conversation.buyer.id} ? 'justify-start' : 'justify-end'">
+                    <div class="max-w-xs lg:max-w-md px-4 py-3 rounded-2xl"
+                         th:classappend="${msg.sender.id == conversation.buyer.id} ? 'bg-blue-100 text-blue-900 rounded-bl-md' : 'bg-green-100 text-green-900 rounded-br-md'">
+                        <div class="flex items-center gap-2 mb-1">
+                            <p class="text-xs font-medium" th:text="${msg.sender.username}">Sender</p>
+                            <span class="text-xs px-2 py-0.5 rounded-full"
+                                  th:classappend="${msg.sender.id == conversation.buyer.id} ? 'bg-blue-200 text-blue-800' : 'bg-green-200 text-green-800'"
+                                  th:text="${msg.sender.id == conversation.buyer.id} ? 'Buyer' : 'Seller'">Role</span>
+                        </div>
+                        <p class="text-sm whitespace-pre-wrap break-words" th:text="${msg.content}">Message content</p>
+                        <p class="text-xs mt-1 opacity-70 text-right" th:text="${#temporals.format(msg.createdAt, 'MMM dd, yyyy HH:mm')}">Time</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-12 text-center bg-g-bg" th:if="${messages.isEmpty()}">
+                <span class="material-icons-outlined text-5xl text-g-text-secondary mb-3">chat_bubble_outline</span>
+                <p class="text-sm text-g-text-secondary">No messages in this conversation yet.</p>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+</body>
+</html>

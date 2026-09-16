@@ -27,6 +27,7 @@ public class PaymentReleaseService {
     private final NotificationService notificationService;
     private final FileStorageService fileStorageService;
     private final PlatformCommissionRepository platformCommissionRepository;
+    private final ChatService chatService;
 
     @Autowired
     public PaymentReleaseService(PaymentReleaseRepository paymentReleaseRepository,
@@ -34,13 +35,15 @@ public class PaymentReleaseService {
                                   UserRepository userRepository,
                                   NotificationService notificationService,
                                   FileStorageService fileStorageService,
-                                  PlatformCommissionRepository platformCommissionRepository) {
+                                  PlatformCommissionRepository platformCommissionRepository,
+                                  ChatService chatService) {
         this.paymentReleaseRepository = paymentReleaseRepository;
         this.auctionRepository = auctionRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
         this.fileStorageService = fileStorageService;
         this.platformCommissionRepository = platformCommissionRepository;
+        this.chatService = chatService;
     }
 
     /**
@@ -64,6 +67,9 @@ public class PaymentReleaseService {
         PaymentRelease paymentRelease = new PaymentRelease(auction, buyer, seller, winningAmount);
         
         PaymentRelease saved = paymentReleaseRepository.save(paymentRelease);
+
+        // Auto-create chat conversation between buyer and seller
+        chatService.createConversation(saved);
 
         // Notify both parties
         notificationService.createNotification(

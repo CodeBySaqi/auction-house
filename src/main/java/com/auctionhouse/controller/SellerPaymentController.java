@@ -1,8 +1,10 @@
 package com.auctionhouse.controller;
 
+import com.auctionhouse.model.Conversation;
 import com.auctionhouse.model.PaymentRelease;
 import com.auctionhouse.model.PlatformCommission;
 import com.auctionhouse.model.User;
+import com.auctionhouse.service.ChatService;
 import com.auctionhouse.service.FileStorageService;
 import com.auctionhouse.service.PaymentReleaseService;
 import com.auctionhouse.service.UserService;
@@ -28,13 +30,15 @@ public class SellerPaymentController {
     private final PaymentReleaseService paymentReleaseService;
     private final UserService userService;
     private final FileStorageService fileStorageService;
+    private final ChatService chatService;
 
     @Autowired
     public SellerPaymentController(PaymentReleaseService paymentReleaseService, UserService userService,
-                                    FileStorageService fileStorageService) {
+                                    FileStorageService fileStorageService, ChatService chatService) {
         this.paymentReleaseService = paymentReleaseService;
         this.userService = userService;
         this.fileStorageService = fileStorageService;
+        this.chatService = chatService;
     }
 
     /**
@@ -65,6 +69,10 @@ public class SellerPaymentController {
             BigDecimal[] breakdown = PlatformCommission.calculate(pr.getWinningAmount());
             model.addAttribute("commissionAmount", breakdown[0]);
             model.addAttribute("sellerPayoutAmount", breakdown[1]);
+
+            // Fetch conversation for chat panel
+            Conversation conversation = chatService.getConversationByPaymentRelease(pr);
+            model.addAttribute("conversation", conversation);
 
             return "seller/submit-details";
         } catch (Exception e) {

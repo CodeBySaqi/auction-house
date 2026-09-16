@@ -4,6 +4,7 @@ import com.auctionhouse.model.*;
 import com.auctionhouse.repository.BidRepository;
 import com.auctionhouse.repository.UserRepository;
 import com.auctionhouse.service.AuctionService;
+import com.auctionhouse.service.ChatService;
 import com.auctionhouse.service.NotificationService;
 import com.auctionhouse.service.PaymentReleaseService;
 import com.auctionhouse.service.UserService;
@@ -50,6 +51,7 @@ public class AdminController {
     private final NotificationService notificationService;
     private final PasswordEncoder passwordEncoder;
     private final PaymentReleaseService paymentReleaseService;
+    private final ChatService chatService;
 
     @Autowired
     public AdminController(UserService userService,
@@ -58,7 +60,8 @@ public class AdminController {
                            UserRepository userRepository,
                            NotificationService notificationService,
                            PasswordEncoder passwordEncoder,
-                           PaymentReleaseService paymentReleaseService) {
+                           PaymentReleaseService paymentReleaseService,
+                           ChatService chatService) {
         this.userService = userService;
         this.auctionService = auctionService;
         this.bidRepository = bidRepository;
@@ -66,6 +69,7 @@ public class AdminController {
         this.notificationService = notificationService;
         this.passwordEncoder = passwordEncoder;
         this.paymentReleaseService = paymentReleaseService;
+        this.chatService = chatService;
     }
 
     /* ==================== NEW ADMIN CONSOLE ==================== */
@@ -850,6 +854,37 @@ public class AdminController {
               .append('\n');
         }
         return csvResponse("bids.csv", sb.toString());
+    }
+
+    /* ==================== CHAT MONITORING ==================== */
+
+    /**
+     * GET /admin/chat/{conversationId}
+     * Admin read-only view of chat conversation (for dispute resolution).
+     */
+    @GetMapping("/chat/{conversationId}")
+    public String viewChatConversation(@PathVariable Long conversationId,
+                                         Model model, Principal principal) {
+        User admin = requireAdmin(principal);
+        model.addAttribute("admin", admin);
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
+
+        try {
+            List<ChatMessage> messages = chatService.getMessages(conversationId, admin);
+            if (!messages.isEmpty()) {
+                Conversation conversation = messages.get(0).getConversation();
+                model.addAttribute("conversation", conversation);
+            }
+            model.addAttribute("messages", messages);
+            model.addAttribute("dateFormatter", DATE_TIME);
+            addCounts(model, auctionService.getAllAuctions());
+        } catch (SecurityException e) {
+            model.addAttribute("error", "Access denied.");
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("error", "Conversation not found.");
+        }
+
+        return "admin-chat-view";
     }
 
     /* ==================== HELPERS ==================== */
