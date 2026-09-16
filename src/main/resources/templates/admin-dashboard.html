@@ -629,7 +629,7 @@
                                     <option value="ALL" th:selected="${currentRole == 'ALL'}">All roles</option>
                                     <option value="ROLE_USER" th:selected="${currentRole == 'ROLE_USER'}">Bidder</option>
                                     <option value="ROLE_ADMIN" th:selected="${currentRole == 'ROLE_ADMIN'}">Admin</option>
-                                    <option value="ROLE_BANNED" th:selected="${currentRole == 'ROLE_BANNED'}">Banned</option>
+                                    <option value="INACTIVE" th:selected="${currentRole == 'INACTIVE'}">Inactive</option>
                                 </select>
                             </label>
                             <button class="btn btn-secondary btn-sm" type="submit">Apply</button>
@@ -678,11 +678,11 @@
                                     <td>
                                         <span class="chip chip-blue" th:if="${u.role == 'ROLE_ADMIN'}">Admin</span>
                                         <span class="chip chip-neutral" th:if="${u.role == 'ROLE_USER'}">Bidder</span>
-                                        <span class="chip chip-red" th:if="${u.role == 'ROLE_BANNED'}">Banned</span>
+                                        <span class="chip chip-red" th:if="${!u.active}">Banned</span>
                                     </td>
                                     <td>
-                                        <span class="chip chip-green" th:if="${u.role != 'ROLE_BANNED'}"><span class="dot"></span> Active</span>
-                                        <span class="chip chip-red" th:if="${u.role == 'ROLE_BANNED'}">
+                                        <span class="chip chip-green" th:if="${u.active}"><span class="dot"></span> Active</span>
+                                        <span class="chip chip-red" th:if="${!u.active}">
                                             <span class="material-icons-outlined mi-xs" aria-hidden="true">block</span> Suspended</span>
                                     </td>
                                     <td class="r num" th:text="'$' + ${#numbers.formatDecimal(u.walletBalance, 1, 'COMMA', 2, 'POINT')}">$0</td>

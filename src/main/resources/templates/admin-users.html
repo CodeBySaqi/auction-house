@@ -237,7 +237,7 @@
                         <option value="ALL" th:selected="${currentRole == 'ALL'}">All Roles</option>
                         <option value="ROLE_USER" th:selected="${currentRole == 'ROLE_USER'}">USER</option>
                         <option value="ROLE_ADMIN" th:selected="${currentRole == 'ROLE_ADMIN'}">ADMIN</option>
-                        <option value="ROLE_BANNED" th:selected="${currentRole == 'ROLE_BANNED'}">BANNED</option>
+                        <option value="INACTIVE" th:selected="${currentRole == 'INACTIVE'}">INACTIVE</option>
                     </select>
                     <button type="submit" class="px-4 py-2 bg-white border border-g-border rounded-lg text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
                         <span class="material-icons-outlined text-lg align-middle">filter_list</span>
@@ -264,7 +264,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-g-border">
-                                <tr th:each="user : ${users}" class="hover:bg-g-bg/50 transition-colors" th:classappend="${user.role == 'ROLE_BANNED'} ? 'bg-red-50/30' : ''">
+                                <tr th:each="user : ${users}" class="hover:bg-g-bg/50 transition-colors" th:classappend="${!user.active} ? 'bg-red-50/30' : ''">
                                     <td class="px-4 py-4">
                                         <input type="checkbox" name="ids" th:value="${user.id}" class="w-4 h-4 text-g-blue rounded border-g-border focus:ring-g-blue user-checkbox">
                                     </td>
@@ -289,7 +289,7 @@
                                                               (${user.role == 'ROLE_ADMIN'} ? 'bg-purple-50 text-purple-700' : 'bg-red-50 text-g-red')">
                                             <span th:if="${user.role == 'ROLE_USER'}" class="w-1.5 h-1.5 bg-g-green rounded-full"></span>
                                             <span th:if="${user.role == 'ROLE_ADMIN'}" class="material-icons-outlined text-xs">verified_user</span>
-                                            <span th:if="${user.role == 'ROLE_BANNED'}" class="material-icons-outlined text-xs">block</span>
+                                            <span th:if="${!user.active}" class="material-icons-outlined text-xs">block</span>
                                             <span th:text="${#strings.substring(user.role, 5)}">USER</span>
                                         </span>
                                     </td>
@@ -315,9 +315,9 @@
                                                 <span class="material-icons-outlined text-lg">account_balance_wallet</span>
                                             </button>
                                             <form th:if="${user.role != 'ROLE_ADMIN'}" th:action="@{'/admin/users/toggle/' + ${user.id}}" method="post" class="inline">
-                                                <button type="submit" th:class="${user.role == 'ROLE_BANNED'} ? 'p-2 rounded-lg text-g-green hover:bg-green-50 transition-colors' : 'p-2 rounded-lg text-g-red hover:bg-red-50 transition-colors'" 
-                                                        th:title="${user.role == 'ROLE_BANNED'} ? 'Unban User' : 'Ban User'">
-                                                    <span class="material-icons-outlined text-lg" th:text="${user.role == 'ROLE_BANNED'} ? 'check_circle' : 'block'">block</span>
+                                                <button type="submit" th:class="${!user.active} ? 'p-2 rounded-lg text-g-green hover:bg-green-50 transition-colors' : 'p-2 rounded-lg text-g-red hover:bg-red-50 transition-colors'" 
+                                                        th:title="${!user.active} ? 'Reactivate User' : 'Deactivate User'">
+                                                    <span class="material-icons-outlined text-lg" th:text="${!user.active} ? 'check_circle' : 'block'">block</span>
                                                 </button>
                                             </form>
                                         </div>

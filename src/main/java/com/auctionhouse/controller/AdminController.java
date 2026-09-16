@@ -433,7 +433,11 @@ public class AdminController {
                     .collect(Collectors.toList());
         }
         if (role != null && !role.isEmpty() && !role.equalsIgnoreCase("ALL")) {
-            users = users.stream().filter(u -> role.equalsIgnoreCase(u.getRole())).collect(Collectors.toList());
+            if ("INACTIVE".equalsIgnoreCase(role)) {
+                users = users.stream().filter(u -> !u.isActive()).collect(Collectors.toList());
+            } else {
+                users = users.stream().filter(u -> role.equalsIgnoreCase(u.getRole())).collect(Collectors.toList());
+            }
         }
         users.sort(Comparator.comparing(User::getCreatedAt).reversed());
 
@@ -447,7 +451,7 @@ public class AdminController {
         model.addAttribute("currentSearch", search != null ? search : "");
         model.addAttribute("currentRole", role != null ? role : "ALL");
         model.addAttribute("adminCount", userRepository.countByRole("ROLE_ADMIN"));
-        model.addAttribute("bannedCount", userRepository.countByRole("ROLE_BANNED"));
+        model.addAttribute("bannedCount", userRepository.countByActive(false));
         model.addAttribute("userCount", userRepository.countByRole("ROLE_USER"));
         model.addAttribute("walletFloat", userRepository.sumWalletBalance());
         model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
@@ -523,21 +527,21 @@ public class AdminController {
     public String toggleUserStatus(@PathVariable Long id, RedirectAttributes ra) {
         try {
             User user = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
-            // SECURITY: Cannot ban SUPER_ADMIN accounts
+            // SECURITY: Cannot deactivate SUPER_ADMIN accounts
             if ("ROLE_SUPER_ADMIN".equals(user.getRole())) {
-                ra.addFlashAttribute("errorMessage", "Cannot ban a Super Admin account.");
+                ra.addFlashAttribute("errorMessage", "Cannot deactivate a Super Admin account.");
                 return "redirect:/admin/users";
             }
             if ("ROLE_ADMIN".equals(user.getRole())) {
-                ra.addFlashAttribute("errorMessage", "Administrators cannot be banned.");
+                ra.addFlashAttribute("errorMessage", "Administrators cannot be deactivated from here.");
                 return "redirect:/admin/users";
             }
-            if ("ROLE_BANNED".equals(user.getRole())) {
-                user.setRole("ROLE_USER");
-                ra.addFlashAttribute("successMessage", "Reinstated \"" + user.getUsername() + "\".");
+            if (!user.isActive()) {
+                user.setActive(true);
+                ra.addFlashAttribute("successMessage", "Reactivated \"" + user.getUsername() + "\".");
             } else {
-                user.setRole("ROLE_BANNED");
-                ra.addFlashAttribute("successMessage", "Banned \"" + user.getUsername() + "\".");
+                user.setActive(false);
+                ra.addFlashAttribute("successMessage", "Deactivated \"" + user.getUsername() + "\".");
             }
             userService.updateProfile(user);
         } catch (Exception e) {
@@ -596,13 +600,21 @@ public class AdminController {
                 if ("ROLE_SUPER_ADMIN".equals(u.getRole())) continue;
                 switch (action) {
                     case "ban":
-                        if (!"ROLE_ADMIN".equals(u.getRole())) { u.setRole("ROLE_BANNED"); userService.updateProfile(u); }
+                        if (!"ROLE_ADMIN".equals(u.getRole()) && !"ROLE_SUPER_ADMIN".equals(u.getRole())) {
+                            u.setActive(false);
+                            userService.updateProfile(u);
+                        }
                         break;
                     case "unban":
-                        if ("ROLE_BANNED".equals(u.getRole())) { u.setRole("ROLE_USER"); userService.updateProfile(u); }
+                        if (!u.isActive()) {
+                            u.setActive(true);
+                            userService.updateProfile(u);
+                        }
                         break;
                     case "delete":
-                        if (!"ROLE_ADMIN".equals(u.getRole())) userService.deleteById(u.getId());
+                        if (!"ROLE_ADMIN".equals(u.getRole()) && !"ROLE_SUPER_ADMIN".equals(u.getRole())) {
+                            userService.deleteById(u.getId());
+                        }
                         break;
                     default:
                         break;

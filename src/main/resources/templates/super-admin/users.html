@@ -120,7 +120,7 @@
                                 <span th:if="${user.role == 'ROLE_SUPER_ADMIN'}" class="px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-full">Super Admin</span>
                                 <span th:if="${user.role == 'ROLE_ADMIN'}" class="px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full">Admin</span>
                                 <span th:if="${user.role == 'ROLE_USER'}" class="px-2.5 py-1 bg-g-bg text-g-text-secondary text-xs font-semibold rounded-full">User</span>
-                                <span th:if="${user.role == 'ROLE_BANNED'}" class="px-2.5 py-1 bg-red-50 text-g-red text-xs font-semibold rounded-full">Banned</span>
+                                <span th:if="${!user.active}" class="px-2.5 py-1 bg-red-50 text-g-red text-xs font-semibold rounded-full">Banned</span>
                             </td>
                             <td class="px-6 py-4">
                                 <span th:if="${user.active}" class="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 text-g-green text-xs font-semibold rounded-full">
