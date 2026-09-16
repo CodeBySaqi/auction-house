@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Received Item Details - AuctionHouse</title>
+    <!-- Theme initialization -->
+    <script>
+        (function() {
+            var theme = localStorage.getItem('theme') || 'light';
+            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script th:replace="~{fragments/layout :: tailwindConfig}"></script>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen flex flex-col">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center gap-2 text-sm text-g-text-secondary mb-2">
+            <a href="/dashboard" class="hover:text-g-blue transition-colors">Dashboard</a>
+            <span class="material-icons-outlined text-xs">chevron_right</span>
+            <span>Submit Received Item Details</span>
+        </div>
+        <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">Submit Received Item Details</h1>
+        <p class="text-sm text-g-text-secondary mt-1">Confirm that you have received the auction item</p>
+    </div>
+
+    <!-- Important Notice -->
+    <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6">
+        <div class="flex items-start gap-3">
+            <span class="material-icons-outlined text-g-blue text-xl">info</span>
+            <div>
+                <p class="text-sm font-medium text-blue-900 mb-1">Important Information</p>
+                <p class="text-xs text-blue-800 leading-relaxed">
+                    Your wallet was already charged when you won this auction. This form is to confirm that you have <strong>received the physical item</strong>, 
+                    not to submit payment proof. Please only submit this form after you have actually received and inspected the item.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auction Info Card -->
+    <div class="bg-white rounded-2xl border border-g-border p-6 mb-6">
+        <div class="flex gap-4">
+            <img th:src="${auction.imageUrl}" th:alt="${auction.title}" class="w-24 h-24 rounded-xl object-cover">
+            <div class="flex-1">
+                <h2 class="font-gsans font-medium text-lg text-g-text mb-1" th:text="${auction.title}">Auction Title</h2>
+                <p class="text-sm text-g-text-secondary mb-2" th:text="${auction.category.displayName}">Category</p>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-g-text">You Paid: <strong class="tabular-nums">$<span th:text="${#numbers.formatDecimal(paymentRelease.winningAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></strong></span>
+                    <span class="text-sm text-g-text">Seller: <strong th:text="${paymentRelease.seller.username}">Seller</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Alert -->
+    <div th:if="${paymentRelease.buyerDetailsSubmitted}" class="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
+        <div class="flex items-center gap-3">
+            <span class="material-icons-outlined text-g-green">check_circle</span>
+            <div>
+                <p class="text-sm font-medium text-green-900">Details Already Submitted</p>
+                <p class="text-xs text-green-700 mt-1">You have already confirmed receipt of this item. You cannot modify your submission.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submission Form -->
+    <form th:action="@{/buyer/payment/submit/{id}(id=${paymentRelease.id})}" method="post" enctype="multipart/form-data" class="bg-white rounded-2xl border border-g-border p-6 space-y-6" th:if="${!paymentRelease.buyerDetailsSubmitted}">
+        
+        <!-- Received Confirmation -->
+        <div>
+            <label class="block text-sm font-medium text-g-text mb-3">Have you received the item? <span class="text-g-red">*</span></label>
+            <div class="flex gap-4">
+                <label class="flex-1 flex items-center gap-3 p-4 bg-g-bg border-2 border-g-border rounded-xl cursor-pointer hover:border-g-blue transition-colors">
+                    <input type="radio" name="receivedConfirmation" value="true" required class="w-4 h-4 text-g-blue">
+                    <div>
+                        <p class="text-sm font-medium text-g-text">Yes, I received it</p>
+                        <p class="text-xs text-g-text-secondary">Item is in my possession</p>
+                    </div>
+                </label>
+                <label class="flex-1 flex items-center gap-3 p-4 bg-g-bg border-2 border-g-border rounded-xl cursor-pointer hover:border-g-blue transition-colors">
+                    <input type="radio" name="receivedConfirmation" value="false" required class="w-4 h-4 text-g-blue">
+                    <div>
+                        <p class="text-sm font-medium text-g-text">No, not yet</p>
+                        <p class="text-xs text-g-text-secondary">Still waiting for delivery</p>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Received Date -->
+        <div>
+            <label class="block text-sm font-medium text-g-text mb-2">Date Received</label>
+            <input type="date" name="receivedDate" class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+            <p class="text-xs text-g-text-secondary mt-1">Leave blank if not yet received</p>
+        </div>
+
+        <!-- Proof Upload -->
+        <div>
+            <label class="block text-sm font-medium text-g-text mb-2">Item Photo / Receipt (Optional)</label>
+            <div class="border-2 border-dashed border-g-border rounded-xl p-6 text-center hover:border-g-blue transition-colors">
+                <input type="file" name="proofFile" accept="image/*,.pdf" id="proofFile" class="hidden" onchange="updateFileName(this)">
+                <label for="proofFile" class="cursor-pointer">
+                    <span class="material-icons-outlined text-4xl text-g-text-secondary mb-2">cloud_upload</span>
+                    <p class="text-sm text-g-text-secondary mb-1">Upload photo of received item or delivery receipt</p>
+                    <p class="text-xs text-g-text-secondary">PNG, JPG, PDF up to 5MB</p>
+                    <p id="fileName" class="text-xs text-g-blue mt-2 hidden"></p>
+                </label>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div>
+            <label class="block text-sm font-medium text-g-text mb-2">Additional Notes</label>
+            <textarea name="note" rows="4" placeholder="Describe the condition of the item, any issues, or additional comments..." class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all resize-none"></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex gap-3 pt-4 border-t border-g-border">
+            <a href="/dashboard" class="flex-1 px-6 py-3 bg-g-bg border border-g-border rounded-xl text-sm font-medium text-g-text hover:bg-g-hover text-center transition-colors">
+                Cancel
+            </a>
+            <button type="submit" class="flex-1 px-6 py-3 bg-g-blue text-white rounded-xl text-sm font-medium hover:bg-g-blue-hover shadow-g-sm hover:shadow-g-md transition-all flex items-center justify-center gap-2">
+                <span class="material-icons-outlined text-lg">check_circle</span>
+                Submit Confirmation
+            </button>
+        </div>
+    </form>
+
+    <!-- Already Submitted View -->
+    <div th:if="${paymentRelease.buyerDetailsSubmitted}" class="bg-white rounded-2xl border border-g-border p-6">
+        <h3 class="font-gsans font-medium text-lg text-g-text mb-4">Your Submitted Details</h3>
+        <div class="space-y-3">
+            <div class="flex justify-between py-2 border-b border-g-border">
+                <span class="text-sm text-g-text-secondary">Item Received</span>
+                <span class="text-sm font-medium" th:class="${paymentRelease.buyerReceivedConfirmation} ? 'text-g-green' : 'text-g-red'" 
+                      th:text="${paymentRelease.buyerReceivedConfirmation} ? 'Yes' : 'No'">Status</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-g-border" th:if="${paymentRelease.buyerReceivedDate}">
+                <span class="text-sm text-g-text-secondary">Received Date</span>
+                <span class="text-sm font-medium text-g-text" th:text="${#temporals.format(paymentRelease.buyerReceivedDate, 'MMM dd, yyyy')}">Date</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-g-border" th:if="${paymentRelease.buyerNote}">
+                <span class="text-sm text-g-text-secondary">Notes</span>
+                <span class="text-sm font-medium text-g-text text-right max-w-xs" th:text="${paymentRelease.buyerNote}">Notes</span>
+            </div>
+            <div class="flex justify-between py-2">
+                <span class="text-sm text-g-text-secondary">Submitted</span>
+                <span class="text-sm font-medium text-g-text" th:text="${#temporals.format(paymentRelease.buyerSubmittedAt, 'MMM dd, yyyy HH:mm')}">Date</span>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+<script>
+    function updateFileName(input) {
+        const fileName = document.getElementById('fileName');
+        if (input.files && input.files[0]) {
+            fileName.textContent = 'Selected: ' + input.files[0].name;
+            fileName.classList.remove('hidden');
+        }
+    }
+</script>
+
+</body>
+</html>

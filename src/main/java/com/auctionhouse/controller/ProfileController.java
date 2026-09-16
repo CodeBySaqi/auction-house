@@ -4,6 +4,7 @@ import com.auctionhouse.model.Auction;
 import com.auctionhouse.model.AuctionStatus;
 import com.auctionhouse.model.Bid;
 import com.auctionhouse.model.Notification;
+import com.auctionhouse.model.PaymentRelease;
 import com.auctionhouse.model.User;
 import com.auctionhouse.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,16 +33,18 @@ public class ProfileController {
     private final AuctionService auctionService;
     private final NotificationService notificationService;
     private final FileStorageService fileStorageService;
+    private final PaymentReleaseService paymentReleaseService;
 
     @Autowired
     public ProfileController(UserService userService, BidService bidService,
                             AuctionService auctionService, NotificationService notificationService,
-                            FileStorageService fileStorageService) {
+                            FileStorageService fileStorageService, PaymentReleaseService paymentReleaseService) {
         this.userService = userService;
         this.bidService = bidService;
         this.auctionService = auctionService;
         this.notificationService = notificationService;
         this.fileStorageService = fileStorageService;
+        this.paymentReleaseService = paymentReleaseService;
     }
 
     @GetMapping("/dashboard")
@@ -63,12 +66,20 @@ public class ProfileController {
                 .filter(b -> b.getAuction().getStatus() == AuctionStatus.ACTIVE)
                 .collect(Collectors.toList());
 
+        // Get payment releases where user is seller (needs to submit delivery details)
+        List<PaymentRelease> sellerPaymentReleases = paymentReleaseService.getBySeller(user);
+
+        // Get payment releases where user is buyer (needs to confirm receipt)
+        List<PaymentRelease> buyerPaymentReleases = paymentReleaseService.getByBuyer(user);
+
         model.addAttribute("user", user);
         model.addAttribute("totalBids", userBids.size());
         model.addAttribute("activeBids", activeBids.size());
         model.addAttribute("wonAuctions", wonAuctions);
         model.addAttribute("notifications", notifications);
         model.addAttribute("unreadCount", unreadCount);
+        model.addAttribute("sellerPaymentReleases", sellerPaymentReleases);
+        model.addAttribute("buyerPaymentReleases", buyerPaymentReleases);
         return "profile/dashboard";
     }
 

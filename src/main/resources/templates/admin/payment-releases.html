@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Releases - Admin Dashboard</title>
+    <!-- Theme initialization -->
+    <script>
+        (function() {
+            var theme = localStorage.getItem('theme') || 'light';
+            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script th:replace="~{fragments/layout :: tailwindConfig}"></script>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen">
+
+    <!-- App Bar -->
+    <nav class="bg-white border-b border-g-border sticky top-0 z-40">
+        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-g-blue rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-white text-xl">gavel</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-gsans font-medium text-xl text-g-text">Auction<span class="text-g-blue">House</span></span>
+                        <span class="px-2.5 py-1 bg-g-text text-white text-[10px] font-bold uppercase tracking-wider rounded-md">Admin</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleTheme()" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Toggle dark mode">
+                        <span class="material-icons-outlined dark:hidden">dark_mode</span>
+                        <span class="material-icons-outlined hidden dark:inline">light_mode</span>
+                    </button>
+                    <a th:href="@{/admin/console}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined">dashboard</span>
+                    </a>
+                    <div class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm">
+                        A
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="flex items-center gap-2 text-sm text-g-text-secondary mb-2">
+                <a href="/admin/console" class="hover:text-g-blue transition-colors">Dashboard</a>
+                <span class="material-icons-outlined text-xs">chevron_right</span>
+                <span>Payment Releases</span>
+            </div>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">Payment Releases</h1>
+                    <p class="text-sm text-g-text-secondary mt-1">Review and release payments for completed auctions</p>
+                </div>
+                <a th:href="@{/admin/console}" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-g-border rounded-full text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
+                    <span class="material-icons-outlined text-lg">arrow_back</span>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-2xl border border-g-border p-5">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-amber-600 text-xl">pending_actions</span>
+                    </div>
+                </div>
+                <p class="font-gsans text-2xl font-medium text-g-text tabular-nums" th:text="${pendingCount}">0</p>
+                <p class="text-xs text-g-text-secondary">Pending Review</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-g-border p-5">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-9 h-9 bg-g-blue-light rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-g-blue text-xl">fact_check</span>
+                    </div>
+                </div>
+                <p class="font-gsans text-2xl font-medium text-g-text tabular-nums" th:text="${#lists.size(paymentReleases.?[status.name() == 'READY_FOR_ADMIN_REVIEW'])}">0</p>
+                <p class="text-xs text-g-text-secondary">Ready for Review</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-g-border p-5">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-g-green text-xl">payments</span>
+                    </div>
+                </div>
+                <p class="font-gsans text-2xl font-medium text-g-text tabular-nums" th:text="${#lists.size(paymentReleases.?[status.name() == 'PAYMENT_RELEASED'])}">0</p>
+                <p class="text-xs text-g-text-secondary">Released</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-g-border p-5">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-purple-600 text-xl">receipt_long</span>
+                    </div>
+                </div>
+                <p class="font-gsans text-2xl font-medium text-g-text tabular-nums" th:text="${#lists.size(paymentReleases)}">0</p>
+                <p class="text-xs text-g-text-secondary">Total Cases</p>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+            <a href="/admin/payments" th:class="${currentFilter == 'all'} ? 'px-4 py-2 bg-g-blue text-white rounded-full text-sm font-medium whitespace-nowrap' : 'px-4 py-2 bg-white border border-g-border text-g-text rounded-full text-sm font-medium hover:bg-g-hover whitespace-nowrap transition-colors'">
+                All Cases
+            </a>
+            <a href="/admin/payments?filter=pending" th:class="${currentFilter == 'pending'} ? 'px-4 py-2 bg-g-blue text-white rounded-full text-sm font-medium whitespace-nowrap' : 'px-4 py-2 bg-white border border-g-border text-g-text rounded-full text-sm font-medium hover:bg-g-hover whitespace-nowrap transition-colors'">
+                Pending Review
+            </a>
+            <a href="/admin/payments?filter=released" th:class="${currentFilter == 'released'} ? 'px-4 py-2 bg-g-blue text-white rounded-full text-sm font-medium whitespace-nowrap' : 'px-4 py-2 bg-white border border-g-border text-g-text rounded-full text-sm font-medium hover:bg-g-hover whitespace-nowrap transition-colors'">
+                Released
+            </a>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${#lists.isEmpty(paymentReleases)}" class="bg-white rounded-2xl border border-g-border p-12 text-center">
+            <div class="w-16 h-16 mx-auto mb-4 bg-g-blue-light rounded-full flex items-center justify-center">
+                <span class="material-icons-outlined text-g-blue text-3xl">payments</span>
+            </div>
+            <h3 class="font-gsans text-xl font-medium text-g-text mb-2">No Payment Releases</h3>
+            <p class="text-sm text-g-text-secondary">There are no payment releases to display.</p>
+        </div>
+
+        <!-- Payment Releases List -->
+        <div th:if="${!#lists.isEmpty(paymentReleases)}" class="space-y-4">
+            <div th:each="pr : ${paymentReleases}" class="bg-white rounded-2xl border border-g-border overflow-hidden hover:shadow-g-md transition-all">
+                <div class="p-6">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <!-- Auction Info -->
+                        <div class="flex gap-4 flex-1">
+                            <img th:src="${pr.auction.imageUrl}" th:alt="${pr.auction.title}" class="w-20 h-20 rounded-xl object-cover">
+                            <div class="flex-1">
+                                <h3 class="font-gsans font-medium text-g-text mb-1" th:text="${pr.auction.title}">Auction Title</h3>
+                                <p class="text-xs text-g-text-secondary mb-2">
+                                    <span th:text="${pr.auction.category.displayName}">Category</span> • 
+                                    Auction #<span th:text="${pr.auction.id}">1</span>
+                                </p>
+                                <div class="flex flex-wrap gap-3 text-xs">
+                                    <span class="text-g-text">Seller: <strong th:text="${pr.seller.username}">Seller</strong></span>
+                                    <span class="text-g-text">Buyer: <strong th:text="${pr.buyer.username}">Buyer</strong></span>
+                                    <span class="text-g-text font-medium">Amount: <strong class="tabular-nums">$<span th:text="${#numbers.formatDecimal(pr.winningAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></strong></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status & Actions -->
+                        <div class="flex flex-col items-end gap-2">
+                            <span th:if="${pr.status.name() == 'WAITING_FOR_DETAILS'}" class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold uppercase rounded-full">
+                                Waiting for Details
+                            </span>
+                            <span th:if="${pr.status.name() == 'SELLER_DETAILS_SUBMITTED'}" class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold uppercase rounded-full">
+                                Seller Submitted
+                            </span>
+                            <span th:if="${pr.status.name() == 'BUYER_DETAILS_SUBMITTED'}" class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold uppercase rounded-full">
+                                Buyer Submitted
+                            </span>
+                            <span th:if="${pr.status.name() == 'READY_FOR_ADMIN_REVIEW'}" class="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-semibold uppercase rounded-full">
+                                Ready for Review
+                            </span>
+                            <span th:if="${pr.status.name() == 'VERIFIED'}" class="px-3 py-1 bg-green-50 text-g-green text-xs font-semibold uppercase rounded-full">
+                                Verified
+                            </span>
+                            <span th:if="${pr.status.name() == 'PAYMENT_RELEASED'}" class="px-3 py-1 bg-green-100 text-g-green text-xs font-semibold uppercase rounded-full">
+                                Payment Released
+                            </span>
+                            <span th:if="${pr.status.name() == 'REJECTED' || pr.status.name() == 'NEEDS_CORRECTION'}" class="px-3 py-1 bg-red-50 text-g-red text-xs font-semibold uppercase rounded-full">
+                                Needs Correction
+                            </span>
+                            
+                            <a th:href="@{/admin/payments/{id}(id=${pr.id})}" class="inline-flex items-center gap-1 px-4 py-2 bg-g-blue text-white rounded-full text-xs font-medium hover:bg-g-blue-hover transition-colors">
+                                <span class="material-icons-outlined text-sm">visibility</span>
+                                Review
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Progress Indicators -->
+                    <div class="mt-4 pt-4 border-t border-g-border">
+                        <div class="grid grid-cols-2 gap-4 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span th:if="${pr.sellerDetailsSubmitted}" class="material-icons-outlined text-g-green text-sm">check_circle</span>
+                                <span th:unless="${pr.sellerDetailsSubmitted}" class="material-icons-outlined text-g-text-secondary text-sm">radio_button_unchecked</span>
+                                <span th:class="${pr.sellerDetailsSubmitted} ? 'text-g-text' : 'text-g-text-secondary'">Seller Details</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span th:if="${pr.buyerDetailsSubmitted}" class="material-icons-outlined text-g-green text-sm">check_circle</span>
+                                <span th:unless="${pr.buyerDetailsSubmitted}" class="material-icons-outlined text-g-text-secondary text-sm">radio_button_unchecked</span>
+                                <span th:class="${pr.buyerDetailsSubmitted} ? 'text-g-text' : 'text-g-text-secondary'">Buyer Details</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.add('theme-transition');
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            setTimeout(() => html.classList.remove('theme-transition'), 350);
+        }
+    </script>
+
+</body>
+</html>

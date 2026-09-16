@@ -298,6 +298,20 @@ public class PaymentReleaseService {
     }
 
     /**
+     * Get all payment releases.
+     */
+    public List<PaymentRelease> getAllPaymentReleases() {
+        return paymentReleaseRepository.findAll();
+    }
+
+    /**
+     * Find payment release by ID.
+     */
+    public Optional<PaymentRelease> findById(Long id) {
+        return paymentReleaseRepository.findById(id);
+    }
+
+    /**
      * Get payment release by auction ID.
      */
     public Optional<PaymentRelease> findByAuctionId(Long auctionId) {

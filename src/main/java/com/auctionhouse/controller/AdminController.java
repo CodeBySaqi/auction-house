@@ -5,6 +5,7 @@ import com.auctionhouse.repository.BidRepository;
 import com.auctionhouse.repository.UserRepository;
 import com.auctionhouse.service.AuctionService;
 import com.auctionhouse.service.NotificationService;
+import com.auctionhouse.service.PaymentReleaseService;
 import com.auctionhouse.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -48,6 +49,7 @@ public class AdminController {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final PasswordEncoder passwordEncoder;
+    private final PaymentReleaseService paymentReleaseService;
 
     @Autowired
     public AdminController(UserService userService,
@@ -55,13 +57,15 @@ public class AdminController {
                            BidRepository bidRepository,
                            UserRepository userRepository,
                            NotificationService notificationService,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           PaymentReleaseService paymentReleaseService) {
         this.userService = userService;
         this.auctionService = auctionService;
         this.bidRepository = bidRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
         this.passwordEncoder = passwordEncoder;
+        this.paymentReleaseService = paymentReleaseService;
     }
 
     /* ==================== NEW ADMIN CONSOLE ==================== */
@@ -232,6 +236,9 @@ public class AdminController {
 
         // Pending approvals count
         model.addAttribute("pendingCount", auctionService.getPendingAuctions().size());
+
+        // Pending payment releases count
+        model.addAttribute("pendingPaymentCount", paymentReleaseService.countPendingReview());
 
         return "admin-console";
     }

@@ -105,6 +105,61 @@
     <div class="grid lg:grid-cols-3 gap-6">
         <!-- Quick Actions -->
         <div class="space-y-4">
+            <!-- Payment Actions -->
+            <div th:if="${!sellerPaymentReleases.isEmpty() || !buyerPaymentReleases.isEmpty()}" class="bg-white rounded-2xl border border-g-border overflow-hidden">
+                <div class="px-5 py-4 border-b border-g-border">
+                    <h2 class="font-gsans font-medium text-g-text flex items-center gap-2">
+                        <span class="material-icons-outlined text-g-blue text-xl">payments</span> Payment Actions
+                    </h2>
+                </div>
+                
+                <!-- Seller Actions -->
+                <div th:if="${!sellerPaymentReleases.isEmpty()}" class="divide-y divide-g-border">
+                    <div th:each="pr : ${sellerPaymentReleases}" class="p-4">
+                        <div class="flex items-start gap-3 mb-2">
+                            <span class="material-icons-outlined text-amber-600 text-lg">local_shipping</span>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-g-text line-clamp-1" th:text="${pr.auction.title}">Auction Title</p>
+                                <p class="text-xs text-g-text-secondary mt-0.5">Submit delivery details</p>
+                            </div>
+                        </div>
+                        <a th:href="@{/seller/payment/submit/{auctionId}(auctionId=${pr.auction.id})}" 
+                           th:if="${!pr.sellerDetailsSubmitted}"
+                           class="inline-flex items-center gap-1 px-3 py-1.5 bg-g-blue text-white text-xs font-medium rounded-full hover:bg-g-blue-hover transition-colors no-underline">
+                            <span class="material-icons-outlined text-sm">add_circle</span>
+                            Submit Details
+                        </a>
+                        <span th:if="${pr.sellerDetailsSubmitted}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-g-green text-xs font-medium rounded-full">
+                            <span class="material-icons-outlined text-sm">check_circle</span>
+                            Submitted
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Buyer Actions -->
+                <div th:if="${!buyerPaymentReleases.isEmpty()}" class="divide-y divide-g-border">
+                    <div th:each="pr : ${buyerPaymentReleases}" class="p-4">
+                        <div class="flex items-start gap-3 mb-2">
+                            <span class="material-icons-outlined text-g-green text-lg">inventory_2</span>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-g-text line-clamp-1" th:text="${pr.auction.title}">Auction Title</p>
+                                <p class="text-xs text-g-text-secondary mt-0.5">Confirm item received</p>
+                            </div>
+                        </div>
+                        <a th:href="@{/buyer/payment/submit/{auctionId}(auctionId=${pr.auction.id})}" 
+                           th:if="${!pr.buyerDetailsSubmitted}"
+                           class="inline-flex items-center gap-1 px-3 py-1.5 bg-g-green text-white text-xs font-medium rounded-full hover:bg-green-600 transition-colors no-underline">
+                            <span class="material-icons-outlined text-sm">check_circle</span>
+                            Confirm Receipt
+                        </a>
+                        <span th:if="${pr.buyerDetailsSubmitted}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-g-green text-xs font-medium rounded-full">
+                            <span class="material-icons-outlined text-sm">check_circle</span>
+                            Confirmed
+                        </span>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white rounded-2xl border border-g-border p-5">
                 <h2 class="font-gsans font-medium text-g-text mb-4 flex items-center gap-2">
                     <span class="material-icons-outlined text-g-text-secondary text-xl">bolt</span> Quick Actions
