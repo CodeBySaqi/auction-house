@@ -165,34 +165,13 @@
             </div>
 
             <!-- Bulk Actions Bar -->
-            <form th:action="@{/admin/auctions/bulk}" method="post" id="bulkForm">
-                <div class="bg-g-blue-light rounded-2xl border border-g-blue/20 p-4 mb-4 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <input type="checkbox" id="selectAll" class="w-4 h-4 text-g-blue rounded border-g-border focus:ring-g-blue">
-                        <label for="selectAll" class="text-sm font-medium text-g-blue cursor-pointer">Select all <span th:text="${auctions.size()}">150</span> auctions</label>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button type="submit" name="action" value="close" class="px-3 py-1.5 bg-white border border-g-border rounded-lg text-xs font-medium text-g-text hover:bg-g-hover transition-colors">
-                            Close Selected
-                        </button>
-                        <button type="submit" name="action" value="reopen" class="px-3 py-1.5 bg-white border border-g-border rounded-lg text-xs font-medium text-g-text hover:bg-g-hover transition-colors">
-                            Reopen Selected
-                        </button>
-                        <button type="submit" name="action" value="cancel" class="px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg text-xs font-medium text-g-red hover:bg-red-100 transition-colors">
-                            Cancel Selected
-                        </button>
-                    </div>
-                </div>
-
+            <div>
                 <!-- Auctions Table -->
                 <div class="bg-white rounded-2xl border border-g-border overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead class="bg-g-bg border-b border-g-border">
                                 <tr>
-                                    <th class="px-4 py-3 text-left">
-                                        <input type="checkbox" class="w-4 h-4 text-g-blue rounded border-g-border focus:ring-g-blue">
-                                    </th>
                                     <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Auction</th>
                                     <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Category</th>
                                     <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Status</th>
@@ -204,9 +183,6 @@
                             </thead>
                             <tbody class="divide-y divide-g-border">
                                 <tr th:each="auction : ${auctions}" class="hover:bg-g-bg/50 transition-colors">
-                                    <td class="px-4 py-4">
-                                        <input type="checkbox" name="ids" th:value="${auction.id}" class="w-4 h-4 text-g-blue rounded border-g-border focus:ring-g-blue auction-checkbox">
-                                    </td>
                                     <td class="px-4 py-4">
                                         <div class="flex items-center gap-3">
                                             <div class="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
@@ -293,7 +269,7 @@
                         </div>
                     </div>
                 </div>
-            </form>
+            </div>
 
         </main>
     </div>
@@ -315,11 +291,7 @@
             }
         });
 
-        // Select all checkbox functionality
-        document.getElementById('selectAll').addEventListener('change', function() {
-            const checkboxes = document.querySelectorAll('.auction-checkbox');
-            checkboxes.forEach(cb => cb.checked = this.checked);
-        });
+
 
         // Auto-hide flash messages after 5 seconds
         setTimeout(() => {
