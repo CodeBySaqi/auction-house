@@ -230,6 +230,9 @@ public class AdminController {
         // Notification count
         model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
 
+        // Pending approvals count
+        model.addAttribute("pendingCount", auctionService.getPendingAuctions().size());
+
         return "admin-console";
     }
 

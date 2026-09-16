@@ -37,6 +37,8 @@
                             <span class="w-2 h-2 bg-g-green rounded-full animate-pulse"></span> Live Auction
                         </span>
                         <span th:if="${auction.status.name() == 'CLOSED'}" class="px-3 py-1.5 bg-red-500 rounded-full text-sm font-medium text-white shadow-g-sm">Auction Closed</span>
+                        <span th:if="${auction.status.name() == 'PENDING_APPROVAL'}" class="px-3 py-1.5 bg-amber-500 rounded-full text-sm font-medium text-white shadow-g-sm">Pending Approval</span>
+                        <span th:if="${auction.status.name() == 'REJECTED'}" class="px-3 py-1.5 bg-red-600 rounded-full text-sm font-medium text-white shadow-g-sm">Rejected</span>
                     </div>
                 </div>
             </div>
@@ -152,6 +154,21 @@
                     <p class="text-sm text-g-text-secondary text-center mb-4">Sign in to place a bid</p>
                     <a href="/login" class="block w-full py-3.5 bg-g-blue text-white font-medium rounded-xl hover:bg-g-blue-hover text-center text-sm transition-colors">Sign in</a>
                     <a href="/register" class="block w-full py-3.5 bg-white text-g-text font-medium rounded-xl border border-g-border hover:bg-g-hover text-center text-sm transition-colors">Create account</a>
+                </div>
+
+                <!-- Pending Approval -->
+                <div th:if="${auction.status.name() == 'PENDING_APPROVAL'}" class="bg-amber-50 rounded-2xl p-5 text-center border border-amber-200">
+                    <span class="material-icons-outlined text-amber-600 text-3xl mb-2">pending_actions</span>
+                    <h3 class="font-gsans font-medium text-amber-800 mb-1">Pending Approval</h3>
+                    <p class="text-sm text-amber-700">This auction is awaiting admin review and is not yet available for bidding.</p>
+                </div>
+
+                <!-- Rejected -->
+                <div th:if="${auction.status.name() == 'REJECTED'}" class="bg-red-50 rounded-2xl p-5 text-center border border-red-200">
+                    <span class="material-icons-outlined text-g-red text-3xl mb-2">cancel</span>
+                    <h3 class="font-gsans font-medium text-red-800 mb-1">Auction Rejected</h3>
+                    <p class="text-sm text-red-700">This auction has been rejected by admin and is not available for bidding.</p>
+                    <p th:if="${auction.rejectionReason != null}" class="text-xs text-red-600 mt-2"><strong>Reason:</strong> <span th:text="${auction.rejectionReason}">Reason</span></p>
                 </div>
 
                 <!-- Stats -->

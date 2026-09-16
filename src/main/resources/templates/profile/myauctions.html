@@ -35,8 +35,12 @@
                 <img th:src="${auction.imageUrl != null} ? @{${auction.imageUrl}} : @{/images/default-auction.png}" th:alt="${auction.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                 <div class="absolute top-3 left-3">
                     <span class="px-2.5 py-1 rounded-full text-xs font-medium shadow-sm"
-                          th:classappend="${auction.status.name() == 'ACTIVE'} ? 'bg-green-100 text-g-green' : 'bg-g-bg text-g-text-secondary'"
-                          th:text="${auction.status.name()}">Status</span>
+                          th:classappend="${auction.status.name() == 'ACTIVE'} ? 'bg-green-100 text-g-green' : 
+                                          (${auction.status.name() == 'PENDING_APPROVAL'} ? 'bg-amber-100 text-amber-700' : 
+                                          (${auction.status.name() == 'REJECTED'} ? 'bg-red-100 text-g-red' : 
+                                          'bg-g-bg text-g-text-secondary'))"
+                          th:text="${auction.status.name() == 'PENDING_APPROVAL'} ? 'Pending Review' : 
+                                  (${auction.status.name() == 'REJECTED'} ? 'Rejected' : ${auction.status.name()})">Status</span>
                 </div>
                 <div class="absolute bottom-3 right-3">
                     <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-black/60 backdrop-blur-sm rounded-full text-xs font-medium text-white">
@@ -49,6 +53,18 @@
                 <span class="px-2 py-0.5 bg-g-bg rounded-md text-xs font-medium text-g-text-secondary w-fit mb-2" th:text="${auction.category.displayName}">Cat</span>
                 <h3 class="font-gsans font-medium text-g-text text-sm mb-1 line-clamp-1" th:text="${auction.title}">Title</h3>
                 <p class="text-xs text-g-text-secondary mb-3 line-clamp-1" th:text="${auction.categoryDetails}">Details</p>
+                
+                <!-- Rejection Reason -->
+                <div th:if="${auction.status.name() == 'REJECTED' && auction.rejectionReason != null}" class="mb-3 p-2 bg-red-50 rounded-lg">
+                    <p class="text-[10px] text-g-red font-medium mb-0.5">Rejection Reason:</p>
+                    <p class="text-xs text-red-700 line-clamp-2" th:text="${auction.rejectionReason}">Reason</p>
+                </div>
+                
+                <!-- Pending Notice -->
+                <div th:if="${auction.status.name() == 'PENDING_APPROVAL'}" class="mb-3 p-2 bg-amber-50 rounded-lg">
+                    <p class="text-xs text-amber-700">⏳ Awaiting admin review before going live.</p>
+                </div>
+                
                 <div class="mt-auto flex justify-between items-end pt-3 border-t border-g-border">
                     <div>
                         <p class="text-[10px] uppercase tracking-wider text-g-text-secondary font-medium">Current bid</p>

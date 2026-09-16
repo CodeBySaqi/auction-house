@@ -122,6 +122,64 @@ public class AuctionService {
     }
 
     /**
+     * Get all pending auctions awaiting approval.
+     */
+    public List<Auction> getPendingAuctions() {
+        return auctionRepository.findByStatusOrderByCreatedAtDesc(AuctionStatus.PENDING_APPROVAL);
+    }
+
+    /**
+     * Get auctions by status.
+     */
+    public List<Auction> getAuctionsByStatus(AuctionStatus status) {
+        return auctionRepository.findByStatusOrderByCreatedAtDesc(status);
+    }
+
+    /**
+     * Approve an auction - sets status to ACTIVE and notifies the seller.
+     */
+    @Transactional
+    public void approveAuction(Auction auction, User admin) {
+        auction.setStatus(AuctionStatus.ACTIVE);
+        auction.setReviewedBy(admin);
+        auction.setReviewedAt(LocalDateTime.now());
+        auction.setRejectionReason(null); // Clear any previous rejection reason
+        auctionRepository.save(auction);
+
+        // Notify the seller
+        if (auction.getCreatedBy() != null) {
+            notificationService.createNotification(
+                auction.getCreatedBy(),
+                "✅ Your auction \"" + auction.getTitle() + "\" has been approved and is now live!",
+                "AUCTION_APPROVED",
+                auction.getId()
+            );
+        }
+    }
+
+    /**
+     * Reject an auction - sets status to REJECTED, saves reason, and notifies the seller.
+     */
+    @Transactional
+    public void rejectAuction(Auction auction, User admin, String reason) {
+        auction.setStatus(AuctionStatus.REJECTED);
+        auction.setReviewedBy(admin);
+        auction.setReviewedAt(LocalDateTime.now());
+        auction.setRejectionReason(reason);
+        auctionRepository.save(auction);
+
+        // Notify the seller
+        if (auction.getCreatedBy() != null) {
+            notificationService.createNotification(
+                auction.getCreatedBy(),
+                "❌ Your auction \"" + auction.getTitle() + "\" has been rejected. Reason: " + reason,
+                "AUCTION_REJECTED",
+                auction.getId()
+            );
+        }
+    }
+
+    /**
      * Delete auction by ID.
      */
     @Transactional

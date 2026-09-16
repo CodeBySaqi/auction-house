@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auction Approvals - AuctionHouse Admin</title>
+    <!-- Theme initialization -->
+    <script>
+        (function() {
+            var theme = localStorage.getItem('theme') || 'light';
+            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script th:replace="~{fragments/layout :: tailwindConfig}"></script>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen">
+
+    <!-- Flash Messages -->
+    <div th:if="${success}" class="fixed top-20 right-4 z-50 bg-green-50 border border-green-200 text-green-800 px-6 py-3 rounded-2xl shadow-g-md flex items-center gap-3 animate-slide-in">
+        <span class="material-icons-outlined text-g-green">check_circle</span>
+        <span class="text-sm font-medium" th:text="${success}">Success</span>
+    </div>
+    <div th:if="${error}" class="fixed top-20 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-6 py-3 rounded-2xl shadow-g-md flex items-center gap-3 animate-slide-in">
+        <span class="material-icons-outlined text-g-red">error</span>
+        <span class="text-sm font-medium" th:text="${error}">Error</span>
+    </div>
+
+    <!-- App Bar -->
+    <nav class="bg-white border-b border-g-border sticky top-0 z-40">
+        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-g-blue rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-white text-xl">gavel</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-gsans font-medium text-xl text-g-text">Auction<span class="text-g-blue">House</span></span>
+                        <span class="px-2.5 py-1 bg-g-text text-white text-[10px] font-bold uppercase tracking-wider rounded-md">Admin</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <!-- Dark Mode Toggle -->
+                    <button onclick="toggleTheme()" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Toggle dark mode">
+                        <span class="material-icons-outlined dark:hidden">dark_mode</span>
+                        <span class="material-icons-outlined hidden dark:inline">light_mode</span>
+                    </button>
+                    <a th:href="@{/admin/console}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Back to Dashboard">
+                        <span class="material-icons-outlined">dashboard</span>
+                    </a>
+                    <div class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm">
+                        A
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        
+        <!-- Page Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">Pending Auction Approvals</h1>
+                <p class="text-sm text-g-text-secondary mt-1">Review and approve or reject new auction submissions.</p>
+            </div>
+            <a th:href="@{/admin/console}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-g-border rounded-full text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
+                <span class="material-icons-outlined text-lg">arrow_back</span>
+                Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Stats Card -->
+        <div class="bg-white rounded-2xl border border-g-border p-5 mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                    <span class="material-icons-outlined text-amber-600 text-xl">pending_actions</span>
+                </div>
+                <div>
+                    <p class="font-gsans text-2xl font-medium text-g-text tabular-nums" th:text="${pendingAuctions.size()}">0</p>
+                    <p class="text-xs text-g-text-secondary">Auctions awaiting review</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${pendingAuctions.isEmpty()}" class="bg-white rounded-2xl border border-g-border p-12 text-center">
+            <div class="w-16 h-16 mx-auto mb-4 bg-green-50 rounded-full flex items-center justify-center">
+                <span class="material-icons-outlined text-g-green text-3xl">check_circle</span>
+            </div>
+            <h3 class="font-gsans text-xl font-medium text-g-text mb-2">All caught up!</h3>
+            <p class="text-sm text-g-text-secondary">No auctions are currently pending approval.</p>
+        </div>
+
+        <!-- Pending Auctions Grid -->
+        <div th:if="${!pendingAuctions.isEmpty()}" class="grid gap-4">
+            <div th:each="auction : ${pendingAuctions}" class="bg-white rounded-2xl border border-g-border overflow-hidden hover:shadow-g-md transition-all">
+                <div class="flex flex-col sm:flex-row">
+                    <!-- Image -->
+                    <div class="sm:w-48 h-40 sm:h-auto flex-shrink-0 overflow-hidden bg-gray-100">
+                        <img th:src="${auction.imageUrl != null} ? @{${auction.imageUrl}} : @{/images/default-auction.png}" 
+                             th:alt="${auction.title}" 
+                             class="w-full h-full object-cover">
+                    </div>
+                    
+                    <!-- Details -->
+                    <div class="flex-1 p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h3 class="font-gsans font-medium text-g-text text-lg mb-1" th:text="${auction.title}">Auction Title</h3>
+                                <p class="text-sm text-g-text-secondary" th:text="${auction.category.displayName}">Category</p>
+                            </div>
+                            <span class="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-semibold uppercase rounded-full">
+                                Pending Review
+                            </span>
+                        </div>
+                        
+                        <p class="text-sm text-g-text-secondary mb-4 line-clamp-2" th:text="${auction.description}">Description</p>
+                        
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                            <div>
+                                <p class="text-xs text-g-text-secondary mb-0.5">Starting Price</p>
+                                <p class="font-gsans font-medium text-g-text tabular-nums">$<span th:text="${#numbers.formatDecimal(auction.startingPrice, 1, 'COMMA', 0, 'POINT')}">0</span></p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-g-text-secondary mb-0.5">Seller</p>
+                                <p class="text-sm font-medium text-g-text" th:text="${auction.createdBy != null ? auction.createdBy.username : 'Unknown'}">Seller</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-g-text-secondary mb-0.5">Submitted</p>
+                                <p class="text-sm text-g-text" th:text="${#temporals.format(auction.createdAt, 'MMM dd, yyyy')}">Date</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-g-text-secondary mb-0.5">Ends</p>
+                                <p class="text-sm text-g-text" th:text="${#temporals.format(auction.endTime, 'MMM dd, yyyy')}">Date</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3">
+                            <a th:href="@{'/admin/approvals/' + ${auction.id}}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-g-blue text-white rounded-full text-sm font-medium hover:bg-g-blue-hover transition-colors shadow-g-sm">
+                                <span class="material-icons-outlined text-lg">visibility</span>
+                                Review
+                            </a>
+                            <a th:href="@{'/auctions/detail/' + ${auction.id}}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-g-border rounded-full text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
+                                <span class="material-icons-outlined text-lg">open_in_new</span>
+                                View Full Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.add('theme-transition');
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            setTimeout(() => html.classList.remove('theme-transition'), 350);
+        }
+
+        // Auto-hide flash messages
+        setTimeout(() => {
+            const flashMessages = document.querySelectorAll('[th\\:if="${success}"], [th\\:if="${error}"]');
+            flashMessages.forEach(msg => {
+                msg.style.transition = 'opacity 0.3s ease';
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 300);
+            });
+        }, 5000);
+    </script>
+
+</body>
+</html>

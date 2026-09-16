@@ -65,9 +65,21 @@ public abstract class Auction {
     @JoinColumn(name = "created_by")
     private User createdBy;
 
+    // Approval system fields
+    @Column(name = "rejection_reason", length = 1000)
+    private String rejectionReason;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewed_by")
+    private User reviewedBy;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+
     public Auction() {
         this.createdAt = LocalDateTime.now();
         this.currentHighestBid = 0;
+        this.status = AuctionStatus.PENDING_APPROVAL; // Default to pending approval
     }
 
     /**
@@ -205,6 +217,15 @@ public abstract class Auction {
 
     public User getCreatedBy() { return createdBy; }
     public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
+
+    public String getRejectionReason() { return rejectionReason; }
+    public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
+
+    public User getReviewedBy() { return reviewedBy; }
+    public void setReviewedBy(User reviewedBy) { this.reviewedBy = reviewedBy; }
+
+    public LocalDateTime getReviewedAt() { return reviewedAt; }
+    public void setReviewedAt(LocalDateTime reviewedAt) { this.reviewedAt = reviewedAt; }
 
     /**
      * Get display price - either current highest bid or starting price.

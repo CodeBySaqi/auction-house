@@ -2,6 +2,7 @@ package com.auctionhouse.controller;
 
 import com.auctionhouse.model.Auction;
 import com.auctionhouse.model.AuctionCategory;
+import com.auctionhouse.model.AuctionStatus;
 import com.auctionhouse.model.Bid;
 import com.auctionhouse.model.CollectibleAuction;
 import com.auctionhouse.model.User;
@@ -72,9 +73,30 @@ public class AuctionController {
     }
 
     @GetMapping("/detail/{id}")
-    public String auctionDetail(@PathVariable Long id, Model model) {
+    public String auctionDetail(@PathVariable Long id, Model model,
+                                 @AuthenticationPrincipal UserDetails userDetails) {
         Auction auction = auctionService.findById(id)
                 .orElseThrow(() -> new RuntimeException("Auction not found"));
+
+        // Restrict access to pending/rejected auctions - only owner or admin can view
+        if (auction.getStatus() == AuctionStatus.PENDING_APPROVAL || 
+            auction.getStatus() == AuctionStatus.REJECTED) {
+            boolean canView = false;
+            if (userDetails != null) {
+                User currentUser = userService.getCurrentUser(userDetails.getUsername());
+                // Owner can view
+                if (auction.getCreatedBy() != null && auction.getCreatedBy().getId().equals(currentUser.getId())) {
+                    canView = true;
+                }
+                // Admin can view
+                if ("ROLE_ADMIN".equals(currentUser.getRole()) || "ROLE_SUPER_ADMIN".equals(currentUser.getRole())) {
+                    canView = true;
+                }
+            }
+            if (!canView) {
+                return "redirect:/auctions";
+            }
+        }
 
         List<Bid> bids = bidService.getBidsByAuction(id);
         double minimumBid = auction.getMinimumBid();
@@ -135,10 +157,11 @@ public class AuctionController {
             auction.setEra("2026");
             auction.setCondition("As described");
             auction.setRarity("User Listed");
+            // Status is already PENDING_APPROVAL by default from Auction constructor
 
             auctionService.save(auction);
-            redirectAttributes.addFlashAttribute("success", "Your auction is now live! 🎉");
-            return "redirect:/auctions/detail/" + auction.getId();
+            redirectAttributes.addFlashAttribute("success", "Your auction has been submitted for review! You'll be notified once it's approved. 📋");
+            return "redirect:/my-auctions";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Failed to create auction: " + e.getMessage());
             return "redirect:/auctions/create";

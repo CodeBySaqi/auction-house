@@ -38,9 +38,15 @@ public class BidService {
      */
     @Transactional
     public Bid placeBid(Auction auction, User bidder, double amount) {
-        // Validation 1: Auction must be active
+        // Validation 1: Auction must be active (not pending, rejected, closed, or cancelled)
         if (auction.getStatus() != AuctionStatus.ACTIVE) {
-            throw new AuctionClosedException("This auction is no longer active.");
+            if (auction.getStatus() == AuctionStatus.PENDING_APPROVAL) {
+                throw new AuctionClosedException("This auction is pending approval and not yet available for bidding.");
+            } else if (auction.getStatus() == AuctionStatus.REJECTED) {
+                throw new AuctionClosedException("This auction has been rejected and is not available for bidding.");
+            } else {
+                throw new AuctionClosedException("This auction is no longer active.");
+            }
         }
 
         // Validation 2: Auction must not be expired

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Auction - AuctionHouse Admin</title>
+    <!-- Theme initialization -->
+    <script>
+        (function() {
+            var theme = localStorage.getItem('theme') || 'light';
+            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script th:replace="~{fragments/layout :: tailwindConfig}"></script>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen">
+
+    <!-- Flash Messages -->
+    <div th:if="${error}" class="fixed top-20 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-6 py-3 rounded-2xl shadow-g-md flex items-center gap-3">
+        <span class="material-icons-outlined text-g-red">error</span>
+        <span class="text-sm font-medium" th:text="${error}">Error</span>
+    </div>
+
+    <!-- App Bar -->
+    <nav class="bg-white border-b border-g-border sticky top-0 z-40">
+        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-g-blue rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-white text-xl">gavel</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-gsans font-medium text-xl text-g-text">Auction<span class="text-g-blue">House</span></span>
+                        <span class="px-2.5 py-1 bg-g-text text-white text-[10px] font-bold uppercase tracking-wider rounded-md">Admin</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleTheme()" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Toggle dark mode">
+                        <span class="material-icons-outlined dark:hidden">dark_mode</span>
+                        <span class="material-icons-outlined hidden dark:inline">light_mode</span>
+                    </button>
+                    <a th:href="@{/admin/approvals}" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-g-border rounded-full text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined text-lg">arrow_back</span>
+                        Back to Approvals
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        
+        <!-- Owner Warning -->
+        <div th:if="${isOwner}" class="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 flex items-center gap-3">
+            <span class="material-icons-outlined text-g-red text-xl">warning</span>
+            <p class="text-sm text-red-800"><strong>You created this auction.</strong> You cannot approve or reject your own submissions.</p>
+        </div>
+
+        <!-- Status Badge -->
+        <div class="mb-6">
+            <span class="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-full text-sm font-semibold">
+                <span class="material-icons-outlined text-lg">pending_actions</span>
+                Pending Approval
+            </span>
+        </div>
+
+        <!-- Auction Details Card -->
+        <div class="bg-white rounded-2xl border border-g-border overflow-hidden mb-6">
+            <!-- Image -->
+            <div class="h-64 sm:h-80 overflow-hidden bg-gray-100">
+                <img th:src="${auction.imageUrl != null} ? @{${auction.imageUrl}} : @{/images/default-auction.png}" 
+                     th:alt="${auction.title}" 
+                     class="w-full h-full object-cover">
+            </div>
+
+            <!-- Details -->
+            <div class="p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h1 class="font-gsans text-2xl font-medium text-g-text mb-2" th:text="${auction.title}">Auction Title</h1>
+                        <p class="text-sm text-g-text-secondary">
+                            <span class="inline-flex items-center gap-1">
+                                <span class="material-icons-outlined text-sm">category</span>
+                                <span th:text="${auction.category.displayName}">Category</span>
+                            </span>
+                        </p>
+                    </div>
+                    <p class="text-right">
+                        <span class="block text-xs text-g-text-secondary">Starting Price</span>
+                        <span class="font-gsans text-2xl font-medium text-g-text tabular-nums">$<span th:text="${#numbers.formatDecimal(auction.startingPrice, 1, 'COMMA', 0, 'POINT')}">0</span></span>
+                    </p>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-6">
+                    <h3 class="font-gsans font-medium text-g-text mb-2">Description</h3>
+                    <p class="text-sm text-g-text-secondary whitespace-pre-line" th:text="${auction.description}">Description text</p>
+                </div>
+
+                <!-- Details Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-g-bg rounded-xl">
+                    <div>
+                        <p class="text-xs text-g-text-secondary mb-1">Seller</p>
+                        <p class="text-sm font-medium text-g-text" th:text="${auction.createdBy != null ? auction.createdBy.username : 'Unknown'}">Seller Name</p>
+                        <p class="text-xs text-g-text-secondary" th:text="${auction.createdBy != null ? auction.createdBy.email : ''}">email</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-g-text-secondary mb-1">Submitted</p>
+                        <p class="text-sm font-medium text-g-text" th:text="${#temporals.format(auction.createdAt, 'MMM dd, yyyy')}">Date</p>
+                        <p class="text-xs text-g-text-secondary" th:text="${#temporals.format(auction.createdAt, 'hh:mm a')}">Time</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-g-text-secondary mb-1">End Date</p>
+                        <p class="text-sm font-medium text-g-text" th:text="${#temporals.format(auction.endTime, 'MMM dd, yyyy')}">Date</p>
+                        <p class="text-xs text-g-text-secondary" th:text="${#temporals.format(auction.endTime, 'hh:mm a')}">Time</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-g-text-secondary mb-1">Auction ID</p>
+                        <p class="text-sm font-medium text-g-text">#<span th:text="${auction.id}">1</span></p>
+                    </div>
+                </div>
+
+                <!-- Category-specific details -->
+                <div class="mt-4 p-4 bg-g-bg rounded-xl">
+                    <h3 class="font-gsans font-medium text-g-text mb-2">Category Details</h3>
+                    <p class="text-sm text-g-text-secondary" th:text="${auction.categoryDetails}">Details</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div th:if="${!isOwner && auction.status.name() == 'PENDING_APPROVAL'}" class="grid sm:grid-cols-2 gap-4">
+            <!-- Approve -->
+            <form th:action="@{'/admin/approvals/' + ${auction.id} + '/approve'}" method="post" class="bg-white rounded-2xl border border-g-border p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-g-green text-xl">check_circle</span>
+                    </div>
+                    <div>
+                        <h3 class="font-gsans font-medium text-g-text">Approve Auction</h3>
+                        <p class="text-xs text-g-text-secondary">Make this auction publicly visible</p>
+                    </div>
+                </div>
+                <p class="text-sm text-g-text-secondary mb-4">The seller will be notified and the auction will become available for bidding.</p>
+                <button type="submit" class="w-full px-6 py-3 bg-g-green text-white rounded-full text-sm font-medium hover:bg-green-600 transition-colors shadow-g-sm flex items-center justify-center gap-2">
+                    <span class="material-icons-outlined text-lg">check</span>
+                    Approve Auction
+                </button>
+            </form>
+
+            <!-- Reject -->
+            <form th:action="@{'/admin/approvals/' + ${auction.id} + '/reject'}" method="post" class="bg-white rounded-2xl border border-g-border p-6" onsubmit="return validateRejection()">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-g-red text-xl">cancel</span>
+                    </div>
+                    <div>
+                        <h3 class="font-gsans font-medium text-g-text">Reject Auction</h3>
+                        <p class="text-xs text-g-text-secondary">Decline this auction submission</p>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-g-text mb-2">Rejection Reason <span class="text-g-red">*</span></label>
+                    <textarea name="reason" rows="3" required placeholder="Explain why this auction is being rejected..."
+                              class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all resize-none"></textarea>
+                </div>
+                <button type="submit" class="w-full px-6 py-3 bg-g-red text-white rounded-full text-sm font-medium hover:bg-red-600 transition-colors shadow-g-sm flex items-center justify-center gap-2">
+                    <span class="material-icons-outlined text-lg">close</span>
+                    Reject Auction
+                </button>
+            </form>
+        </div>
+
+        <!-- Already Reviewed -->
+        <div th:if="${auction.status.name() != 'PENDING_APPROVAL'}" class="bg-white rounded-2xl border border-g-border p-6 text-center">
+            <div class="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center"
+                 th:classappend="${auction.status.name() == 'ACTIVE'} ? 'bg-green-50' : 'bg-red-50'">
+                <span class="material-icons-outlined text-2xl"
+                      th:classappend="${auction.status.name() == 'ACTIVE'} ? 'text-g-green' : 'text-g-red'"
+                      th:text="${auction.status.name() == 'ACTIVE'} ? 'check_circle' : 'cancel'">status</span>
+            </div>
+            <h3 class="font-gsans text-lg font-medium text-g-text mb-2">
+                <span th:if="${auction.status.name() == 'ACTIVE'}">Auction Approved</span>
+                <span th:if="${auction.status.name() == 'REJECTED'}">Auction Rejected</span>
+                <span th:if="${auction.status.name() != 'ACTIVE' && auction.status.name() != 'REJECTED'}" th:text="${auction.status.name()}">Status</span>
+            </h3>
+            <p class="text-sm text-g-text-secondary mb-2">
+                Reviewed by <strong th:text="${auction.reviewedBy != null ? auction.reviewedBy.username : 'Unknown'}">Admin</strong>
+                on <span th:text="${auction.reviewedAt != null ? #temporals.format(auction.reviewedAt, 'MMM dd, yyyy hh:mm a') : 'Unknown'}">Date</span>
+            </p>
+            <p th:if="${auction.rejectionReason != null}" class="text-sm text-g-text-secondary mt-3 p-3 bg-red-50 rounded-lg">
+                <strong>Reason:</strong> <span th:text="${auction.rejectionReason}">Reason</span>
+            </p>
+            <a th:href="@{/admin/approvals}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-g-blue text-white rounded-full text-sm font-medium hover:bg-g-blue-hover transition-colors mt-4">
+                <span class="material-icons-outlined text-lg">arrow_back</span>
+                Back to Approvals
+            </a>
+        </div>
+
+    </main>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.add('theme-transition');
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            setTimeout(() => html.classList.remove('theme-transition'), 350);
+        }
+
+        function validateRejection() {
+            const reason = document.querySelector('textarea[name="reason"]').value.trim();
+            if (!reason) {
+                alert('Please provide a rejection reason.');
+                return false;
+            }
+            return confirm('Are you sure you want to reject this auction? The seller will be notified.');
+        }
+    </script>
+
+</body>
+</html>

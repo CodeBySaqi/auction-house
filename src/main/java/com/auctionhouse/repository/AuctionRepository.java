@@ -58,4 +58,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     /** Count per status. */
     @Query("SELECT a.status, COUNT(a) FROM Auction a GROUP BY a.status")
     List<Object[]> countGroupedByStatus();
+
+    /** Find auctions by status, ordered by creation date (newest first). */
+    List<Auction> findByStatusOrderByCreatedAtDesc(AuctionStatus status);
 }
