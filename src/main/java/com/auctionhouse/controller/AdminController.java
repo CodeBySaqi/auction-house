@@ -308,6 +308,19 @@ public class AdminController {
                 auctionService.closeAuctionManually(auction);
                 ra.addFlashAttribute("successMessage", "Closed \"" + auction.getTitle() + "\".");
             } else {
+                // BUG 7: Check for existing PaymentRelease before reopening
+                Optional<PaymentRelease> existingPR = paymentReleaseService.findByAuctionId(auction.getId());
+                if (existingPR.isPresent()) {
+                    PaymentRelease pr = existingPR.get();
+                    if (pr.isPaymentReleased()) {
+                        ra.addFlashAttribute("errorMessage", "Cannot reopen \"" + auction.getTitle() + "\" — payment has already been released to the seller.");
+                    } else {
+                        ra.addFlashAttribute("errorMessage", "Cannot reopen \"" + auction.getTitle() + "\" — payment release record exists. Please resolve payment release first.");
+                    }
+                    return "redirect:/admin/auctions";
+                }
+                // Refund highest bidder and reset bid state before reopening
+                auctionService.clearAuctionBids(auction);
                 auction.setStatus(AuctionStatus.ACTIVE);
                 auction.setEndTime(LocalDateTime.now().plusDays(7));
                 auctionService.save(auction);
