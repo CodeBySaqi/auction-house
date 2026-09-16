@@ -4,12 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Auctions - AuctionHouse Admin</title>
+    <!-- Theme initialization (must be before Tailwind to prevent FOUC) -->
+    <script>
+        // Theme toggle function
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.add('theme-transition');
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            setTimeout(() => html.classList.remove('theme-transition'), 350);
+        }
+
+        (function() {
+            var theme = localStorage.getItem('theme') || 'light';
+            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <script th:replace="~{fragments/layout :: tailwindConfig}"></script>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
     <style>
         body { font-family: 'Roboto', system-ui, sans-serif; }
         .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
@@ -53,6 +73,11 @@
                 </div>
 
                 <div class="flex items-center gap-2">
+                    <!-- Dark Mode Toggle -->
+                    <button onclick="toggleTheme()" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Toggle dark mode">
+                        <span class="material-icons-outlined dark:hidden">dark_mode</span>
+                        <span class="material-icons-outlined hidden dark:inline">light_mode</span>
+                    </button>
                     <a th:href="@{/notifications}" class="relative p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
                         <span class="material-icons-outlined">notifications</span>
                         <span th:if="${unreadCount > 0}" class="absolute top-1 right-1 w-4 h-4 bg-g-red rounded-full text-[10px] text-white font-bold flex items-center justify-center" th:text="${unreadCount}">3</span>

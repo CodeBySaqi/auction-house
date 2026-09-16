@@ -3,6 +3,55 @@
    Custom styles to complement Tailwind CSS
    ======================================== */
 
+/* ---- Theme CSS Variables ---- */
+:root {
+    --g-blue: #1a73e8;
+    --g-blue-hover: #1765cc;
+    --g-blue-light: #e8f0fe;
+    --g-red: #ea4335;
+    --g-yellow: #fbbc04;
+    --g-green: #34a853;
+    --g-surface: #ffffff;
+    --g-bg: #f8f9fa;
+    --g-text: #202124;
+    --g-text-secondary: #5f6368;
+    --g-border: #dadce0;
+    --g-hover: #f1f3f4;
+    --g-card-bg: #ffffff;
+    --g-input-bg: #f8f9fa;
+    --g-shadow-color: rgba(60,64,67,.15);
+    --g-shadow-strong: rgba(60,64,67,.3);
+    --g-scrollbar-track: #f8f9fa;
+    --g-scrollbar-thumb: #dadce0;
+    --g-scrollbar-hover: #bdc1c6;
+    --g-img-fallback-start: #f8f9fa;
+    --g-img-fallback-end: #e8eaed;
+}
+
+.dark {
+    --g-blue: #8ab4f8;
+    --g-blue-hover: #aecbfa;
+    --g-blue-light: rgba(138,180,248,0.15);
+    --g-red: #f28b82;
+    --g-yellow: #fdd663;
+    --g-green: #81c995;
+    --g-surface: #292a2d;
+    --g-bg: #1e1f20;
+    --g-text: #e8eaed;
+    --g-text-secondary: #9aa0a6;
+    --g-border: #3c4043;
+    --g-hover: #35363a;
+    --g-card-bg: #292a2d;
+    --g-input-bg: #35363a;
+    --g-shadow-color: rgba(0,0,0,.3);
+    --g-shadow-strong: rgba(0,0,0,.5);
+    --g-scrollbar-track: #292a2d;
+    --g-scrollbar-thumb: #5f6368;
+    --g-scrollbar-hover: #80868b;
+    --g-img-fallback-start: #292a2d;
+    --g-img-fallback-end: #35363a;
+}
+
 /* Smooth scrolling */
 html {
     scroll-behavior: smooth;
@@ -12,6 +61,14 @@ html {
 html, body {
     overflow-x: hidden;
     max-width: 100%;
+}
+
+/* Smooth theme transition */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease, box-shadow 0.3s ease !important;
 }
 
 /* Ensure all images are responsive */
@@ -26,14 +83,14 @@ img {
     height: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: #f8f9fa;
+    background: var(--g-scrollbar-track);
 }
 ::-webkit-scrollbar-thumb {
-    background: #dadce0;
+    background: var(--g-scrollbar-thumb);
     border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #bdc1c6;
+    background: var(--g-scrollbar-hover);
 }
 
 /* Hide scrollbar for category pills */
@@ -74,14 +131,14 @@ img {
 
 /* Focus visible for accessibility */
 :focus-visible {
-    outline: 2px solid #1a73e8;
+    outline: 2px solid var(--g-blue);
     outline-offset: 2px;
     border-radius: 4px;
 }
 
 /* Image fallback */
 img {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e8eaed 100%);
+    background: linear-gradient(135deg, var(--g-img-fallback-start) 0%, var(--g-img-fallback-end) 100%);
 }
 
 /* Animate pulse for live indicator */
@@ -126,6 +183,102 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 input[type="number"] {
     -moz-appearance: textfield;
+}
+
+/* ========================================
+   DARK MODE OVERRIDES
+   ======================================== */
+
+/* White backgrounds → dark card bg */
+.dark .bg-white {
+    background-color: var(--g-card-bg);
+}
+
+/* Google Material shadows in dark mode */
+.dark .shadow-g-sm {
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,.4), 0 1px 3px 1px rgba(0,0,0,.25);
+}
+.dark .shadow-g-md {
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,.4), 0 4px 8px 3px rgba(0,0,0,.25);
+}
+.dark .shadow-g-lg {
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,.4), 0 8px 16px 6px rgba(0,0,0,.25);
+}
+.dark .shadow-g-xl {
+    box-shadow: 0 2px 6px 2px rgba(0,0,0,.4), 0 12px 28px 8px rgba(0,0,0,.25);
+}
+.dark .shadow-lg {
+    box-shadow: 0 4px 12px rgba(0,0,0,.4);
+}
+
+/* Light-tinted backgrounds in dark mode */
+.dark .bg-green-50,
+.dark .bg-blue-50,
+.dark .bg-amber-50,
+.dark .bg-red-50,
+.dark .bg-purple-50,
+.dark .bg-rose-50,
+.dark .bg-emerald-50 {
+    background-color: rgba(255,255,255,0.05);
+}
+
+/* Alert/notification backgrounds in dark mode */
+.dark .bg-green-50.border-green-200 {
+    background-color: rgba(129,201,149,0.1);
+    border-color: rgba(129,201,149,0.3);
+}
+.dark .bg-red-50.border-red-200 {
+    background-color: rgba(242,139,130,0.1);
+    border-color: rgba(242,139,130,0.3);
+}
+.dark .bg-blue-50.border-blue-200 {
+    background-color: rgba(138,180,248,0.1);
+    border-color: rgba(138,180,248,0.3);
+}
+
+/* Code blocks in dark mode */
+.dark code {
+    background-color: #35363a;
+    color: #e8eaed;
+    border-color: #5f6368;
+}
+
+/* Hover effects in dark mode */
+.dark .hover\:bg-red-50:hover {
+    background-color: rgba(242,139,130,0.15);
+}
+.dark .hover\:bg-green-50:hover {
+    background-color: rgba(129,201,149,0.15);
+}
+
+/* Form inputs in dark mode */
+.dark input[type="date"],
+.dark input[type="time"] {
+    color-scheme: dark;
+}
+
+/* Backdrop blur overlays in dark mode */
+.dark .bg-white\/90 {
+    background-color: rgba(41,42,45,0.9);
+}
+
+/* Slider nav buttons in dark mode */
+.dark .bg-white\/80 {
+    background-color: rgba(41,42,45,0.8);
+}
+.dark .hover\:bg-white:hover {
+    background-color: #35363a;
+}
+
+/* Text color fixes for dark mode */
+.dark .text-gray-800 { color: #e8eaed; }
+.dark .text-gray-600 { color: #9aa0a6; }
+.dark .text-gray-500 { color: #9aa0a6; }
+
+/* Hero section gradient slides look fine in dark mode,
+   but ensure text contrast */
+.dark .text-white {
+    color: #ffffff;
 }
 
 /* Print styles */

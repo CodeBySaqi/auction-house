@@ -6,6 +6,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${title}">Auction House</title>
+    
+    <!-- Theme initialization (must be before Tailwind to prevent FOUC) -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,21 +24,22 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <script>
     tailwind.config = {
+        darkMode: 'class',
         theme: {
             extend: {
                 colors: {
-                    'g-blue': '#1a73e8',
-                    'g-blue-hover': '#1765cc',
-                    'g-blue-light': '#e8f0fe',
-                    'g-red': '#ea4335',
-                    'g-yellow': '#fbbc04',
-                    'g-green': '#34a853',
-                    'g-surface': '#ffffff',
-                    'g-bg': '#f8f9fa',
-                    'g-text': '#202124',
-                    'g-text-secondary': '#5f6368',
-                    'g-border': '#dadce0',
-                    'g-hover': '#f1f3f4',
+                    'g-blue': 'var(--g-blue)',
+                    'g-blue-hover': 'var(--g-blue-hover)',
+                    'g-blue-light': 'var(--g-blue-light)',
+                    'g-red': 'var(--g-red)',
+                    'g-yellow': 'var(--g-yellow)',
+                    'g-green': 'var(--g-green)',
+                    'g-surface': 'var(--g-surface)',
+                    'g-bg': 'var(--g-bg)',
+                    'g-text': 'var(--g-text)',
+                    'g-text-secondary': 'var(--g-text-secondary)',
+                    'g-border': 'var(--g-border)',
+                    'g-hover': 'var(--g-hover)',
                 },
                 fontFamily: {
                     'gsans': ['"Google Sans"', 'Roboto', 'system-ui', 'sans-serif'],
@@ -47,23 +59,33 @@
 </head>
 
 <!-- Tailwind Config Fragment -->
+<script>
+    // Theme initialization (prevent FOUC)
+    (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    })();
+</script>
 <script th:fragment="tailwindConfig">
     tailwind.config = {
+        darkMode: 'class',
         theme: {
             extend: {
                 colors: {
-                    'g-blue': '#1a73e8',
-                    'g-blue-hover': '#1765cc',
-                    'g-blue-light': '#e8f0fe',
-                    'g-red': '#ea4335',
-                    'g-yellow': '#fbbc04',
-                    'g-green': '#34a853',
-                    'g-surface': '#ffffff',
-                    'g-bg': '#f8f9fa',
-                    'g-text': '#202124',
-                    'g-text-secondary': '#5f6368',
-                    'g-border': '#dadce0',
-                    'g-hover': '#f1f3f4',
+                    'g-blue': 'var(--g-blue)',
+                    'g-blue-hover': 'var(--g-blue-hover)',
+                    'g-blue-light': 'var(--g-blue-light)',
+                    'g-red': 'var(--g-red)',
+                    'g-yellow': 'var(--g-yellow)',
+                    'g-green': 'var(--g-green)',
+                    'g-surface': 'var(--g-surface)',
+                    'g-bg': 'var(--g-bg)',
+                    'g-text': 'var(--g-text)',
+                    'g-text-secondary': 'var(--g-text-secondary)',
+                    'g-border': 'var(--g-border)',
+                    'g-hover': 'var(--g-hover)',
                 },
                 fontFamily: {
                     'gsans': ['"Google Sans"', 'Roboto', 'system-ui', 'sans-serif'],
@@ -116,6 +138,11 @@
 
                 <!-- Authenticated User Section -->
                 <div th:if="${currentUser != null}" class="flex items-center gap-1">
+                    <!-- Dark Mode Toggle -->
+                    <button onclick="toggleTheme()" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Toggle dark mode" id="themeToggleBtn">
+                        <span class="material-icons-outlined dark:hidden">dark_mode</span>
+                        <span class="material-icons-outlined hidden dark:inline">light_mode</span>
+                    </button>
                     <a href="/notifications" class="relative p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
                         <span class="material-icons-outlined">notifications</span>
                         <span th:if="${unreadCount > 0}" class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-g-red rounded-full text-[10px] text-white font-medium flex items-center justify-center" th:text="${unreadCount}">0</span>
@@ -164,6 +191,11 @@
 
                 <!-- Not Authenticated -->
                 <div th:if="${currentUser == null}" class="flex items-center gap-1.5 sm:gap-2">
+                    <!-- Dark Mode Toggle -->
+                    <button onclick="toggleTheme()" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Toggle dark mode">
+                        <span class="material-icons-outlined dark:hidden">dark_mode</span>
+                        <span class="material-icons-outlined hidden dark:inline">light_mode</span>
+                    </button>
                     <a href="/login" class="px-4 sm:px-4 py-2 sm:py-2 text-sm font-medium text-white sm:text-g-blue bg-g-blue sm:bg-transparent hover:bg-g-blue-hover sm:hover:bg-g-blue-light rounded-full transition-colors shadow-g-sm sm:shadow-none whitespace-nowrap">Sign in</a>
                     <a href="/register" class="hidden sm:inline-flex px-5 py-2.5 text-sm font-medium text-white bg-g-blue hover:bg-g-blue-hover rounded-full transition-colors shadow-g-sm">Get started</a>
                 </div>
@@ -197,6 +229,20 @@
 <div th:fragment="scripts">
     <script th:src="@{/js/main.js}"></script>
     <script>
+        // Theme toggle function
+        function toggleTheme() {
+            const html = document.documentElement;
+            // Add transition class
+            html.classList.add('theme-transition');
+            // Toggle dark mode
+            html.classList.toggle('dark');
+            // Save preference
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            // Remove transition class after animation
+            setTimeout(() => html.classList.remove('theme-transition'), 350);
+        }
+
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
             const dropdown = document.getElementById('profileDropdown');

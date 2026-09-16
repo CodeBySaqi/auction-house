@@ -54,14 +54,17 @@
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+        .user-list { max-height: 200px; overflow-y: auto; }
+        .user-list::-webkit-scrollbar { width: 4px; }
+        .user-list::-webkit-scrollbar-thumb { background: #dadce0; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-g-bg font-roboto text-g-text min-h-screen">
 
-    <!-- Flash Message Demo -->
+    <!-- Flash Message -->
     <div id="flashMessage" class="hidden fixed top-20 right-4 z-50 bg-green-50 border border-green-200 text-green-800 px-6 py-3 rounded-2xl shadow-g-md flex items-center gap-3 animate-slide-in">
         <span class="material-icons-outlined text-g-green">check_circle</span>
-        <span class="text-sm font-medium">Announcement delivered to 100 accounts.</span>
+        <span id="flashText" class="text-sm font-medium">Announcement delivered successfully.</span>
         <button onclick="document.getElementById('flashMessage').classList.add('hidden')" class="ml-2 p-1 hover:bg-green-100 rounded-full transition-colors">
             <span class="material-icons-outlined text-lg">close</span>
         </button>
@@ -137,10 +140,6 @@
                     <span class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Analytics</span>
                 </div>
                 <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
-                    <span class="material-icons-outlined text-xl text-g-text-secondary">analytics</span>
-                    Reports
-                </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
                     <span class="material-icons-outlined text-xl text-g-text-secondary">trending_up</span>
                     Activity
                 </a>
@@ -169,7 +168,7 @@
             <!-- Page Header -->
             <div class="mb-6">
                 <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">Broadcast</h1>
-                <p class="text-sm text-g-text-secondary mt-1">Send announcements and notifications to all users on the platform.</p>
+                <p class="text-sm text-g-text-secondary mt-1">Send announcements and notifications to users on the platform.</p>
             </div>
 
             <!-- Stats Cards -->
@@ -195,11 +194,11 @@
                 <div class="bg-white rounded-2xl border border-g-border p-5">
                     <div class="flex items-center gap-3 mb-2">
                         <div class="w-9 h-9 bg-g-blue-light rounded-xl flex items-center justify-center">
-                            <span class="material-icons-outlined text-g-blue text-xl">people</span>
+                            <span class="material-icons-outlined text-g-blue text-xl">schedule_send</span>
                         </div>
                     </div>
-                    <p class="font-gsans text-2xl font-medium text-g-text tabular-nums">100</p>
-                    <p class="text-xs text-g-text-secondary mt-1">Active Recipients</p>
+                    <p class="font-gsans text-2xl font-medium text-g-text tabular-nums">3</p>
+                    <p class="text-xs text-g-text-secondary mt-1">Scheduled</p>
                 </div>
                 <div class="bg-white rounded-2xl border border-g-border p-5">
                     <div class="flex items-center gap-3 mb-2">
@@ -215,7 +214,7 @@
             <div class="grid lg:grid-cols-3 gap-6">
                 
                 <!-- Compose Broadcast -->
-                <div class="lg:col-span-2">
+                <div class="lg:col-span-2 space-y-6">
                     <div class="bg-white rounded-2xl border border-g-border p-6">
                         <div class="flex items-center gap-3 mb-6">
                             <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
@@ -223,7 +222,7 @@
                             </div>
                             <div>
                                 <h2 class="font-gsans text-lg font-medium text-g-text">Compose Announcement</h2>
-                                <p class="text-xs text-g-text-secondary">Create and send a message to all platform users</p>
+                                <p class="text-xs text-g-text-secondary">Create and send a message to selected users</p>
                             </div>
                         </div>
 
@@ -231,7 +230,7 @@
                             <!-- Message Type -->
                             <div>
                                 <label class="block text-sm font-medium text-g-text mb-2">Message Type</label>
-                                <select class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all">
+                                <select id="msgType" onchange="updatePreviewType()" class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all">
                                     <option value="announcement">📢 Announcement</option>
                                     <option value="alert">⚠️ Alert</option>
                                     <option value="update">🔄 Update</option>
@@ -242,7 +241,7 @@
                             <!-- Subject -->
                             <div>
                                 <label class="block text-sm font-medium text-g-text mb-2">Subject</label>
-                                <input type="text" placeholder="e.g., New Feature Release, Maintenance Notice..." 
+                                <input id="subjectInput" type="text" oninput="updatePreview()" placeholder="e.g., New Feature Release, Maintenance Notice..." 
                                        class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all"
                                        value="Platform Update: New Bidding Features">
                             </div>
@@ -250,7 +249,7 @@
                             <!-- Message -->
                             <div>
                                 <label class="block text-sm font-medium text-g-text mb-2">Message</label>
-                                <textarea rows="8" placeholder="Type your announcement message here..." 
+                                <textarea id="messageInput" rows="6" oninput="updatePreview(); updateCharCount()" placeholder="Type your announcement message here..." 
                                           class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all resize-none">We're excited to announce new bidding features that will enhance your auction experience!
 
 🎯 Auto-bid: Set your maximum bid and let the system bid for you
@@ -259,12 +258,181 @@
 
 These features are now live! Log in and try them out on your favorite auctions.</textarea>
                                 <div class="flex items-center justify-between mt-2">
-                                    <p class="text-xs text-g-text-secondary">Supports plain text only</p>
-                                    <p class="text-xs text-g-text-secondary tabular-nums">387 / 1000 characters</p>
+                                    <p class="text-xs text-g-text-secondary">Supports plain text, links, and emojis</p>
+                                    <p id="charCount" class="text-xs text-g-text-secondary tabular-nums">387 / 1000 characters</p>
                                 </div>
                             </div>
 
-                            <!-- Preview Toggle -->
+                            <!-- Attach Links -->
+                            <div>
+                                <label class="block text-sm font-medium text-g-text mb-2">Attach Links</label>
+                                <div class="space-y-2" id="linksContainer">
+                                    <div class="flex gap-2">
+                                        <input type="url" placeholder="https://example.com/page" 
+                                               class="flex-1 px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all"
+                                               value="https://saqlainahmad.site/auctions">
+                                        <input type="text" placeholder="Link label (optional)" 
+                                               class="w-40 px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all"
+                                               value="View Auctions">
+                                        <button type="button" onclick="this.parentElement.remove()" class="p-2.5 text-g-red hover:bg-red-50 rounded-lg transition-colors">
+                                            <span class="material-icons-outlined text-lg">close</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="addLinkField()" class="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-g-blue hover:bg-g-blue-light rounded-lg transition-colors">
+                                    <span class="material-icons-outlined text-sm">add_link</span>
+                                    Add Link
+                                </button>
+                            </div>
+
+                            <!-- Attach Images -->
+                            <div>
+                                <label class="block text-sm font-medium text-g-text mb-2">Attach Images</label>
+                                <div class="flex items-center gap-3" id="imagePreviewArea">
+                                    <div class="relative group">
+                                        <img src="https://images.unsplash.com/photo-1562157873-818bc0726f68?w=200&h=200&fit=crop" class="w-20 h-20 rounded-xl object-cover border border-g-border">
+                                        <button type="button" onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 w-5 h-5 bg-g-red text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span class="material-icons-outlined text-xs">close</span>
+                                        </button>
+                                    </div>
+                                    <label class="w-20 h-20 rounded-xl border-2 border-dashed border-g-border flex flex-col items-center justify-center cursor-pointer hover:border-g-blue hover:bg-g-blue-light transition-all">
+                                        <span class="material-icons-outlined text-g-text-secondary text-xl">add_photo_alternate</span>
+                                        <span class="text-[10px] text-g-text-secondary mt-1">Upload</span>
+                                        <input type="file" accept="image/*" class="hidden" multiple>
+                                    </label>
+                                </div>
+                                <p class="text-xs text-g-text-secondary mt-2">Max 3 images, JPG/PNG, up to 5MB each</p>
+                            </div>
+
+                            <!-- Recipients -->
+                            <div>
+                                <label class="block text-sm font-medium text-g-text mb-2">Recipients</label>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <button type="button" onclick="setAudience('all')" id="audienceAll" class="px-3 py-1.5 bg-g-blue text-white text-xs font-medium rounded-full transition-colors">
+                                        All Users (100)
+                                    </button>
+                                    <button type="button" onclick="setAudience('active')" id="audienceActive" class="px-3 py-1.5 bg-g-bg border border-g-border text-g-text text-xs font-medium rounded-full hover:bg-g-hover transition-colors">
+                                        Active Users (87)
+                                    </button>
+                                    <button type="button" onclick="setAudience('bidders')" id="audienceBidders" class="px-3 py-1.5 bg-g-bg border border-g-border text-g-text text-xs font-medium rounded-full hover:bg-g-hover transition-colors">
+                                        Top Bidders (25)
+                                    </button>
+                                    <button type="button" onclick="setAudience('custom')" id="audienceCustom" class="px-3 py-1.5 bg-g-bg border border-g-border text-g-text text-xs font-medium rounded-full hover:bg-g-hover transition-colors">
+                                        Custom Selection
+                                    </button>
+                                </div>
+
+                                <!-- User Search -->
+                                <div id="userSearchBox" class="hidden">
+                                    <div class="relative mb-2">
+                                        <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">search</span>
+                                        <input type="text" id="userSearchInput" oninput="filterUsers()" placeholder="Search users by name or email..." 
+                                               class="w-full pl-10 pr-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all">
+                                    </div>
+                                    <div class="border border-g-border rounded-xl overflow-hidden">
+                                        <div class="user-list bg-g-bg">
+                                            <!-- Selected users chips area -->
+                                            <div id="selectedUsersArea" class="hidden px-3 py-2 border-b border-g-border bg-white">
+                                                <div class="flex flex-wrap gap-1.5" id="selectedChips"></div>
+                                            </div>
+                                            <!-- User list -->
+                                            <div id="userList" class="divide-y divide-g-border">
+                                                <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-white cursor-pointer transition-colors">
+                                                    <input type="checkbox" class="w-4 h-4 text-g-blue rounded border-g-border focus:ring-g-blue" onchange="updateSelectedCount()">
+                                                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-medium">JD</div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm text-g-text">john_doe</p>
+                                                        <p class="text-xs text-g-text-secondary">john.doe@email.com</p>
+                                                    </div>
+                                                    <span class="px-2 py-0.5 bg-green-50 text-g-green text-[10px] font-medium rounded-full">USER</span>
+                                                </label>
+                                                <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-white cursor-pointer transition-colors">
+                                                    <input type="checkbox" class="w-4 h-4 text-g-blue rounded border-g-border focus:ring-g-blue" onchange="updateSelectedCount()">
+                                                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-xs font-medium">SK</div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm text-g-text">sarah_khan</p>
+                                                        <p class="text-xs text-g-text-secondary">sarah.khan@email.com</p>
+                                                    </div>
+                                                    <span class="px-2 py-0.5 bg-green-50 text-g-green text-[10px] font-medium rounded-full">USER</span>
+                                                </label>
+                                                <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-white cursor-pointer transition-colors">
+                                                    <input type="checkbox" class="w-4 h-4 text-g-blue rounded border-g-border focus:ring-g-blue" onchange="updateSelectedCount()">
+                                                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white text-xs font-medium">MA</div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm text-g-text">mike_ahmed</p>
+                                                        <p class="text-xs text-g-text-secondary">mike.ahmed@email.com</p>
+                                                    </div>
+                                                    <span class="px-2 py-0.5 bg-green-50 text-g-green text-[10px] font-medium rounded-full">USER</span>
+                                                </label>
+                                                <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-white cursor-pointer transition-colors">
+                                                    <input type="checkbox" class="w-4 h-4 text-g-blue rounded border-g-border focus:ring-g-blue" onchange="updateSelectedCount()">
+                                                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-xs font-medium">AR</div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm text-g-text">aisha_razzaq</p>
+                                                        <p class="text-xs text-g-text-secondary">aisha.r@email.com</p>
+                                                    </div>
+                                                    <span class="px-2 py-0.5 bg-green-50 text-g-green text-[10px] font-medium rounded-full">USER</span>
+                                                </label>
+                                                <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-white cursor-pointer transition-colors">
+                                                    <input type="checkbox" class="w-4 h-4 text-g-blue rounded border-g-border focus:ring-g-blue" onchange="updateSelectedCount()">
+                                                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-white text-xs font-medium">HB</div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm text-g-text">hassan_bids</p>
+                                                        <p class="text-xs text-g-text-secondary">hassan.bids@email.com</p>
+                                                    </div>
+                                                    <span class="px-2 py-0.5 bg-green-50 text-g-green text-[10px] font-medium rounded-full">USER</span>
+                                                </label>
+                                                <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-white cursor-pointer transition-colors">
+                                                    <input type="checkbox" class="w-4 h-4 text-g-blue rounded border-g-border focus:ring-g-blue" onchange="updateSelectedCount()">
+                                                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-xs font-medium">ZM</div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm text-g-text">zainab_m</p>
+                                                        <p class="text-xs text-g-text-secondary">zainab.m@email.com</p>
+                                                    </div>
+                                                    <span class="px-2 py-0.5 bg-purple-50 text-purple-700 text-[10px] font-medium rounded-full">ADMIN</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="px-4 py-2 bg-white border-t border-g-border flex items-center justify-between">
+                                            <span id="selectedCount" class="text-xs text-g-text-secondary">0 users selected</span>
+                                            <button type="button" onclick="selectAllUsers()" class="text-xs font-medium text-g-blue hover:underline">Select All</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Schedule -->
+                            <div>
+                                <label class="block text-sm font-medium text-g-text mb-2">When to Send</label>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <button type="button" onclick="setSchedule('now')" id="scheduleNow" class="px-3 py-1.5 bg-g-blue text-white text-xs font-medium rounded-full transition-colors flex items-center gap-1.5">
+                                        <span class="material-icons-outlined text-sm">send</span>
+                                        Send Now
+                                    </button>
+                                    <button type="button" onclick="setSchedule('later')" id="scheduleLater" class="px-3 py-1.5 bg-g-bg border border-g-border text-g-text text-xs font-medium rounded-full hover:bg-g-hover transition-colors flex items-center gap-1.5">
+                                        <span class="material-icons-outlined text-sm">schedule_send</span>
+                                        Schedule for Later
+                                    </button>
+                                </div>
+                                <div id="schedulePicker" class="hidden">
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs text-g-text-secondary mb-1.5">Date</label>
+                                            <input type="date" id="scheduleDate" class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-g-text-secondary mb-1.5">Time</label>
+                                            <input type="time" id="scheduleTime" class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all">
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-g-text-secondary mt-2 flex items-center gap-1">
+                                        <span class="material-icons-outlined text-xs">info</span>
+                                        Broadcast will be sent automatically at the scheduled time (Asia/Karachi timezone)
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Preview -->
                             <div class="border-t border-g-border pt-5">
                                 <button type="button" onclick="togglePreview()" class="inline-flex items-center gap-2 px-4 py-2 bg-g-bg border border-g-border rounded-lg text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
                                     <span class="material-icons-outlined text-lg">visibility</span>
@@ -273,41 +441,46 @@ These features are now live! Log in and try them out on your favorite auctions.<
                             </div>
 
                             <!-- Preview Card -->
-                            <div id="previewCard" class="bg-g-bg border border-g-border rounded-xl p-4">
+                            <div id="previewCard" class="hidden bg-g-bg border border-g-border rounded-xl p-4">
                                 <div class="flex items-start gap-3">
                                     <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
                                         <span class="material-icons-outlined text-amber-600">campaign</span>
                                     </div>
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2 mb-1">
-                                            <span class="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-semibold uppercase rounded">Announcement</span>
+                                            <span id="previewBadge" class="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-semibold uppercase rounded">Announcement</span>
                                             <span class="text-xs text-g-text-secondary">Just now</span>
                                         </div>
-                                        <p class="text-sm font-medium text-g-text mb-1">Platform Update: New Bidding Features</p>
-                                        <p class="text-sm text-g-text-secondary whitespace-pre-line">We're excited to announce new bidding features that will enhance your auction experience!
-
-🎯 Auto-bid: Set your maximum bid and let the system bid for you
-⚡ Quick Bid: One-click bidding with preset increments
-📱 Mobile Notifications: Get instant alerts when you're outbid
-
-These features are now live! Log in and try them out on your favorite auctions.</p>
+                                        <p id="previewSubject" class="text-sm font-medium text-g-text mb-1">Platform Update: New Bidding Features</p>
+                                        <p id="previewMessage" class="text-sm text-g-text-secondary whitespace-pre-line">We're excited to announce new bidding features...</p>
+                                        <!-- Preview Links -->
+                                        <div class="mt-3 flex flex-wrap gap-2">
+                                            <a href="#" class="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-g-border rounded-lg text-xs font-medium text-g-blue hover:bg-g-blue-light transition-colors">
+                                                <span class="material-icons-outlined text-xs">link</span>
+                                                View Auctions
+                                            </a>
+                                        </div>
+                                        <!-- Preview Image -->
+                                        <div class="mt-3">
+                                            <img src="https://images.unsplash.com/photo-1562157873-818bc0726f68?w=400&h=200&fit=crop" class="w-full max-w-xs rounded-xl border border-g-border">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Action Buttons -->
                             <div class="flex items-center justify-between pt-4 border-t border-g-border">
-                                <div class="flex items-center gap-2 text-sm text-g-text-secondary">
+                                <div id="recipientInfo" class="flex items-center gap-2 text-sm text-g-text-secondary">
                                     <span class="material-icons-outlined text-lg">people</span>
-                                    <span>This message will be sent to all <strong class="text-g-text">100</strong> users</span>
+                                    <span>Sending to <strong class="text-g-text">all 100</strong> users</span>
                                 </div>
                                 <div class="flex gap-3">
-                                    <button type="button" class="px-6 py-2.5 bg-white border border-g-border rounded-full text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
+                                    <button type="button" class="px-5 py-2.5 bg-white border border-g-border rounded-full text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
                                         Save Draft
                                     </button>
-                                    <button type="button" onclick="showFlashMessage()" class="px-6 py-2.5 bg-amber-500 text-white rounded-full text-sm font-medium hover:bg-amber-600 transition-colors shadow-g-sm flex items-center gap-2">
+                                    <button type="button" onclick="sendBroadcast()" id="sendBtn" class="px-6 py-2.5 bg-amber-500 text-white rounded-full text-sm font-medium hover:bg-amber-600 transition-colors shadow-g-sm flex items-center gap-2">
                                         <span class="material-icons-outlined text-lg">send</span>
-                                        Send Broadcast
+                                        <span id="sendBtnText">Send Now</span>
                                     </button>
                                 </div>
                             </div>
@@ -315,15 +488,49 @@ These features are now live! Log in and try them out on your favorite auctions.<
                     </div>
                 </div>
 
-                <!-- Recent Broadcasts -->
-                <div class="lg:col-span-1">
+                <!-- Right Column: Recent Broadcasts + Scheduled -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Scheduled Broadcasts -->
+                    <div class="bg-white rounded-2xl border border-g-border p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-gsans text-base font-medium text-g-text">Scheduled</h3>
+                            <span class="px-2 py-0.5 bg-g-blue-light text-g-blue text-xs font-semibold rounded-full">3</span>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-g-bg rounded-xl border border-g-border">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="material-icons-outlined text-g-blue text-sm">schedule_send</span>
+                                    <span class="text-xs font-medium text-g-blue">Sep 18, 2026 • 10:00 AM</span>
+                                </div>
+                                <p class="text-sm font-medium text-g-text truncate">Weekend Auction Event</p>
+                                <p class="text-xs text-g-text-secondary mt-1">All Users (100)</p>
+                            </div>
+                            <div class="p-3 bg-g-bg rounded-xl border border-g-border">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="material-icons-outlined text-g-blue text-sm">schedule_send</span>
+                                    <span class="text-xs font-medium text-g-blue">Sep 20, 2026 • 2:00 PM</span>
+                                </div>
+                                <p class="text-sm font-medium text-g-text truncate">New Car Collection Launch</p>
+                                <p class="text-xs text-g-text-secondary mt-1">Top Bidders (25)</p>
+                            </div>
+                            <div class="p-3 bg-g-bg rounded-xl border border-g-border">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="material-icons-outlined text-g-blue text-sm">schedule_send</span>
+                                    <span class="text-xs font-medium text-g-blue">Sep 25, 2026 • 9:00 AM</span>
+                                </div>
+                                <p class="text-sm font-medium text-g-text truncate">Monthly Platform Report</p>
+                                <p class="text-xs text-g-text-secondary mt-1">All Users (100)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Broadcasts -->
                     <div class="bg-white rounded-2xl border border-g-border p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="font-gsans text-base font-medium text-g-text">Recent Broadcasts</h3>
                             <a href="#" class="text-xs font-medium text-g-blue hover:underline">View all</a>
                         </div>
                         <div class="space-y-4">
-                            <!-- Broadcast 1 -->
                             <div class="pb-4 border-b border-g-border">
                                 <div class="flex items-start gap-3">
                                     <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -336,8 +543,6 @@ These features are now live! Log in and try them out on your favorite auctions.<
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Broadcast 2 -->
                             <div class="pb-4 border-b border-g-border">
                                 <div class="flex items-start gap-3">
                                     <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -350,8 +555,6 @@ These features are now live! Log in and try them out on your favorite auctions.<
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Broadcast 3 -->
                             <div class="pb-4 border-b border-g-border">
                                 <div class="flex items-start gap-3">
                                     <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -364,22 +567,6 @@ These features are now live! Log in and try them out on your favorite auctions.<
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Broadcast 4 -->
-                            <div class="pb-4 border-b border-g-border">
-                                <div class="flex items-start gap-3">
-                                    <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <span class="material-icons-outlined text-g-green text-lg">check_circle</span>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-g-text truncate">Security Update Required</p>
-                                        <p class="text-xs text-g-text-secondary mt-1">Delivered to 100 users</p>
-                                        <p class="text-xs text-g-text-secondary mt-1">5 days ago</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Broadcast 5 -->
                             <div>
                                 <div class="flex items-start gap-3">
                                     <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -402,13 +589,137 @@ These features are now live! Log in and try them out on your favorite auctions.<
     </div>
 
     <script>
+        // Set default date/time for schedule picker
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
+        document.getElementById('scheduleDate').value = now.toISOString().split('T')[0];
+        document.getElementById('scheduleTime').value = now.toTimeString().slice(0, 5);
+
         function togglePreview() {
-            const preview = document.getElementById('previewCard');
-            preview.classList.toggle('hidden');
+            document.getElementById('previewCard').classList.toggle('hidden');
+            updatePreview();
         }
 
-        function showFlashMessage() {
+        function updatePreview() {
+            document.getElementById('previewSubject').textContent = document.getElementById('subjectInput').value || 'Untitled';
+            document.getElementById('previewMessage').textContent = document.getElementById('messageInput').value || 'No message';
+        }
+
+        function updatePreviewType() {
+            const type = document.getElementById('msgType').value;
+            const badge = document.getElementById('previewBadge');
+            const labels = { announcement: 'Announcement', alert: 'Alert', update: 'Update', new_feature: 'New Feature' };
+            badge.textContent = labels[type] || 'Announcement';
+        }
+
+        function updateCharCount() {
+            const len = document.getElementById('messageInput').value.length;
+            document.getElementById('charCount').textContent = len + ' / 1000 characters';
+        }
+
+        function addLinkField() {
+            const container = document.getElementById('linksContainer');
+            if (container.children.length >= 3) return;
+            const div = document.createElement('div');
+            div.className = 'flex gap-2';
+            div.innerHTML = `
+                <input type="url" placeholder="https://example.com/page" 
+                       class="flex-1 px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all">
+                <input type="text" placeholder="Link label (optional)" 
+                       class="w-40 px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white transition-all">
+                <button type="button" onclick="this.parentElement.remove()" class="p-2.5 text-g-red hover:bg-red-50 rounded-lg transition-colors">
+                    <span class="material-icons-outlined text-lg">close</span>
+                </button>`;
+            container.appendChild(div);
+        }
+
+        // Audience selection
+        let currentAudience = 'all';
+        function setAudience(type) {
+            currentAudience = type;
+            ['all', 'active', 'bidders', 'custom'].forEach(a => {
+                const btn = document.getElementById('audience' + a.charAt(0).toUpperCase() + a.slice(1));
+                if (a === type) {
+                    btn.className = 'px-3 py-1.5 bg-g-blue text-white text-xs font-medium rounded-full transition-colors';
+                } else {
+                    btn.className = 'px-3 py-1.5 bg-g-bg border border-g-border text-g-text text-xs font-medium rounded-full hover:bg-g-hover transition-colors';
+                }
+            });
+
+            const searchBox = document.getElementById('userSearchBox');
+            const info = document.getElementById('recipientInfo');
+            
+            if (type === 'custom') {
+                searchBox.classList.remove('hidden');
+                info.innerHTML = '<span class="material-icons-outlined text-lg">people</span><span>Sending to <strong class="text-g-text" id="customCount">0</strong> selected users</span>';
+            } else {
+                searchBox.classList.add('hidden');
+                const counts = { all: 'all 100', active: '87 active', bidders: '25 top bidder' };
+                info.innerHTML = '<span class="material-icons-outlined text-lg">people</span><span>Sending to <strong class="text-g-text">' + counts[type] + '</strong> users</span>';
+            }
+        }
+
+        function filterUsers() {
+            const query = document.getElementById('userSearchInput').value.toLowerCase();
+            const labels = document.querySelectorAll('#userList label');
+            labels.forEach(label => {
+                const text = label.textContent.toLowerCase();
+                label.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function updateSelectedCount() {
+            const checked = document.querySelectorAll('#userList input[type="checkbox"]:checked').length;
+            document.getElementById('selectedCount').textContent = checked + ' user' + (checked !== 1 ? 's' : '') + ' selected';
+            const customCount = document.getElementById('customCount');
+            if (customCount) customCount.textContent = checked;
+        }
+
+        function selectAllUsers() {
+            const checkboxes = document.querySelectorAll('#userList input[type="checkbox"]');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => {
+                if (cb.parentElement.style.display !== 'none') cb.checked = !allChecked;
+            });
+            updateSelectedCount();
+        }
+
+        // Schedule selection
+        function setSchedule(type) {
+            const nowBtn = document.getElementById('scheduleNow');
+            const laterBtn = document.getElementById('scheduleLater');
+            const picker = document.getElementById('schedulePicker');
+            const sendBtnText = document.getElementById('sendBtnText');
+            const sendBtn = document.getElementById('sendBtn');
+
+            if (type === 'now') {
+                nowBtn.className = 'px-3 py-1.5 bg-g-blue text-white text-xs font-medium rounded-full transition-colors flex items-center gap-1.5';
+                laterBtn.className = 'px-3 py-1.5 bg-g-bg border border-g-border text-g-text text-xs font-medium rounded-full hover:bg-g-hover transition-colors flex items-center gap-1.5';
+                picker.classList.add('hidden');
+                sendBtnText.textContent = 'Send Now';
+                sendBtn.className = 'px-6 py-2.5 bg-amber-500 text-white rounded-full text-sm font-medium hover:bg-amber-600 transition-colors shadow-g-sm flex items-center gap-2';
+            } else {
+                laterBtn.className = 'px-3 py-1.5 bg-g-blue text-white text-xs font-medium rounded-full transition-colors flex items-center gap-1.5';
+                nowBtn.className = 'px-3 py-1.5 bg-g-bg border border-g-border text-g-text text-xs font-medium rounded-full hover:bg-g-hover transition-colors flex items-center gap-1.5';
+                picker.classList.remove('hidden');
+                sendBtnText.textContent = 'Schedule Broadcast';
+                sendBtn.className = 'px-6 py-2.5 bg-g-blue text-white rounded-full text-sm font-medium hover:bg-g-blue-hover transition-colors shadow-g-sm flex items-center gap-2';
+            }
+        }
+
+        function sendBroadcast() {
+            const isScheduled = !document.getElementById('schedulePicker').classList.contains('hidden');
             const flash = document.getElementById('flashMessage');
+            const flashText = document.getElementById('flashText');
+            
+            if (isScheduled) {
+                const date = document.getElementById('scheduleDate').value;
+                const time = document.getElementById('scheduleTime').value;
+                flashText.textContent = 'Broadcast scheduled for ' + date + ' at ' + time + '.';
+            } else {
+                flashText.textContent = 'Announcement delivered successfully!';
+            }
+            
             flash.classList.remove('hidden');
             setTimeout(() => {
                 flash.style.transition = 'opacity 0.3s ease';
