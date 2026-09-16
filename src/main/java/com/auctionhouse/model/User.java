@@ -38,6 +38,9 @@ public class User {
     @Column(nullable = false)
     private String role = "ROLE_USER";
 
+    @Column(nullable = false)
+    private boolean active = true;
+
     @OneToMany(mappedBy = "bidder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Bid> bids = new ArrayList<>();
 
@@ -80,6 +83,9 @@ public class User {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 
     public List<Bid> getBids() { return bids; }
     public void setBids(List<Bid> bids) { this.bids = bids; }

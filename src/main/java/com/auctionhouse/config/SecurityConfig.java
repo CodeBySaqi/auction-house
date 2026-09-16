@@ -52,7 +52,8 @@ public class SecurityConfig {
                 .antMatchers("/", "/home", "/register", "/login", "/css/**", "/js/**", "/images/**",
                         "/uploads/**", "/h2-console/**", "/auctions", "/auctions/detail/**",
                         "/auctions/search", "/api/auctions/**").permitAll()
-                .antMatchers("/admin/**").hasRole("ADMIN")
+                .antMatchers("/super-admin/**").hasRole("SUPER_ADMIN")
+                .antMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .anyRequest().authenticated()
             .and()
             .formLogin()

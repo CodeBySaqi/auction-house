@@ -36,6 +36,11 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
+        // Block deactivated users from logging in
+        if (!user.isActive()) {
+            throw new UsernameNotFoundException("This account has been deactivated. Contact an administrator.");
+        }
+
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),

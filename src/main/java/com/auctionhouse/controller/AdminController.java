@@ -465,6 +465,11 @@ public class AdminController {
                 ra.addFlashAttribute("errorMessage", "Email \"" + email + "\" is already registered.");
                 return "redirect:/admin/users";
             }
+            // SECURITY: ADMIN cannot create SUPER_ADMIN accounts
+            if ("ROLE_SUPER_ADMIN".equals(role)) {
+                ra.addFlashAttribute("errorMessage", "Only Super Admins can create SUPER_ADMIN accounts.");
+                return "redirect:/admin/users";
+            }
             User u = new User();
             u.setUsername(username);
             u.setEmail(email);
@@ -488,6 +493,16 @@ public class AdminController {
                 ra.addFlashAttribute("errorMessage", "You cannot change your own role.");
                 return "redirect:/admin/users";
             }
+            // SECURITY: ADMIN cannot assign SUPER_ADMIN role
+            if ("ROLE_SUPER_ADMIN".equals(role)) {
+                ra.addFlashAttribute("errorMessage", "Only Super Admins can assign the SUPER_ADMIN role.");
+                return "redirect:/admin/users";
+            }
+            // SECURITY: ADMIN cannot modify SUPER_ADMIN accounts
+            if ("ROLE_SUPER_ADMIN".equals(user.getRole())) {
+                ra.addFlashAttribute("errorMessage", "Cannot modify a Super Admin account.");
+                return "redirect:/admin/users";
+            }
             String oldRole = user.getRole().replace("ROLE_", "");
             user.setRole(role);
             userService.updateProfile(user);
@@ -502,6 +517,11 @@ public class AdminController {
     public String toggleUserStatus(@PathVariable Long id, RedirectAttributes ra) {
         try {
             User user = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
+            // SECURITY: Cannot ban SUPER_ADMIN accounts
+            if ("ROLE_SUPER_ADMIN".equals(user.getRole())) {
+                ra.addFlashAttribute("errorMessage", "Cannot ban a Super Admin account.");
+                return "redirect:/admin/users";
+            }
             if ("ROLE_ADMIN".equals(user.getRole())) {
                 ra.addFlashAttribute("errorMessage", "Administrators cannot be banned.");
                 return "redirect:/admin/users";
@@ -566,6 +586,8 @@ public class AdminController {
                 if (!opt.isPresent()) continue;
                 User u = opt.get();
                 if (u.getUsername().equals(principal.getName())) continue;
+                // SECURITY: Cannot perform bulk actions on SUPER_ADMIN accounts
+                if ("ROLE_SUPER_ADMIN".equals(u.getRole())) continue;
                 switch (action) {
                     case "ban":
                         if (!"ROLE_ADMIN".equals(u.getRole())) { u.setRole("ROLE_BANNED"); userService.updateProfile(u); }

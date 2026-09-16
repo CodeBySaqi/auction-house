@@ -27,11 +27,21 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         
         String redirectUrl = "/dashboard"; // Default for regular users
         
-        // Check if user has ROLE_ADMIN
+        // Check if user has ROLE_SUPER_ADMIN (highest priority)
         for (GrantedAuthority authority : authorities) {
-            if (authority.getAuthority().equals("ROLE_ADMIN")) {
-                redirectUrl = "/admin/dashboard";
+            if (authority.getAuthority().equals("ROLE_SUPER_ADMIN")) {
+                redirectUrl = "/super-admin";
                 break;
+            }
+        }
+        
+        // Check if user has ROLE_ADMIN (only if not SUPER_ADMIN)
+        if (redirectUrl.equals("/dashboard")) {
+            for (GrantedAuthority authority : authorities) {
+                if (authority.getAuthority().equals("ROLE_ADMIN")) {
+                    redirectUrl = "/admin/dashboard";
+                    break;
+                }
             }
         }
         

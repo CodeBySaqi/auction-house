@@ -27,4 +27,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT COALESCE(SUM(u.walletBalance), 0) FROM User u")
     double sumWalletBalance();
+
+    /* ---------- Super Admin additions ---------- */
+
+    List<User> findByRole(String role);
+
+    List<User> findByRoleOrderByCreatedAtDesc(String role);
+
+    long countByActive(boolean active);
+
+    @Query("SELECT u FROM User u WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :q, '%')) " +
+           "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :q, '%')) ORDER BY u.createdAt DESC")
+    List<User> searchUsers(@org.springframework.data.repository.query.Param("q") String query);
 }

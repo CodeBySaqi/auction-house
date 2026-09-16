@@ -168,6 +168,12 @@
                                 <a href="/dashboard" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
                                     <span class="material-icons-outlined text-g-text-secondary text-xl">dashboard</span> Dashboard
                                 </a>
+                                <a href="/super-admin" sec:authorize="hasRole('SUPER_ADMIN')" class="flex items-center gap-3 px-4 py-2.5 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors">
+                                    <span class="material-icons-outlined text-purple-600 text-xl">shield</span> Super Admin Panel
+                                </a>
+                                <a href="/admin/console" sec:authorize="hasAnyRole('ADMIN', 'SUPER_ADMIN')" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                    <span class="material-icons-outlined text-g-text-secondary text-xl">admin_panel_settings</span> Admin Console
+                                </a>
                                 <a href="/my-bids" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
                                     <span class="material-icons-outlined text-g-text-secondary text-xl">payments</span> My Bids
                                 </a>
