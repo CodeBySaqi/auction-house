@@ -29,9 +29,6 @@ public class Bid {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
-    @Column(name = "is_winning")
-    private boolean isWinning = true;
-
     public Bid() {
         this.timestamp = LocalDateTime.now();
     }
@@ -41,7 +38,6 @@ public class Bid {
         this.auction = auction;
         this.amount = amount;
         this.timestamp = LocalDateTime.now();
-        this.isWinning = true;
     }
 
     /**
@@ -84,7 +80,4 @@ public class Bid {
 
     public LocalDateTime getTimestamp() { return timestamp; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
-
-    public boolean isWinning() { return isWinning; }
-    public void setWinning(boolean winning) { isWinning = winning; }
 }

@@ -88,10 +88,10 @@ public class AdminController {
         model.addAttribute("totalAuctions", allAuctions.size());
         model.addAttribute("totalUsers", allUsers.size());
         
-        long activeUsers = allUsers.stream()
+        long newUsersLast24h = allUsers.stream()
                 .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().isAfter(now.minusHours(24)))
                 .count();
-        model.addAttribute("activeUsers", activeUsers);
+        model.addAttribute("newUsersLast24h", newUsersLast24h);
         
         int totalBids = allAuctions.stream().mapToInt(Auction::getBidCount).sum();
         model.addAttribute("totalBids", totalBids);

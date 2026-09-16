@@ -252,18 +252,18 @@
                     </div>
                 </div>
 
-                <!-- Active Users -->
+                <!-- New Users (Rolling 24h) -->
                 <div class="bg-white rounded-2xl border border-g-border p-5">
                     <div class="flex items-center gap-3 mb-3">
                         <div class="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center">
-                            <span class="material-icons-outlined text-g-green text-xl">people</span>
+                            <span class="material-icons-outlined text-g-green text-xl">person_add</span>
                         </div>
                     </div>
-                    <p class="font-gsans text-2xl font-medium text-g-text tabular-nums" th:text="${activeUsers}">87</p>
-                    <p class="text-xs text-g-text-secondary mt-1">Active users (24h)</p>
+                    <p class="font-gsans text-2xl font-medium text-g-text tabular-nums" th:text="${newUsersLast24h}">87</p>
+                    <p class="text-xs text-g-text-secondary mt-1">New users (last 24h)</p>
                     <div class="flex items-center gap-1 mt-2">
                         <span class="w-2 h-2 bg-g-green rounded-full pulse-dot"></span>
-                        <span class="text-xs font-medium text-g-green">Live</span>
+                        <span class="text-xs font-medium text-g-green">Rolling</span>
                     </div>
                 </div>
 
