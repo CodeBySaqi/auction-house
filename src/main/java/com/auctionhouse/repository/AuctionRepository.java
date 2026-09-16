@@ -5,12 +5,15 @@ import com.auctionhouse.model.AuctionCategory;
 import com.auctionhouse.model.AuctionStatus;
 import com.auctionhouse.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import javax.persistence.LockModeType;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AuctionRepository extends JpaRepository<Auction, Long> {
@@ -61,4 +64,12 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
     /** Find auctions by status, ordered by creation date (newest first). */
     List<Auction> findByStatusOrderByCreatedAtDesc(AuctionStatus status);
+
+    /**
+     * Find auction by ID with pessimistic write lock.
+     * Used when placing bids to prevent race conditions.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT a FROM Auction a WHERE a.id = :id")
+    Optional<Auction> findByIdForUpdate(@Param("id") Long id);
 }

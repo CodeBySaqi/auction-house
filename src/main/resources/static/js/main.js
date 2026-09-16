@@ -13,19 +13,47 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     });
 
-    // Bid form validation
+    // Bid form validation with double-click prevention
     const bidForm = document.getElementById('bidForm');
     if (bidForm) {
+        let isSubmitting = false;
+        
         bidForm.addEventListener('submit', function(e) {
+            // Prevent double-click submissions
+            if (isSubmitting) {
+                e.preventDefault();
+                return false;
+            }
+            
             const amountInput = bidForm.querySelector('input[name="amount"]');
+            const submitButton = bidForm.querySelector('button[type="submit"]');
             const minBid = parseFloat(amountInput.min);
-            const amount = parseFloat(amountInput.value);
+            let amount = parseFloat(amountInput.value);
 
-            if (isNaN(amount) || amount < minBid) {
+            // Validation: Must be a valid number
+            if (isNaN(amount)) {
+                e.preventDefault();
+                alert('Please enter a valid bid amount.');
+                return false;
+            }
+
+            // Validation: Must be positive
+            if (amount <= 0) {
+                e.preventDefault();
+                alert('Bid amount must be greater than zero.');
+                return false;
+            }
+
+            // Validation: Must meet minimum bid
+            if (amount < minBid) {
                 e.preventDefault();
                 alert('Please enter a bid of at least $' + minBid.toFixed(2));
                 return false;
             }
+
+            // Round to 2 decimal places to prevent floating point issues
+            amount = Math.round(amount * 100) / 100;
+            amountInput.value = amount;
 
             // Confirm bid
             const confirmed = confirm('Place a bid of $' + amount.toFixed(2) + '?');
@@ -33,6 +61,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.preventDefault();
                 return false;
             }
+
+            // Disable button to prevent double-clicks
+            isSubmitting = true;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="material-icons-outlined text-lg animate-spin">hourglass_empty</span> Placing Bid...';
+            
+            // Re-enable after 3 seconds in case of network issues
+            setTimeout(() => {
+                isSubmitting = false;
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<span class="material-icons-outlined text-lg">gavel</span> Place Bid';
+            }, 3000);
         });
     }
 

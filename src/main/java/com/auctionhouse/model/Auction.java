@@ -136,12 +136,14 @@ public abstract class Auction {
 
     /**
      * Get the minimum acceptable bid (current highest + minimum increment).
+     * Allows $1 minimum increment for user-friendly bidding.
      */
     public double getMinimumBid() {
         if (this.currentHighestBid == 0) {
             return this.startingPrice;
         }
-        double increment = Math.max(this.currentHighestBid * 0.01, 50.0);
+        // Allow minimum $1 increment for better user experience
+        double increment = Math.max(1.0, Math.ceil(this.currentHighestBid * 0.01));
         return this.currentHighestBid + increment;
     }
 

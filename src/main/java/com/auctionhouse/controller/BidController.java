@@ -1,9 +1,7 @@
 package com.auctionhouse.controller;
 
-import com.auctionhouse.model.Auction;
 import com.auctionhouse.model.Bid;
 import com.auctionhouse.model.User;
-import com.auctionhouse.service.AuctionService;
 import com.auctionhouse.service.BidService;
 import com.auctionhouse.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,19 +15,18 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * BidController - handles bid placement.
+ * Only authenticated users can place bids.
  */
 @Controller
 @RequestMapping("/bid")
 public class BidController {
 
     private final BidService bidService;
-    private final AuctionService auctionService;
     private final UserService userService;
 
     @Autowired
-    public BidController(BidService bidService, AuctionService auctionService, UserService userService) {
+    public BidController(BidService bidService, UserService userService) {
         this.bidService = bidService;
-        this.auctionService = auctionService;
         this.userService = userService;
     }
 
@@ -38,18 +35,20 @@ public class BidController {
                            @RequestParam double amount,
                            @AuthenticationPrincipal UserDetails userDetails,
                            RedirectAttributes redirectAttributes) {
+        // Validation: User must be authenticated
+        if (userDetails == null) {
+            redirectAttributes.addFlashAttribute("error", "You must be logged in to place a bid.");
+            return "redirect:/login";
+        }
+
         try {
             User bidder = userService.getCurrentUser(userDetails.getUsername());
-            Auction auction = auctionService.findById(auctionId)
-                    .orElseThrow(() -> new RuntimeException("Auction not found"));
-
-            Bid bid = bidService.placeBid(auction, bidder, amount);
-
-            // Also save the updated auction
-            auctionService.save(auction);
+            
+            // Place the bid (all validation happens in service layer)
+            Bid bid = bidService.placeBid(auctionId, bidder, amount);
 
             redirectAttributes.addFlashAttribute("success",
-                    String.format("Bid of $%,.2f placed successfully!", amount));
+                    String.format("Bid of $%,.2f placed successfully!", bid.getAmount()));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
