@@ -38,8 +38,6 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
     List<Auction> findTop6ByStatusOrderByEndTimeAsc(AuctionStatus status);
 
-    List<Auction> findTop12ByStatusOrderByEndTimeAsc(AuctionStatus status);
-
     List<Auction> findByCreatedByOrderByCreatedAtDesc(User createdBy);
 
     /* ---------- Admin console additions ---------- */

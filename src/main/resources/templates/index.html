@@ -141,7 +141,49 @@
     </div>
 </section>
 
-
+<!-- Categories -->
+<section class="py-16 bg-g-bg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="font-gsans text-2xl font-medium text-g-text mb-8">Browse by category</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <a href="/auctions?category=CARS" class="group bg-white rounded-2xl p-6 border border-g-border hover:border-g-blue hover:shadow-g-md transition-all text-center no-underline">
+                <div class="w-14 h-14 mx-auto mb-3 bg-blue-50 rounded-2xl flex items-center justify-center group-hover:bg-g-blue-light transition-colors">
+                    <span class="material-icons-outlined text-g-blue text-2xl">directions_car</span>
+                </div>
+                <h3 class="font-gsans font-medium text-g-text text-sm">Cars</h3>
+                <p class="text-xs text-g-text-secondary mt-1">Luxury & Classic</p>
+            </a>
+            <a href="/auctions?category=WATCHES" class="group bg-white rounded-2xl p-6 border border-g-border hover:border-g-blue hover:shadow-g-md transition-all text-center no-underline">
+                <div class="w-14 h-14 mx-auto mb-3 bg-amber-50 rounded-2xl flex items-center justify-center group-hover:bg-amber-100 transition-colors">
+                    <span class="material-icons-outlined text-amber-600 text-2xl">watch</span>
+                </div>
+                <h3 class="font-gsans font-medium text-g-text text-sm">Watches</h3>
+                <p class="text-xs text-g-text-secondary mt-1">Rolex, Patek & more</p>
+            </a>
+            <a href="/auctions?category=ART" class="group bg-white rounded-2xl p-6 border border-g-border hover:border-g-blue hover:shadow-g-md transition-all text-center no-underline">
+                <div class="w-14 h-14 mx-auto mb-3 bg-purple-50 rounded-2xl flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                    <span class="material-icons-outlined text-purple-600 text-2xl">palette</span>
+                </div>
+                <h3 class="font-gsans font-medium text-g-text text-sm">Fine Art</h3>
+                <p class="text-xs text-g-text-secondary mt-1">Paintings & Prints</p>
+            </a>
+            <a href="/auctions?category=JEWELRY" class="group bg-white rounded-2xl p-6 border border-g-border hover:border-g-blue hover:shadow-g-md transition-all text-center no-underline">
+                <div class="w-14 h-14 mx-auto mb-3 bg-rose-50 rounded-2xl flex items-center justify-center group-hover:bg-rose-100 transition-colors">
+                    <span class="material-icons-outlined text-rose-500 text-2xl">diamond</span>
+                </div>
+                <h3 class="font-gsans font-medium text-g-text text-sm">Jewelry</h3>
+                <p class="text-xs text-g-text-secondary mt-1">Diamonds & Gems</p>
+            </a>
+            <a href="/auctions?category=COLLECTIBLES" class="group bg-white rounded-2xl p-6 border border-g-border hover:border-g-blue hover:shadow-g-md transition-all text-center no-underline">
+                <div class="w-14 h-14 mx-auto mb-3 bg-emerald-50 rounded-2xl flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+                    <span class="material-icons-outlined text-emerald-600 text-2xl">museum</span>
+                </div>
+                <h3 class="font-gsans font-medium text-g-text text-sm">Collectibles</h3>
+                <p class="text-xs text-g-text-secondary mt-1">Rare & Unique</p>
+            </a>
+        </div>
+    </div>
+</section>
 
 <!-- Featured Auctions -->
 <section class="py-16 bg-white">
@@ -156,7 +198,7 @@
                 <span class="material-icons-outlined text-lg">arrow_forward</span>
             </a>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <a th:each="auction : ${featuredAuctions}" th:href="@{'/auctions/detail/' + ${auction.id}}" class="group bg-white rounded-2xl border border-g-border overflow-hidden hover:shadow-g-md hover:border-transparent transition-all no-underline">
                 <div class="relative h-52 overflow-hidden bg-gray-100">
                     <img th:src="${auction.imageUrl != null} ? @{${auction.imageUrl}} : @{/images/default-auction.png}" th:alt="${auction.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">

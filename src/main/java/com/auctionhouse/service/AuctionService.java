@@ -90,7 +90,7 @@ public class AuctionService {
      * Get featured auctions (top 6 ending soonest).
      */
     public List<Auction> getFeaturedAuctions() {
-        return auctionRepository.findTop12ByStatusOrderByEndTimeAsc(AuctionStatus.ACTIVE);
+        return auctionRepository.findTop6ByStatusOrderByEndTimeAsc(AuctionStatus.ACTIVE);
     }
 
     /**
