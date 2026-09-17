@@ -141,6 +141,9 @@
             <a th:href="@{/admin/bids}" th:classappend="${activePage == 'bids'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors">
                 <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'bids'} ? '' : 'text-g-text-secondary'">gavel</span> Bids
             </a>
+            <a th:href="@{/admin/support}" th:classappend="${activePage == 'support'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'support'} ? '' : 'text-g-text-secondary'">support_agent</span> Support
+            </a>
             <div class="px-3 py-1.5 mt-3"><span class="text-[10px] font-semibold uppercase tracking-wider text-g-text-secondary">Analytics</span></div>
             <a th:href="@{/admin/analytics}" th:classappend="${activePage == 'activity'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors">
                 <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'activity'} ? '' : 'text-g-text-secondary'">trending_up</span> Activity

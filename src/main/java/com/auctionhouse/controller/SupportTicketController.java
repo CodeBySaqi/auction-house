@@ -80,6 +80,7 @@ public class SupportTicketController {
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             redirectAttributes.addFlashAttribute("subject", subject);
+            redirectAttributes.addFlashAttribute("category", category);
             redirectAttributes.addFlashAttribute("message", message);
             return "redirect:/support/create";
         }

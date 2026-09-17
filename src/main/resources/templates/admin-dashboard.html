@@ -1236,13 +1236,13 @@
         if(!notifications||notifications.length===0){list.insertAdjacentHTML('beforeend','<div class="notif-item" style="padding:24px;text-align:center"><span class="material-icons-outlined" style="font-size:30px;color:var(--g-text-secondary)">notifications_none</span><p style="font-size:13px;color:var(--g-text-secondary);margin-top:8px">All caught up!</p></div>');return;}
         notifications.forEach(function(n){
             var isUnread=!n.read;
-            var iconBg=n.type==='WON'?'#dcfce7':(n.type==='OUTBID'?'#fee2e2':'#dbeafe');
-            var iconColor=n.type==='WON'?'#16a34a':(n.type==='OUTBID'?'#dc2626':'#2563eb');
-            var icon=n.type==='WON'?'emoji_events':(n.type==='OUTBID'?'trending_down':'campaign');
+            var iconBg=n.type==='WON'?'#dcfce7':(n.type==='OUTBID'?'#fee2e2':(n.type==='SUPPORT'?'#e0e7ff':'#dbeafe'));
+            var iconColor=n.type==='WON'?'#16a34a':(n.type==='OUTBID'?'#dc2626':(n.type==='SUPPORT'?'#4f46e5':'#2563eb'));
+            var icon=n.type==='WON'?'emoji_events':(n.type==='OUTBID'?'trending_down':(n.type==='SUPPORT'?'support_agent':'campaign'));
             var div=document.createElement('div');div.className='notif-item';
             div.style.cssText='padding:12px 16px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;border-bottom:1px solid var(--g-border)';
             if(isUnread)div.style.background='rgba(59,130,246,0.04)';
-            if(n.auctionId)div.onclick=function(){window.location='/auctions/detail/'+n.auctionId};
+            if(n.type==='SUPPORT'){div.onclick=function(){window.location='/support';}}else if(n.auctionId){div.onclick=function(){window.location='/auctions/detail/'+n.auctionId};}
             div.innerHTML='<div style="width:32px;height:32px;border-radius:50%;background:'+iconBg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="material-icons-outlined" style="font-size:16px;color:'+iconColor+'">'+icon+'</span></div>'
                 +'<div style="flex:1;min-width:0"><p style="font-size:12px;line-height:1.5;'+(isUnread?'font-weight:500;color:var(--g-text)':'color:var(--g-text-secondary)')+'">'+escapeH(n.message)+'</p><p style="font-size:10px;color:var(--g-text-secondary);margin-top:4px">'+n.timeAgo+'</p></div>'
                 +(isUnread?'<span style="width:8px;height:8px;background:var(--g-blue);border-radius:50%;flex-shrink:0;margin-top:6px"></span>':'');

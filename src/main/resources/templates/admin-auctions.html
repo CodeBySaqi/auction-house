@@ -379,13 +379,13 @@
             }
 
             notifications.forEach(function(n) {
-                var iconBg = n.type === 'WON' ? 'bg-green-100' : (n.type === 'OUTBID' ? 'bg-red-100' : (n.type === 'REFUND' ? 'bg-amber-100' : 'bg-blue-100'));
-                var iconColor = n.type === 'WON' ? 'text-g-green' : (n.type === 'OUTBID' ? 'text-g-red' : (n.type === 'REFUND' ? 'text-amber-600' : 'text-g-blue'));
-                var icon = n.type === 'WON' ? 'emoji_events' : (n.type === 'OUTBID' ? 'trending_down' : (n.type === 'REFUND' ? 'payments' : 'campaign'));
+                var iconBg = n.type === 'WON' ? 'bg-green-100' : (n.type === 'OUTBID' ? 'bg-red-100' : (n.type === 'REFUND' ? 'bg-amber-100' : (n.type === 'SUPPORT' ? 'bg-indigo-100' : 'bg-blue-100')));
+                var iconColor = n.type === 'WON' ? 'text-g-green' : (n.type === 'OUTBID' ? 'text-g-red' : (n.type === 'REFUND' ? 'text-amber-600' : (n.type === 'SUPPORT' ? 'text-indigo-600' : 'text-g-blue')));
+                var icon = n.type === 'WON' ? 'emoji_events' : (n.type === 'OUTBID' ? 'trending_down' : (n.type === 'REFUND' ? 'payments' : (n.type === 'SUPPORT' ? 'support_agent' : 'campaign')));
                 var isUnread = !n.read;
 
                 var html = '<div class="notif-item px-4 py-3 flex items-start gap-3 hover:bg-g-hover transition-colors cursor-pointer' + (isUnread ? ' bg-blue-50/40' : '') + '"' +
-                    (n.auctionId ? ' onclick="window.location=\'/auctions/detail/' + n.auctionId + '\'"' : '') + '>' +
+                    ((n.type === 'SUPPORT' ? ' onclick="window.location=\'/support\'"' : (n.auctionId ? ' onclick="window.location=\'/auctions/detail/' + n.auctionId + '\'"' : ''))) + '>' +
                     '<div class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center ' + iconBg + '">' +
                     '<span class="material-icons-outlined text-base ' + iconColor + '">' + icon + '</span></div>' +
                     '<div class="flex-1 min-w-0">' +
