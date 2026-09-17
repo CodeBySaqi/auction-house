@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Ticket ' + ${ticket.ticketNumber} + ' — AuctionHouse')}"></head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen flex flex-col">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full flex flex-col" style="max-height: calc(100vh - 80px);">
+    <!-- Back link + Header -->
+    <a href="/support" class="inline-flex items-center gap-1 text-sm text-g-text-secondary hover:text-g-blue transition-colors mb-4 no-underline">
+        <span class="material-icons-outlined text-lg">arrow_back</span>
+        My Tickets
+    </a>
+
+    <!-- Ticket Header -->
+    <div class="bg-white rounded-2xl border border-g-border p-5 mb-4 flex-shrink-0">
+        <div class="flex items-start justify-between gap-4">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                    <span class="text-xs font-mono text-g-text-secondary" th:text="${ticket.ticketNumber}">#10001</span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase" id="ticketStatus"
+                          th:classappend="${ticket.status.name() == 'OPEN'} ? 'bg-blue-100 text-blue-700' :
+                                          (${ticket.status.name() == 'IN_PROGRESS'} ? 'bg-amber-100 text-amber-700' :
+                                          (${ticket.status.name() == 'RESOLVED'} ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'))"
+                          th:text="${ticket.status.displayName}"
+                          th:data-status="${ticket.status.name()}">Status</span>
+                    <span class="px-2 py-0.5 bg-g-bg rounded-full text-[10px] font-medium text-g-text-secondary" th:text="${ticket.category.displayName}">Category</span>
+                </div>
+                <h1 class="font-gsans font-medium text-g-text text-lg" th:text="${ticket.subject}">Subject</h1>
+                <p class="text-xs text-g-text-secondary mt-1">Created <span th:text="${ticket.getCreatedFormatted()}">Jan 01, 2025</span></p>
+            </div>
+        </div>
+        <!-- Closed banner -->
+        <div th:if="${ticket.status.name() == 'CLOSED'}" class="mt-3 p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center gap-2">
+            <span class="material-icons-outlined text-gray-500 text-lg">lock</span>
+            <span class="text-xs text-gray-600">This ticket is closed. No further messages can be sent.</span>
+        </div>
+        <!-- Resolved info -->
+        <div th:if="${ticket.status.name() == 'RESOLVED'}" class="mt-3 p-3 bg-green-50 rounded-xl border border-green-200 flex items-center gap-2">
+            <span class="material-icons-outlined text-g-green text-lg">check_circle</span>
+            <span class="text-xs text-green-700">This ticket has been resolved. Reply if your issue persists to reopen it.</span>
+        </div>
+    </div>
+
+    <!-- Conversation Area -->
+    <div class="bg-white rounded-2xl border border-g-border flex-1 flex flex-col overflow-hidden" style="min-height: 300px;">
+        <!-- Messages -->
+        <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+            <div th:each="msg : ${messages}" class="flex" th:classappend="${msg.senderRole == 'ADMIN'} ? 'justify-start' : 'justify-end'"
+                 th:if="${isOwner ? true : true}">
+                <!-- Admin message (left) -->
+                <div th:if="${msg.senderRole == 'ADMIN'}" class="max-w-[80%]">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-6 h-6 rounded-full bg-g-blue flex items-center justify-center text-white text-[10px] font-medium">A</div>
+                        <span class="text-xs font-medium text-g-text" th:text="${msg.sender.username}">Admin</span>
+                        <span class="text-[10px] text-g-text-secondary" th:text="${msg.getFormattedDateTime()}">Time</span>
+                    </div>
+                    <div class="bg-g-bg border border-g-border rounded-2xl rounded-tl-sm px-4 py-3">
+                        <p class="text-sm text-g-text whitespace-pre-wrap" th:text="${msg.content}">Message</p>
+                    </div>
+                </div>
+                <!-- User message (right) -->
+                <div th:unless="${msg.senderRole == 'ADMIN'}" class="max-w-[80%]">
+                    <div class="flex items-center gap-2 mb-1 justify-end">
+                        <span class="text-[10px] text-g-text-secondary" th:text="${msg.getFormattedDateTime()}">Time</span>
+                        <span class="text-xs font-medium text-g-text" th:text="${msg.sender.username}">You</span>
+                        <div class="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-white text-[10px] font-medium"
+                             th:text="${#strings.substring(msg.sender.username, 0, 1).toUpperCase()}">U</div>
+                    </div>
+                    <div class="bg-g-blue text-white rounded-2xl rounded-tr-sm px-4 py-3">
+                        <p class="text-sm whitespace-pre-wrap" th:text="${msg.content}">Message</p>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${messages.isEmpty()}" class="text-center py-8">
+                <p class="text-sm text-g-text-secondary">No messages yet</p>
+            </div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="border-t border-g-border p-4 flex-shrink-0" id="messageInputArea"
+             th:if="${ticket.status.name() != 'CLOSED'}">
+            <form id="messageForm" th:action="@{'/support/' + ${ticket.id} + '/reply'}" method="post" class="flex gap-3">
+                <input type="text" name="content" id="messageInput" autocomplete="off" maxlength="2000"
+                       class="flex-1 px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
+                       placeholder="Type your message...">
+                <button type="submit" id="sendBtn"
+                        class="px-5 py-3 bg-g-blue text-white font-medium rounded-xl hover:bg-g-blue-hover text-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span class="material-icons-outlined text-lg">send</span>
+                </button>
+            </form>
+        </div>
+        <div th:if="${ticket.status.name() == 'CLOSED'}" class="border-t border-g-border p-4 flex-shrink-0 text-center">
+            <p class="text-sm text-g-text-secondary">
+                <span class="material-icons-outlined text-base align-middle">lock</span>
+                This conversation is closed
+            </p>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+<!-- WebSocket: Real-time messaging -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script th:inline="javascript">
+(function() {
+    const ticketId = /*[[${ticket.id}]]*/ 0;
+    const currentUsername = /*[[${currentUser.username}]]*/ '';
+    const ticketStatus = /*[[${ticket.status.name()}]]*/ 'OPEN';
+
+    if (ticketStatus === 'CLOSED') return; // No WebSocket for closed tickets
+
+    const messagesContainer = document.getElementById('messagesContainer');
+    const messageForm = document.getElementById('messageForm');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    let stompClient = null;
+    let connected = false;
+
+    function connectWebSocket() {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null; // Disable debug logging
+
+        stompClient.connect({}, function() {
+            connected = true;
+
+            // Subscribe to ticket messages
+            stompClient.subscribe('/topic/ticket/' + ticketId, function(msg) {
+                const data = JSON.parse(msg.body);
+                appendMessage(data);
+            });
+
+            // Handle errors
+            stompClient.subscribe('/user/queue/errors', function(msg) {
+                const data = JSON.parse(msg.body);
+                alert('Error: ' + data.message);
+                sendBtn.disabled = false;
+            });
+        }, function() {
+            connected = false;
+            setTimeout(connectWebSocket, 3000); // Reconnect after 3s
+        });
+    }
+
+    function appendMessage(data) {
+        const isMine = data.senderUsername === currentUsername;
+        const isAdmin = !isMine; // If not mine, it's from admin (on user side)
+
+        const time = new Date(data.timestamp);
+        const timeStr = time.toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true });
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex ' + (isMine ? 'justify-end' : 'justify-start');
+
+        if (isMine) {
+            wrapper.innerHTML = '<div class="max-w-[80%]">'
+                + '<div class="flex items-center gap-2 mb-1 justify-end">'
+                + '<span class="text-[10px] text-g-text-secondary">' + timeStr + '</span>'
+                + '<span class="text-xs font-medium text-g-text">' + escapeHtml(data.senderUsername) + '</span>'
+                + '<div class="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-white text-[10px] font-medium">' + escapeHtml(data.senderUsername.charAt(0).toUpperCase()) + '</div>'
+                + '</div>'
+                + '<div class="bg-g-blue text-white rounded-2xl rounded-tr-sm px-4 py-3">'
+                + '<p class="text-sm whitespace-pre-wrap">' + escapeHtml(data.content) + '</p>'
+                + '</div></div>';
+        } else {
+            wrapper.innerHTML = '<div class="max-w-[80%]">'
+                + '<div class="flex items-center gap-2 mb-1">'
+                + '<div class="w-6 h-6 rounded-full bg-g-blue flex items-center justify-center text-white text-[10px] font-medium">A</div>'
+                + '<span class="text-xs font-medium text-g-text">' + escapeHtml(data.senderUsername) + '</span>'
+                + '<span class="text-[10px] text-g-text-secondary">' + timeStr + '</span>'
+                + '</div>'
+                + '<div class="bg-g-bg border border-g-border rounded-2xl rounded-tl-sm px-4 py-3">'
+                + '<p class="text-sm text-g-text whitespace-pre-wrap">' + escapeHtml(data.content) + '</p>'
+                + '</div></div>';
+        }
+
+        messagesContainer.appendChild(wrapper);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function sendMessage(content) {
+        if (!connected || !stompClient) {
+            // Fallback to form submission
+            messageForm.submit();
+            return;
+        }
+
+        stompClient.send('/app/ticket.send', {}, JSON.stringify({
+            ticketId: ticketId,
+            content: content
+        }));
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Form submission
+    if (messageForm) {
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const content = messageInput.value.trim();
+            if (!content) return;
+
+            sendBtn.disabled = true;
+            messageInput.value = '';
+
+            sendMessage(content);
+
+            setTimeout(function() { sendBtn.disabled = false; }, 1000);
+        });
+    }
+
+    // Enter to send
+    if (messageInput) {
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                messageForm.dispatchEvent(new Event('submit'));
+            }
+        });
+    }
+
+    // Scroll to bottom on load
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    // Connect WebSocket
+    connectWebSocket();
+})();
+</script>
+</body>
+</html>

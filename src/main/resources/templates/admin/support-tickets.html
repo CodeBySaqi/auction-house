@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Tickets - AuctionHouse Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script th:replace="~{fragments/layout :: tailwindConfig}"></script>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-g-bg font-roboto text-g-text h-screen overflow-hidden flex flex-col">
+
+    <!-- App Bar -->
+    <nav class="bg-white border-b border-g-border sticky top-0 z-40">
+        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-g-blue rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-white text-xl">gavel</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-gsans font-medium text-xl text-g-text">Auction<span class="text-g-blue">House</span></span>
+                        <span class="px-2.5 py-1 bg-g-text text-white text-[10px] font-bold uppercase tracking-wider rounded-md">Admin</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a th:href="@{/}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined">home</span>
+                    </a>
+                    <div class="relative">
+                        <button onclick="document.getElementById('adminProfileMenu').classList.toggle('hidden')" class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm">A</button>
+                        <div id="adminProfileMenu" class="hidden absolute right-0 top-12 w-56 bg-white border border-g-border rounded-2xl shadow-g-lg z-50 py-2">
+                            <div class="px-4 py-3 border-b border-g-border mb-1">
+                                <p class="text-sm font-medium text-g-text" th:text="${admin.username}">Admin</p>
+                            </div>
+                            <a th:href="@{/}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                <span class="material-icons-outlined text-lg text-g-text-secondary">home</span> View Site
+                            </a>
+                            <form th:action="@{/logout}" method="post" class="m-0">
+                                <button type="submit" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-red hover:bg-red-50 transition-colors w-full">
+                                    <span class="material-icons-outlined text-lg">logout</span> Logout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div class="max-w-[1680px] mx-auto flex flex-1 overflow-hidden w-full">
+        <aside th:replace="~{fragments/admin-sidebar :: sidebar('support')}"></aside>
+        <div th:replace="~{fragments/admin-sidebar :: mobile-nav('support')}"></div>
+
+        <!-- Main Content -->
+        <main class="flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+
+            <!-- Header -->
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">Support Tickets</h1>
+                    <p class="text-sm text-g-text-secondary mt-1"><span th:text="${totalTickets}">0</span> total tickets · <span th:text="${openCount}">0</span> open</p>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white rounded-2xl border border-g-border p-4 mb-6 flex flex-wrap items-center gap-3">
+                <!-- Search -->
+                <form th:action="@{/admin/support}" method="get" class="flex-1 min-w-[200px]">
+                    <div class="relative">
+                        <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">search</span>
+                        <input type="text" name="search" th:value="${currentSearch}" placeholder="Search by ticket #, user, subject..."
+                               class="w-full pl-10 pr-4 py-2.5 bg-g-bg border border-g-border rounded-full text-sm placeholder-g-text-secondary focus:outline-none focus:border-g-blue transition-all">
+                    </div>
+                    <input type="hidden" name="status" th:value="${currentStatus}">
+                </form>
+                <!-- Status Filter -->
+                <div class="flex items-center gap-1 flex-wrap">
+                    <a th:href="@{/admin/support(search=${currentSearch})}"
+                       th:classappend="${currentStatus == ''} ? 'bg-g-blue text-white' : 'bg-g-bg text-g-text hover:bg-g-hover'"
+                       class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors no-underline">All</a>
+                    <a th:each="s : ${statuses}" th:href="@{/admin/support(status=${s.name()}, search=${currentSearch})}"
+                       th:classappend="${currentStatus == s.name()} ? 'bg-g-blue text-white' : 'bg-g-bg text-g-text hover:bg-g-hover'"
+                       class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors no-underline" th:text="${s.displayName}">Status</a>
+                </div>
+            </div>
+
+            <!-- Ticket List -->
+            <div class="bg-white rounded-2xl border border-g-border overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-g-bg border-b border-g-border">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Ticket</th>
+                                <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">User</th>
+                                <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Category</th>
+                                <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Status</th>
+                                <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Last Activity</th>
+                                <th class="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-g-border">
+                            <tr th:each="ticket : ${tickets}" class="hover:bg-g-bg/50 transition-colors">
+                                <td class="px-4 py-4">
+                                    <p class="text-xs font-mono text-g-text-secondary" th:text="${ticket.ticketNumber}">#10001</p>
+                                    <p class="text-sm font-medium text-g-text truncate max-w-[200px]" th:text="${ticket.subject}">Subject</p>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <p class="text-sm text-g-text" th:text="${ticket.user.username}">User</p>
+                                    <p class="text-xs text-g-text-secondary" th:text="${ticket.user.email}">email</p>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <span class="px-2.5 py-1 bg-g-bg rounded-full text-xs font-medium text-g-text-secondary" th:text="${ticket.category.displayName}">Cat</span>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase"
+                                          th:classappend="${ticket.status.name() == 'OPEN'} ? 'bg-blue-100 text-blue-700' :
+                                                          (${ticket.status.name() == 'IN_PROGRESS'} ? 'bg-amber-100 text-amber-700' :
+                                                          (${ticket.status.name() == 'RESOLVED'} ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'))"
+                                          th:text="${ticket.status.displayName}">Status</span>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <span class="text-sm text-g-text" th:text="${ticket.getTimeAgo()}">2m ago</span>
+                                </td>
+                                <td class="px-4 py-4 text-right">
+                                    <a th:href="@{'/admin/support/' + ${ticket.id}}" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-g-blue bg-g-blue-light rounded-full hover:bg-blue-100 transition-colors no-underline">
+                                        Open <span class="material-icons-outlined text-sm">arrow_forward</span>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty state -->
+                <div th:if="${tickets.isEmpty()}" class="p-12 text-center">
+                    <span class="material-icons-outlined text-g-text-secondary text-4xl">inbox</span>
+                    <p class="text-sm text-g-text-secondary mt-2">No tickets found</p>
+                </div>
+
+                <!-- Pagination -->
+                <div class="px-6 py-4 border-t border-g-border flex items-center justify-between" th:if="${totalPages > 1}">
+                    <span class="text-sm text-g-text-secondary">Page <span th:text="${currentPage + 1}">1</span> of <span th:text="${totalPages}">5</span></span>
+                    <div class="flex gap-2">
+                        <a th:if="${currentPage > 0}" th:href="@{/admin/support(page=${currentPage - 1}, status=${currentStatus}, search=${currentSearch})}"
+                           class="px-3 py-1.5 text-sm font-medium text-g-text bg-white border border-g-border rounded-lg hover:bg-g-hover transition-colors no-underline">← Prev</a>
+                        <a th:if="${currentPage < totalPages - 1}" th:href="@{/admin/support(page=${currentPage + 1}, status=${currentStatus}, search=${currentSearch})}"
+                           class="px-3 py-1.5 text-sm font-medium text-g-text bg-white border border-g-border rounded-lg hover:bg-g-hover transition-colors no-underline">Next →</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('click', function(e) {
+            var menu = document.getElementById('adminProfileMenu');
+            if (!menu) return;
+            if (!e.target.closest('#adminProfileMenu') && !e.target.closest('button')) {
+                menu.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
