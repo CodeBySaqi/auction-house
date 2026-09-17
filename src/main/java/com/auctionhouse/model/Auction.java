@@ -115,7 +115,9 @@ public abstract class Auction {
         this.currentHighestBid = bid.getAmount();
         this.highestBidder = bid.getBidder();
         this.bidCount++;
-        this.bids.add(bid);
+        // NOTE: Do NOT add to this.bids collection here.
+        // The bid is saved separately via bidRepository.save() in BidService.
+        // Adding here would cause cascade PERSIST + explicit save = double entry.
         return true;
     }
 

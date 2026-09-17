@@ -142,7 +142,7 @@
                             </div>
                             <p class="text-xs text-g-text-secondary mt-1.5">Minimum: $<span th:text="${#numbers.formatDecimal(minimumBid, 1, 'COMMA', 2, 'POINT')}">0</span></p>
                         </div>
-                        <button type="submit" class="w-full py-4 bg-g-blue text-white font-medium rounded-xl hover:bg-g-blue-hover shadow-g-sm hover:shadow-g-md transition-all flex items-center justify-center gap-2 text-sm">
+                        <button type="submit" id="placeBidBtn" class="w-full py-4 bg-g-blue text-white font-medium rounded-xl hover:bg-g-blue-hover shadow-g-sm hover:shadow-g-md transition-all flex items-center justify-center gap-2 text-sm">
                             <span class="material-icons-outlined text-lg">gavel</span>
                             Place Bid
                         </button>
@@ -178,7 +178,7 @@
                         <p class="text-[10px] uppercase tracking-wider text-g-text-secondary font-medium">Bids</p>
                     </div>
                     <div>
-                        <p class="font-gsans font-medium text-lg text-g-text" th:text="'$' + ${#numbers.formatDecimal(auction.startingPrice / 1000, 1, 'COMMA', 0, 'POINT')} + 'k'">$0k</p>
+                        <p class="font-gsans font-medium text-lg text-g-text" th:text="'$' + ${#numbers.formatDecimal(auction.startingPrice, 1, 'COMMA', 0, 'POINT')}">$0</p>
                         <p class="text-[10px] uppercase tracking-wider text-g-text-secondary font-medium">Start</p>
                     </div>
                     <div>
@@ -196,21 +196,33 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Countdown timer
     const el = document.getElementById('countdown');
-    if (!el) return;
-    let s = parseInt(el.dataset.seconds) || 0;
-    function tick() {
-        if (s <= 0) { el.textContent = 'Ended'; el.classList.add('text-g-red'); return; }
-        const d = Math.floor(s/86400), h = Math.floor((s%86400)/3600), m = Math.floor((s%3600)/60), sec = s%60;
-        let t = '';
-        if (d > 0) t = d+'d '+h+'h '+m+'m';
-        else if (h > 0) t = h+'h '+m+'m '+sec+'s';
-        else t = m+'m '+sec+'s';
-        el.textContent = t;
-        if (s < 3600) el.classList.add('text-g-red');
-        s--;
+    if (el) {
+        let s = parseInt(el.dataset.seconds) || 0;
+        function tick() {
+            if (s <= 0) { el.textContent = 'Ended'; el.classList.add('text-g-red'); return; }
+            const d = Math.floor(s/86400), h = Math.floor((s%86400)/3600), m = Math.floor((s%3600)/60), sec = s%60;
+            let t = '';
+            if (d > 0) t = d+'d '+h+'h '+m+'m';
+            else if (h > 0) t = h+'h '+m+'m '+sec+'s';
+            else t = m+'m '+sec+'s';
+            el.textContent = t;
+            if (s < 3600) el.classList.add('text-g-red');
+            s--;
+        }
+        tick(); setInterval(tick, 1000);
     }
-    tick(); setInterval(tick, 1000);
+
+    // Prevent double-submit on bid form
+    var bidForm = document.getElementById('bidForm');
+    var bidBtn = document.getElementById('placeBidBtn');
+    if (bidForm && bidBtn) {
+        bidForm.addEventListener('submit', function() {
+            bidBtn.disabled = true;
+            bidBtn.innerHTML = '<span class="material-icons-outlined text-lg animate-spin">hourglass_top</span> Placing bid...';
+        });
+    }
 });
 </script>
 </body>
