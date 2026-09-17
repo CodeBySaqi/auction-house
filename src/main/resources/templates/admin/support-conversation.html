@@ -46,10 +46,37 @@
                             <span class="material-icons-outlined text-sm">swap_horiz</span> Change Status
                         </button>
                         <div id="statusMenu" class="hidden absolute right-0 top-10 w-48 bg-white border border-g-border rounded-xl shadow-g-lg z-50 py-1">
-                            <form th:each="s : ${statuses}" th:action="@{'/admin/support/' + ${ticket.id} + '/status'}" method="post" class="m-0"
-                                  th:if="${s.name() != ticket.status.name()}">
-                                <input type="hidden" name="status" th:value="${s.name()}">
-                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-g-text hover:bg-g-hover transition-colors" th:text="${s.displayName}">Status</button>
+                            <!-- Only show valid transitions based on current status -->
+                            <!-- OPEN → IN_PROGRESS, CLOSED -->
+                            <form th:if="${ticket.status.name() == 'OPEN'}" th:action="@{'/admin/support/' + ${ticket.id} + '/status'}" method="post" class="m-0">
+                                <input type="hidden" name="status" value="IN_PROGRESS">
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-g-text hover:bg-g-hover transition-colors">In Progress</button>
+                            </form>
+                            <form th:if="${ticket.status.name() == 'OPEN'}" th:action="@{'/admin/support/' + ${ticket.id} + '/status'}" method="post" class="m-0">
+                                <input type="hidden" name="status" value="CLOSED">
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-g-text hover:bg-g-hover transition-colors">Close</button>
+                            </form>
+                            <!-- IN_PROGRESS → RESOLVED, CLOSED, OPEN -->
+                            <form th:if="${ticket.status.name() == 'IN_PROGRESS'}" th:action="@{'/admin/support/' + ${ticket.id} + '/status'}" method="post" class="m-0">
+                                <input type="hidden" name="status" value="RESOLVED">
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-g-text hover:bg-g-hover transition-colors">Resolve</button>
+                            </form>
+                            <form th:if="${ticket.status.name() == 'IN_PROGRESS'}" th:action="@{'/admin/support/' + ${ticket.id} + '/status'}" method="post" class="m-0">
+                                <input type="hidden" name="status" value="CLOSED">
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-g-text hover:bg-g-hover transition-colors">Close</button>
+                            </form>
+                            <form th:if="${ticket.status.name() == 'IN_PROGRESS'}" th:action="@{'/admin/support/' + ${ticket.id} + '/status'}" method="post" class="m-0">
+                                <input type="hidden" name="status" value="OPEN">
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-g-text hover:bg-g-hover transition-colors">Reopen</button>
+                            </form>
+                            <!-- RESOLVED → OPEN, CLOSED -->
+                            <form th:if="${ticket.status.name() == 'RESOLVED'}" th:action="@{'/admin/support/' + ${ticket.id} + '/status'}" method="post" class="m-0">
+                                <input type="hidden" name="status" value="OPEN">
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-g-text hover:bg-g-hover transition-colors">Reopen</button>
+                            </form>
+                            <form th:if="${ticket.status.name() == 'RESOLVED'}" th:action="@{'/admin/support/' + ${ticket.id} + '/status'}" method="post" class="m-0">
+                                <input type="hidden" name="status" value="CLOSED">
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-g-text hover:bg-g-hover transition-colors">Close</button>
                             </form>
                         </div>
                     </div>

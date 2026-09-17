@@ -20,6 +20,10 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     @Query("SELECT t FROM SupportTicket t WHERE t.user.id = :userId ORDER BY t.updatedAt DESC")
     List<SupportTicket> findByUserIdOrderByUpdatedAtDesc(@Param("userId") Long userId);
 
+    /** Fetches tickets with messages eagerly loaded to avoid LazyInitializationException in templates. */
+    @Query("SELECT DISTINCT t FROM SupportTicket t LEFT JOIN FETCH t.messages WHERE t.user.id = :userId ORDER BY t.updatedAt DESC")
+    List<SupportTicket> findByUserIdWithMessages(@Param("userId") Long userId);
+
     @Query("SELECT t FROM SupportTicket t WHERE t.user.id = :userId ORDER BY t.updatedAt DESC")
     Page<SupportTicket> findByUserId(@Param("userId") Long userId, Pageable pageable);
 

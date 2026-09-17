@@ -73,6 +73,7 @@ public class SupportTicket {
         this.updatedAt = LocalDateTime.now();
         this.status = TicketStatus.OPEN;
         this.priority = "MEDIUM";
+        this.ticketNumber = "PENDING"; // Placeholder, updated after ID generation
     }
 
     /**

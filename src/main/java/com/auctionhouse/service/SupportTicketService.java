@@ -175,10 +175,10 @@ public class SupportTicketService {
     }
 
     /**
-     * Get tickets for a user.
+     * Get tickets for a user (with messages eagerly loaded for template rendering).
      */
     public List<SupportTicket> getUserTickets(Long userId) {
-        return ticketRepository.findByUserIdOrderByUpdatedAtDesc(userId);
+        return ticketRepository.findByUserIdWithMessages(userId);
     }
 
     /**
@@ -266,9 +266,10 @@ public class SupportTicketService {
 
     /**
      * Count unread messages for a user across all their tickets.
+     * Uses eagerly loaded tickets to avoid LazyInitializationException.
      */
     public int countTotalUnread(Long userId) {
-        List<SupportTicket> tickets = ticketRepository.findByUserIdOrderByUpdatedAtDesc(userId);
+        List<SupportTicket> tickets = ticketRepository.findByUserIdWithMessages(userId);
         int total = 0;
         for (SupportTicket t : tickets) {
             total += t.getUnreadCountForUser(userId);

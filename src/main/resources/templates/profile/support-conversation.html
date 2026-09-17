@@ -46,8 +46,7 @@
     <div class="bg-white rounded-2xl border border-g-border flex-1 flex flex-col overflow-hidden" style="min-height: 300px;">
         <!-- Messages -->
         <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-            <div th:each="msg : ${messages}" class="flex" th:classappend="${msg.senderRole == 'ADMIN'} ? 'justify-start' : 'justify-end'"
-                 th:if="${isOwner ? true : true}">
+            <div th:each="msg : ${messages}" class="flex" th:classappend="${msg.senderRole == 'ADMIN'} ? 'justify-start' : 'justify-end'">
                 <!-- Admin message (left) -->
                 <div th:if="${msg.senderRole == 'ADMIN'}" class="max-w-[80%]">
                     <div class="flex items-center gap-2 mb-1">
