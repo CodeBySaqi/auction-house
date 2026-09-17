@@ -77,12 +77,12 @@
                     <div th:each="bid, stat : ${bids}" class="px-6 sm:px-8 py-4 flex items-center justify-between hover:bg-g-bg/50 transition-colors">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium text-white"
-                                 th:classappend="${stat.index == 0} ? 'bg-g-green' : 'bg-g-text-secondary/40'"
+                                 th:classappend="${auction.highestBidder != null and bid.bidder.id == auction.highestBidder.id and bid.amount == auction.currentHighestBid} ? 'bg-g-green' : 'bg-g-text-secondary/40'"
                                  th:text="${#strings.substring(bid.bidder.username, 0, 1).toUpperCase()}">U</div>
                             <div>
                                 <p class="text-sm font-medium text-g-text flex items-center gap-1.5">
                                     <span th:text="${bid.bidder.username}">User</span>
-                                    <span th:if="${stat.index == 0}" class="px-1.5 py-0.5 bg-green-50 rounded text-[10px] font-medium text-g-green uppercase">Highest</span>
+                                    <span th:if="${auction.highestBidder != null and bid.bidder.id == auction.highestBidder.id and bid.amount == auction.currentHighestBid}" class="px-1.5 py-0.5 bg-green-50 rounded text-[10px] font-medium text-g-green uppercase">Highest</span>
                                 </p>
                                 <p class="text-xs text-g-text-secondary" th:text="${bid.timeAgo}">Time</p>
                             </div>
@@ -129,7 +129,7 @@
                 </div>
 
                 <!-- Bid Form -->
-                <div th:if="${currentUser != null and auction.status.name() == 'ACTIVE'}">
+                <div th:if="${currentUser != null and auction.status.name() == 'ACTIVE' and !auction.isExpired()}">
                     <form th:action="@{/bid/place}" method="post" id="bidForm" class="space-y-4">
                         <input type="hidden" name="auctionId" th:value="${auction.id}">
                         <div>
@@ -150,7 +150,7 @@
                 </div>
 
                 <!-- Not logged in -->
-                <div th:if="${currentUser == null and auction.status.name() == 'ACTIVE'}" class="space-y-3">
+                <div th:if="${currentUser == null and auction.status.name() == 'ACTIVE' and !auction.isExpired()}" class="space-y-3">
                     <p class="text-sm text-g-text-secondary text-center mb-4">Sign in to place a bid</p>
                     <a href="/login" class="block w-full py-3.5 bg-g-blue text-white font-medium rounded-xl hover:bg-g-blue-hover text-center text-sm transition-colors">Sign in</a>
                     <a href="/register" class="block w-full py-3.5 bg-white text-g-text font-medium rounded-xl border border-g-border hover:bg-g-hover text-center text-sm transition-colors">Create account</a>

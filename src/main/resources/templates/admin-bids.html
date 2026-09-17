@@ -49,17 +49,36 @@
                 <div class="hidden md:flex flex-1 max-w-xl mx-8">
                     <div class="relative w-full">
                         <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-g-text-secondary">search</span>
-                        <input type="text" placeholder="Search bids..." 
+                        <input type="text" id="bidSearchInput" placeholder="Search by bidder, auction, or amount..." 
                                class="w-full pl-11 pr-4 py-2.5 bg-g-bg border border-g-border rounded-full text-sm placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white focus:shadow-g-sm transition-all">
                     </div>
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <!-- Dark Mode Toggle -->
-                    <a th:href="@{/notifications}" class="relative p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
-                        <span class="material-icons-outlined">notifications</span>
-                        <span th:if="${unreadCount > 0}" class="absolute top-1 right-1 w-4 h-4 bg-g-red rounded-full text-[10px] text-white font-bold flex items-center justify-center" th:text="${unreadCount}">3</span>
-                    </a>
+                    <!-- Notification Bell + Popover -->
+                    <div class="relative" id="notifBell">
+                        <button onclick="toggleNotifPopover()" class="relative p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                            <span class="material-icons-outlined">notifications</span>
+                            <span id="notifBadge" th:if="${unreadCount > 0}" class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-g-red rounded-full text-[10px] text-white font-medium flex items-center justify-center" th:text="${unreadCount}">0</span>
+                        </button>
+                        <div id="notifPopover" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-g-xl border border-g-border z-50 overflow-hidden">
+                            <div class="px-4 py-3 border-b border-g-border flex items-center justify-between">
+                                <h3 class="font-gsans font-medium text-sm text-g-text">Notifications</h3>
+                                <span id="notifUnreadLabel" class="text-[10px] font-semibold text-g-blue bg-g-blue-light px-2 py-0.5 rounded-full hidden">0 new</span>
+                            </div>
+                            <div id="notifList" class="max-h-80 overflow-y-auto divide-y divide-g-border scrollbar-hide">
+                                <div id="notifLoading" class="p-6 text-center">
+                                    <div class="w-6 h-6 border-2 border-g-blue border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                                    <p class="text-xs text-g-text-secondary">Loading...</p>
+                                </div>
+                            </div>
+                            <div class="border-t border-g-border px-4 py-2.5">
+                                <a href="/notifications" class="flex items-center justify-center gap-1.5 text-sm font-medium text-g-blue hover:text-g-blue-hover transition-colors py-1">
+                                    View all notifications <span class="material-icons-outlined text-base">arrow_forward</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                     <a th:href="@{/admin/settings}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
                         <span class="material-icons-outlined">settings</span>
                     </a>
@@ -172,8 +191,9 @@
                                 <th class="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-g-border">
-                            <tr th:each="bid, stat : ${recentBids}" class="hover:bg-g-bg/50 transition-colors" th:classappend="${bid['isWinning'] && bid['auction'].status.name() == 'CLOSED'} ? 'bg-green-50/30' : ''">
+                        <tbody class="divide-y divide-g-border" id="bidsTableBody">
+                            <tr th:each="bid, stat : ${recentBids}" class="bid-row hover:bg-g-bg/50 transition-colors" th:classappend="${bid['isWinning'] && bid['auction'].status.name() == 'CLOSED'} ? 'bg-green-50/30' : ''"
+                                th:data-bidder="${bid['bidder'].username}" th:data-auction="${bid['auction'].title}" th:data-amount="${bid['amount']}">
                                 <td class="px-4 py-4">
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium text-sm flex-shrink-0"
@@ -235,10 +255,24 @@
                     </table>
                 </div>
 
-                <!-- Pagination Info -->
+                <!-- Pagination -->
                 <div class="px-6 py-4 border-t border-g-border flex items-center justify-between">
                     <div class="text-sm text-g-text-secondary">
-                        Showing <span class="font-medium text-g-text" th:text="${recentBids.size()}">5</span> most recent bids
+                        Showing <span class="font-medium text-g-text" th:text="${recentBids.size()}">20</span> of 
+                        <span class="font-medium text-g-text" th:text="${totalBidCount}">100</span> bids
+                    </div>
+                    <div class="flex items-center gap-2" th:if="${totalPages > 1}">
+                        <a th:if="${currentPage > 0}" th:href="@{/admin/bids(page=${currentPage - 1})}" 
+                           class="px-3 py-1.5 text-sm font-medium text-g-text bg-white border border-g-border rounded-lg hover:bg-g-hover transition-colors">
+                            ← Prev
+                        </a>
+                        <span class="text-sm text-g-text-secondary">
+                            Page <span class="font-medium text-g-text" th:text="${currentPage + 1}">1</span> of <span th:text="${totalPages}">5</span>
+                        </span>
+                        <a th:if="${currentPage < totalPages - 1}" th:href="@{/admin/bids(page=${currentPage + 1})}" 
+                           class="px-3 py-1.5 text-sm font-medium text-g-text bg-white border border-g-border rounded-lg hover:bg-g-hover transition-colors">
+                            Next →
+                        </a>
                     </div>
                 </div>
             </div>
@@ -261,6 +295,64 @@
             if (!button && !dropdown.contains(event.target)) {
                 dropdown.classList.add('hidden');
             }
+        });
+
+        // BUG B3 FIX: Search functionality for bids table
+        const searchInput = document.getElementById('bidSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                const rows = document.querySelectorAll('.bid-row');
+                rows.forEach(function(row) {
+                    const bidder = (row.getAttribute('data-bidder') || '').toLowerCase();
+                    const auction = (row.getAttribute('data-auction') || '').toLowerCase();
+                    const amount = (row.getAttribute('data-amount') || '').toLowerCase();
+                    const match = !query || bidder.includes(query) || auction.includes(query) || amount.includes(query);
+                    row.style.display = match ? '' : 'none';
+                });
+            });
+        }
+
+        // ===== Notification Popover =====
+        let notifLoaded = false;
+        function toggleNotifPopover() {
+            var popover = document.getElementById('notifPopover');
+            var isOpen = !popover.classList.contains('hidden');
+            popover.classList.toggle('hidden');
+            if (!isOpen && !notifLoaded) fetchNotifData();
+        }
+        function fetchNotifData() {
+            var list = document.getElementById('notifList');
+            document.getElementById('notifLoading').style.display = 'block';
+            fetch('/api/notifications/recent').then(function(r){return r.json()}).then(function(data){
+                notifLoaded = true;
+                document.getElementById('notifLoading').style.display = 'none';
+                renderNotifs(data.notifications, data.unreadCount);
+                var badge = document.getElementById('notifBadge');
+                if(badge){badge.style.display=data.unreadCount>0?'flex':'none';badge.textContent=data.unreadCount>99?'99+':data.unreadCount;}
+                var label = document.getElementById('notifUnreadLabel');
+                if(label){if(data.unreadCount>0){label.textContent=data.unreadCount+' new';label.classList.remove('hidden');}else{label.classList.add('hidden');}}
+            }).catch(function(){document.getElementById('notifLoading').innerHTML='<p class="text-xs text-g-red">Failed to load</p>';});
+        }
+        function renderNotifs(notifications) {
+            var list = document.getElementById('notifList');
+            list.querySelectorAll('.notif-item').forEach(function(el){el.remove()});
+            if(!notifications||notifications.length===0){list.insertAdjacentHTML('beforeend','<div class="notif-item p-6 text-center"><span class="material-icons-outlined text-g-text-secondary text-3xl">notifications_none</span><p class="text-sm text-g-text-secondary mt-2">All caught up!</p></div>');return;}
+            notifications.forEach(function(n){
+                var isUnread=!n.read;
+                var iconBg=n.type==='WON'?'bg-green-100':(n.type==='OUTBID'?'bg-red-100':(n.type==='REFUND'?'bg-amber-100':'bg-blue-100'));
+                var iconColor=n.type==='WON'?'text-g-green':(n.type==='OUTBID'?'text-g-red':(n.type==='REFUND'?'text-amber-600':'text-g-blue'));
+                var icon=n.type==='WON'?'emoji_events':(n.type==='OUTBID'?'trending_down':(n.type==='REFUND'?'payments':'campaign'));
+                var d=document.createElement('div');d.className='notif-item px-4 py-3 flex items-start gap-3 hover:bg-g-hover transition-colors cursor-pointer'+(isUnread?' bg-blue-50/40':'');
+                if(n.auctionId)d.onclick=function(){window.location='/auctions/detail/'+n.auctionId};
+                var esc=function(t){var x=document.createElement('div');x.textContent=t;return x.innerHTML;};
+                d.innerHTML='<div class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center '+iconBg+'"><span class="material-icons-outlined text-base '+iconColor+'">'+icon+'</span></div><div class="flex-1 min-w-0"><p class="text-xs leading-relaxed line-clamp-2 '+(isUnread?'font-medium text-g-text':'text-g-text-secondary')+'">'+esc(n.message)+'</p><p class="text-[10px] text-g-text-secondary mt-1">'+n.timeAgo+'</p></div>'+(isUnread?'<span class="w-2 h-2 bg-g-blue rounded-full shrink-0 mt-1.5"></span>':'');
+                list.appendChild(d);
+            });
+        }
+        document.addEventListener('click',function(e){
+            var bell=document.getElementById('notifBell');var popover=document.getElementById('notifPopover');
+            if(bell&&popover&&!bell.contains(e.target))popover.classList.add('hidden');
         });
     </script>
 

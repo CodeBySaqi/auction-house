@@ -13,7 +13,7 @@ import java.util.Optional;
 @Repository
 public interface BidRepository extends JpaRepository<Bid, Long> {
 
-    List<Bid> findByAuctionIdOrderByAmountDesc(Long auctionId);
+    List<Bid> findByAuctionIdOrderByTimestampDesc(Long auctionId);
 
     List<Bid> findByBidderIdOrderByTimestampDesc(Long bidderId);
 

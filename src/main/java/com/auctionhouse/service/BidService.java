@@ -122,8 +122,8 @@ public class BidService {
         // DEDUCT full bid amount from current bidder's wallet
         double amountToDeduct = amount;
 
-        // Refresh bidder from database to get latest wallet balance
-        bidder = userRepository.findById(bidder.getId())
+        // Refresh bidder from database WITH PESSIMISTIC LOCK to prevent concurrent wallet corruption
+        bidder = userRepository.findByIdForUpdate(bidder.getId())
                 .orElseThrow(() -> new RuntimeException("Bidder not found"));
 
         // Validation: User must have enough balance for the deduction
@@ -179,10 +179,10 @@ public class BidService {
     }
 
     /**
-     * Get all bids for a specific auction, sorted by amount descending.
+     * Get all bids for a specific auction, sorted by timestamp descending (newest first).
      */
     public List<Bid> getBidsByAuction(Long auctionId) {
-        return bidRepository.findByAuctionIdOrderByAmountDesc(auctionId);
+        return bidRepository.findByAuctionIdOrderByTimestampDesc(auctionId);
     }
 
     /**

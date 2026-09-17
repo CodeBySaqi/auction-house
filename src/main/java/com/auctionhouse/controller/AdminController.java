@@ -960,7 +960,8 @@ public class AdminController {
     /* ==================== BIDS ==================== */
 
     @GetMapping("/bids")
-    public String manageBids(Model model, Principal principal) {
+    public String manageBids(Model model, Principal principal,
+                             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page) {
         User admin = requireAdmin(principal);
         model.addAttribute("admin", admin);
         addSidebarAttributes(model);
@@ -974,19 +975,52 @@ public class AdminController {
         List<Bid> recentBidsAll = bidRepository.findBidsSince(startOfDay);
         model.addAttribute("bidsToday", recentBidsAll.size());
         
-        // Calculate average bid amount
-        double avgBidAmount = allAuctions.stream()
-                .filter(a -> a.getCurrentHighestBid() > 0)
-                .mapToDouble(Auction::getCurrentHighestBid)
+        // BUG B2 FIX: Calculate average bid amount from ALL individual bids, not just highest per auction
+        List<Bid> allBidsList = bidRepository.findAll();
+        double avgBidAmount = allBidsList.stream()
+                .mapToDouble(Bid::getAmount)
                 .average()
                 .orElse(0.0);
         model.addAttribute("avgBidAmount", avgBidAmount);
         
-        // Average time between bids (simplified calculation)
-        model.addAttribute("avgTimeBetweenBids", "2m 15s");
+        // BUG B1 FIX: Calculate real average time between bids
+        String avgTimeStr = "N/A";
+        if (allBidsList.size() >= 2) {
+            // Sort by timestamp ascending for gap calculation
+            List<Bid> sortedBids = allBidsList.stream()
+                    .filter(b -> b.getTimestamp() != null)
+                    .sorted((a, b) -> a.getTimestamp().compareTo(b.getTimestamp()))
+                    .collect(java.util.stream.Collectors.toList());
+            
+            if (sortedBids.size() >= 2) {
+                long totalGapSeconds = 0;
+                int gapCount = 0;
+                for (int i = 1; i < sortedBids.size(); i++) {
+                    long gap = java.time.temporal.ChronoUnit.SECONDS.between(
+                            sortedBids.get(i - 1).getTimestamp(), sortedBids.get(i).getTimestamp());
+                    totalGapSeconds += gap;
+                    gapCount++;
+                }
+                if (gapCount > 0) {
+                    long avgSeconds = totalGapSeconds / gapCount;
+                    if (avgSeconds < 60) {
+                        avgTimeStr = avgSeconds + "s";
+                    } else if (avgSeconds < 3600) {
+                        avgTimeStr = (avgSeconds / 60) + "m " + (avgSeconds % 60) + "s";
+                    } else {
+                        avgTimeStr = (avgSeconds / 3600) + "h " + ((avgSeconds % 3600) / 60) + "m";
+                    }
+                }
+            }
+        }
+        model.addAttribute("avgTimeBetweenBids", avgTimeStr);
         
-        // Get recent bids with winning status
-        List<Bid> recentBidsRaw = bidRepository.findRecentBids(PageRequest.of(0, 50));
+        // BUG B4 FIX: Paginated recent bids (20 per page)
+        int pageSize = 20;
+        List<Bid> recentBidsRaw = bidRepository.findRecentBids(PageRequest.of(page, pageSize));
+        long totalBidCount = bidRepository.count();
+        int totalPages = (int) Math.ceil((double) totalBidCount / pageSize);
+        
         List<Map<String, Object>> recentBids = new ArrayList<>();
         
         for (Bid bid : recentBidsRaw) {
@@ -1006,6 +1040,9 @@ public class AdminController {
             recentBids.add(b);
         }
         model.addAttribute("recentBids", recentBids);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("totalBidCount", totalBidCount);
         
         model.addAttribute("totalUsers", userService.findAllUsers().size());
         model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));

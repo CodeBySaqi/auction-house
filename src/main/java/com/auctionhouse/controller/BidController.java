@@ -55,7 +55,7 @@ public class BidController {
             User bidder = userService.getCurrentUser(userDetails.getUsername());
 
             // Place the bid (additional validation happens in service layer)
-            Bid bid = bidService.placeBid(bidDTO.getAuctionId(), bidder, bidDTO.getAmount());
+            Bid bid = bidService.placeBid(bidDTO.getAuctionId(), bidder, bidDTO.getAmount().doubleValue());
 
             redirectAttributes.addFlashAttribute("success",
                     String.format("Bid of $%,.2f placed successfully!", bid.getAmount()));
