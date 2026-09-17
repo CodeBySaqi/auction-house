@@ -51,7 +51,7 @@ public abstract class Auction {
     @Column(name = "category", nullable = false)
     private AuctionCategory category;
 
-    @OneToMany(mappedBy = "auction", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "auction", fetch = FetchType.LAZY)
     @OrderBy("timestamp DESC")
     private List<Bid> bids = new ArrayList<>();
 

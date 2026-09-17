@@ -2,6 +2,7 @@ package com.auctionhouse.repository;
 
 import com.auctionhouse.model.Bid;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -28,6 +29,16 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
     void deleteByAuctionId(Long auctionId);
 
     long countByBidderId(Long bidderId);
+
+    /**
+     * Delete duplicate bids — keeps only the first (lowest ID) for each
+     * (auction_id, bidder_id, amount, timestamp) combination.
+     */
+    @Modifying
+    @Query(value = "DELETE FROM bids WHERE id NOT IN " +
+                   "(SELECT MIN(id) FROM bids GROUP BY auction_id, bidder_id, amount, timestamp)",
+           nativeQuery = true)
+    int deleteDuplicateBids();
 
     /* ---------- Admin console additions ---------- */
 

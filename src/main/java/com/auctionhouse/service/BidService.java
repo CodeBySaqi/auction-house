@@ -9,7 +9,11 @@ import com.auctionhouse.model.User;
 import com.auctionhouse.repository.AuctionRepository;
 import com.auctionhouse.repository.BidRepository;
 import com.auctionhouse.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +28,8 @@ import java.util.List;
  */
 @Service
 public class BidService {
+
+    private static final Logger log = LoggerFactory.getLogger(BidService.class);
 
     private final BidRepository bidRepository;
     private final UserRepository userRepository;
@@ -197,5 +203,22 @@ public class BidService {
      */
     public long getBidCount(Long auctionId) {
         return bidRepository.countByAuctionId(auctionId);
+    }
+
+    /**
+     * One-time cleanup on startup: remove any duplicate bid rows
+     * caused by the previous cascade double-persist bug.
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    @Transactional
+    public void cleanupDuplicateBids() {
+        try {
+            int deleted = bidRepository.deleteDuplicateBids();
+            if (deleted > 0) {
+                log.info("Cleaned up {} duplicate bid entries on startup", deleted);
+            }
+        } catch (Exception e) {
+            log.warn("Could not clean up duplicate bids: {}", e.getMessage());
+        }
     }
 }
