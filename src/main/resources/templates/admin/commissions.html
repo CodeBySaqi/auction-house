@@ -41,10 +41,6 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="toggleTheme()" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Toggle dark mode">
-                        <span class="material-icons-outlined dark:hidden">dark_mode</span>
-                        <span class="material-icons-outlined hidden dark:inline">light_mode</span>
-                    </button>
                     
                     <div class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm">A</div>
                 </div>
@@ -179,14 +175,6 @@
     </div>
 
     <script>
-        function toggleTheme() {
-            const html = document.documentElement;
-            html.classList.add('theme-transition');
-            html.classList.toggle('dark');
-            const isDark = html.classList.contains('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            setTimeout(() => html.classList.remove('theme-transition'), 350);
-        }
     </script>
 
 </body>

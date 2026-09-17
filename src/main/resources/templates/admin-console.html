@@ -106,10 +106,6 @@
                 <!-- Right Actions -->
                 <div class="flex items-center gap-2">
                     <!-- Dark Mode Toggle -->
-                    <button onclick="toggleTheme()" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Toggle dark mode">
-                        <span class="material-icons-outlined dark:hidden">dark_mode</span>
-                        <span class="material-icons-outlined hidden dark:inline">light_mode</span>
-                    </button>
                     <a th:href="@{/admin/notifications}" class="relative p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
                         <span class="material-icons-outlined">notifications</span>
                         <span th:if="${unreadCount > 0}" class="absolute top-1 right-1 w-4 h-4 bg-g-red rounded-full text-[10px] text-white font-bold flex items-center justify-center" th:text="${unreadCount}">3</span>
@@ -438,14 +434,6 @@
 
     <script>
         // Theme toggle function
-        function toggleTheme() {
-            const html = document.documentElement;
-            html.classList.add('theme-transition');
-            html.classList.toggle('dark');
-            const isDark = html.classList.contains('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            setTimeout(() => html.classList.remove('theme-transition'), 350);
-        }
 
         // Toggle profile dropdown
         function toggleProfileDropdown() {
