@@ -68,10 +68,14 @@ public class UserService implements UserDetailsService {
      */
     @Transactional
     public User register(UserRegistrationDTO dto) {
-        if (userRepository.existsByUsername(dto.getUsername())) {
+        // Trim whitespace from username and email before validation
+        String username = dto.getUsername().trim();
+        String email = dto.getEmail().trim();
+
+        if (userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username already taken");
         }
-        if (userRepository.existsByEmail(dto.getEmail())) {
+        if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email already registered");
         }
         if (!dto.getPassword().equals(dto.getConfirmPassword())) {
@@ -79,8 +83,8 @@ public class UserService implements UserDetailsService {
         }
 
         User user = new User();
-        user.setUsername(dto.getUsername());
-        user.setEmail(dto.getEmail());
+        user.setUsername(username);
+        user.setEmail(email);
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setWalletBalance(100000.0);
 

@@ -42,15 +42,21 @@
             <form th:action="@{/login}" method="post" class="space-y-5">
                 <div>
                     <label class="block text-sm font-medium text-g-text mb-1.5">Username</label>
-                    <input type="text" name="username" required autofocus
+                    <input type="text" name="username" required autofocus id="loginUsername"
+                           pattern="[a-zA-Z0-9_]+" maxlength="30" autocomplete="username"
                            class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
                            placeholder="Enter your username">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-g-text mb-1.5">Password</label>
-                    <input type="password" name="password" required
-                           class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
-                           placeholder="Enter your password">
+                    <div class="relative">
+                        <input type="password" name="password" required id="loginPassword"
+                               class="w-full px-4 py-3 pr-11 bg-white border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
+                               placeholder="Enter your password">
+                        <button type="button" onclick="toggleLoginPassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-g-text-secondary hover:text-g-text transition-colors p-1">
+                            <span class="material-icons-outlined text-xl" id="loginPwdIcon">visibility_off</span>
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" class="w-full py-3.5 bg-g-blue text-white font-medium rounded-xl hover:bg-g-blue-hover shadow-g-sm hover:shadow-g-md transition-all text-sm">
                     Sign in
@@ -75,5 +81,35 @@
 </div>
 
 <div th:replace="~{fragments/layout :: scripts}"></div>
+<script>
+    // Prevent spaces in username (real-time)
+    var loginUsername = document.getElementById('loginUsername');
+    if (loginUsername) {
+        loginUsername.addEventListener('keydown', function(e) {
+            if (e.key === ' ') e.preventDefault();
+        });
+        loginUsername.addEventListener('input', function() {
+            this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '');
+        });
+        loginUsername.addEventListener('paste', function(e) {
+            e.preventDefault();
+            var paste = (e.clipboardData || window.clipboardData).getData('text');
+            this.value += paste.replace(/[^a-zA-Z0-9_]/g, '');
+        });
+    }
+
+    // Toggle password visibility
+    function toggleLoginPassword() {
+        var input = document.getElementById('loginPassword');
+        var icon = document.getElementById('loginPwdIcon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.textContent = 'visibility';
+        } else {
+            input.type = 'password';
+            icon.textContent = 'visibility_off';
+        }
+    }
+</script>
 </body>
 </html>
