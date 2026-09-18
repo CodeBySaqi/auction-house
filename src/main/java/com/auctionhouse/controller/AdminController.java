@@ -733,6 +733,23 @@ public class AdminController {
                 .limit(6)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> x, LinkedHashMap::new)));
 
+        // Success rate: closed auctions with a winner / total closed auctions
+        long closedAuctions = allAuctions.stream().filter(a -> a.getStatus() == AuctionStatus.CLOSED).count();
+        long closedWithWinner = allAuctions.stream()
+                .filter(a -> a.getStatus() == AuctionStatus.CLOSED && a.getHighestBidder() != null)
+                .count();
+        int successRate = closedAuctions == 0 ? 0 : (int) Math.round(closedWithWinner * 100.0 / closedAuctions);
+        model.addAttribute("successRate", successRate);
+
+        // Avg duration: average days from creation to end for closed auctions
+        double avgDuration = allAuctions.stream()
+                .filter(a -> a.getStatus() == AuctionStatus.CLOSED
+                        && a.getCreatedAt() != null && a.getEndTime() != null)
+                .mapToLong(a -> java.time.temporal.ChronoUnit.HOURS.between(a.getCreatedAt(), a.getEndTime()))
+                .average()
+                .orElse(0.0) / 24.0;
+        model.addAttribute("avgDuration", String.format("%.1f", avgDuration));
+
         model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
         addCounts(model, allAuctions);
         addFormatters(model);

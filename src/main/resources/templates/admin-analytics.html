@@ -49,11 +49,11 @@
                 </div>
 
                 <div class="hidden md:flex flex-1 max-w-xl mx-8">
-                    <div class="relative w-full">
+                    <form th:action="@{/admin/auctions}" method="get" class="relative w-full">
                         <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-g-text-secondary">search</span>
-                        <input type="text" placeholder="Search..." 
+                        <input type="text" name="search" placeholder="Search auctions..." 
                                class="w-full pl-11 pr-4 py-2.5 bg-g-bg border border-g-border rounded-full text-sm placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white focus:shadow-g-sm transition-all">
-                    </div>
+                    </form>
                 </div>
 
                 <div class="flex items-center gap-2">
@@ -212,8 +212,10 @@
                 
                 <!-- Chart -->
                 <div class="flex items-end justify-between gap-3 h-64 mb-4">
-                    <div th:each="month : ${monthlyRevenue}" class="flex-1 flex flex-col items-center gap-2">
-                        <div class="w-full bg-g-blue rounded-t chart-bar" th:style="'height: ' + ${month.value > 0 ? (month.value / (maxRevenue > 0 ? maxRevenue : 1) * 100) : 5} + '%'"></div>
+                    <div th:each="month : ${monthlyRevenue}" class="flex-1 flex flex-col items-center gap-2 h-full">
+                        <div class="w-full flex-1 flex flex-col justify-end">
+                            <div class="w-full bg-g-blue rounded-t chart-bar" th:style="'height: ' + ${month.value > 0 ? (month.value / (maxRevenue > 0 ? maxRevenue : 1) * 100) : 0} + '%'" th:title="'$' + ${#numbers.formatDecimal(month.value, 1, 'COMMA', 0, 'POINT')}"></div>
+                        </div>
                         <div class="text-center">
                             <p class="text-xs font-medium text-g-text tabular-nums">$<span th:text="${#numbers.formatDecimal(month.value / 1000, 1, 'COMMA', 0, 'POINT')}">180</span>K</p>
                             <p class="text-[10px] text-g-text-secondary" th:text="${month.key}">Apr</p>
@@ -289,11 +291,11 @@
                     <div class="mt-6 pt-6 border-t border-g-border grid grid-cols-2 gap-4">
                         <div>
                             <p class="text-xs text-g-text-secondary mb-1">Success Rate</p>
-                            <p class="font-gsans text-xl font-medium text-g-green tabular-nums">84%</p>
+                            <p class="font-gsans text-xl font-medium text-g-green tabular-nums" th:text="${successRate} + '%'">84%</p>
                         </div>
                         <div>
                             <p class="text-xs text-g-text-secondary mb-1">Avg Duration</p>
-                            <p class="font-gsans text-xl font-medium text-g-text tabular-nums">5.2 days</p>
+                            <p class="font-gsans text-xl font-medium text-g-text tabular-nums"><span th:text="${avgDuration}">5.2</span> days</p>
                         </div>
                     </div>
                 </div>
