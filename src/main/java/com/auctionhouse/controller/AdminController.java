@@ -811,8 +811,11 @@ public class AdminController {
                                @RequestParam double defaultBalance,
                                @RequestParam int defaultDuration,
                                RedirectAttributes ra) {
-        // Values are validated and acknowledged here; wire them to a settings
-        // table or @ConfigurationProperties if you want them to persist.
+        // Pass submitted values back so the form reflects what was saved
+        ra.addFlashAttribute("savedSiteName", siteName);
+        ra.addFlashAttribute("savedAdminEmail", adminEmail);
+        ra.addFlashAttribute("savedDefaultBalance", defaultBalance);
+        ra.addFlashAttribute("savedDefaultDuration", defaultDuration);
         ra.addFlashAttribute("successMessage", "Settings saved. New accounts now start with $"
                 + String.format("%,.2f", defaultBalance) + " and run for " + defaultDuration + " minutes.");
         return "redirect:/admin/settings";

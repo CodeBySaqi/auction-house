@@ -57,11 +57,11 @@
                 </div>
 
                 <div class="hidden md:flex flex-1 max-w-xl mx-8">
-                    <div class="relative w-full">
+                    <form th:action="@{/admin/search}" method="get" class="relative w-full">
                         <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-g-text-secondary">search</span>
-                        <input type="text" placeholder="Search..." 
+                        <input type="text" name="q" placeholder="Search..." 
                                class="w-full pl-11 pr-4 py-2.5 bg-g-bg border border-g-border rounded-full text-sm placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:bg-white focus:shadow-g-sm transition-all">
-                    </div>
+                    </form>
                 </div>
 
                 <div class="flex items-center gap-2">
@@ -161,14 +161,14 @@
                         <!-- Site Name -->
                         <div>
                             <label class="block text-sm font-medium text-g-text mb-2">Site Name</label>
-                            <input type="text" name="siteName" value="AuctionHouse" 
+                            <input type="text" name="siteName" th:value="${savedSiteName ?: 'AuctionHouse'}" 
                                    class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all">
                         </div>
 
                         <!-- Admin Email -->
                         <div>
                             <label class="block text-sm font-medium text-g-text mb-2">Admin Email</label>
-                            <input type="email" name="adminEmail" value="admin@auctionhouse.com" 
+                            <input type="email" name="adminEmail" th:value="${savedAdminEmail ?: 'admin@auctionhouse.com'}" 
                                    class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all">
                         </div>
 
@@ -177,7 +177,7 @@
                             <label class="block text-sm font-medium text-g-text mb-2">Default Wallet Balance</label>
                             <div class="relative">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-g-text-secondary text-sm">$</span>
-                                <input type="number" name="defaultBalance" value="100000" 
+                                <input type="number" name="defaultBalance" th:value="${savedDefaultBalance ?: 100000}" 
                                        class="w-full pl-8 pr-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all tabular-nums">
                             </div>
                             <p class="text-xs text-g-text-secondary mt-1.5">Initial balance for new user accounts</p>
@@ -187,7 +187,7 @@
                         <div>
                             <label class="block text-sm font-medium text-g-text mb-2">Default Auction Duration</label>
                             <div class="relative">
-                                <input type="number" name="defaultDuration" value="4320" 
+                                <input type="number" name="defaultDuration" th:value="${savedDefaultDuration ?: 4320}" 
                                        class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-g-blue focus:bg-white transition-all tabular-nums">
                                 <span class="absolute right-4 top-1/2 -translate-y-1/2 text-g-text-secondary text-sm">minutes</span>
                             </div>
