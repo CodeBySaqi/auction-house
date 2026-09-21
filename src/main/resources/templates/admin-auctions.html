@@ -246,6 +246,9 @@
                                             <a th:href="@{'/auctions/detail/' + ${auction.id}}" class="p-2 rounded-lg text-g-text-secondary hover:bg-g-hover transition-colors" title="View">
                                                 <span class="material-icons-outlined text-lg">visibility</span>
                                             </a>
+                                            <a th:href="@{'/admin/auctions/edit/' + ${auction.id}}" class="p-2 rounded-lg text-g-text-secondary hover:bg-g-hover transition-colors" title="Edit">
+                                                <span class="material-icons-outlined text-lg">edit</span>
+                                            </a>
                                             <form th:if="${auction.status.name() == 'ACTIVE'}" th:action="@{'/admin/auctions/extend/' + ${auction.id}}" method="post" class="inline">
                                                 <button type="submit" class="p-2 rounded-lg text-g-text-secondary hover:bg-g-hover transition-colors" title="Extend">
                                                     <span class="material-icons-outlined text-lg">schedule</span>

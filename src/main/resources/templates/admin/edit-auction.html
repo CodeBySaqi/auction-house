@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Edit Auction — ' + ${auction.title}">Edit Auction</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script th:replace="~{fragments/layout :: tailwindConfig}"></script>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-g-bg font-roboto text-g-text h-screen overflow-hidden flex flex-col">
+
+    <!-- App Bar -->
+    <nav class="bg-white border-b border-g-border sticky top-0 z-40 flex-shrink-0">
+        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <a href="/admin/auctions" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined">arrow_back</span>
+                    </a>
+                    <div class="flex items-center gap-2">
+                        <span class="font-gsans font-medium text-lg text-g-text">Edit Auction <span class="text-g-blue" th:text="'#' + ${auction.id}">#1</span></span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a th:href="@{/}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined">home</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <div class="flex-1 overflow-y-auto">
+        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+            <!-- Flash messages -->
+            <div th:if="${error}" class="flex items-center gap-3 p-4 mb-6 bg-red-50 rounded-2xl border border-red-200">
+                <span class="material-icons-outlined text-g-red">error</span>
+                <span class="text-sm text-red-800" th:text="${error}">Error</span>
+            </div>
+
+            <div class="bg-white rounded-3xl border border-g-border p-6 sm:p-8">
+                <h1 class="font-gsans text-2xl font-medium text-g-text mb-6">Edit Auction</h1>
+
+                <form th:action="@{'/admin/auctions/edit/' + ${auction.id}}" method="post" enctype="multipart/form-data" class="space-y-6" id="editAuctionForm">
+
+                    <!-- Title -->
+                    <div>
+                        <label class="block text-sm font-medium text-g-text mb-1.5">Title</label>
+                        <input type="text" name="title" required maxlength="200" th:value="${auction.title}"
+                               class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-sm font-medium text-g-text mb-1.5">Description</label>
+                        <textarea name="description" required rows="4" maxlength="2000"
+                                  class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all resize-none"
+                                  th:text="${auction.description}"></textarea>
+                    </div>
+
+                    <!-- Category (read-only) + Price -->
+                    <div class="grid sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-medium text-g-text mb-1.5">Category</label>
+                            <input type="text" th:value="${auction.category.displayName}" disabled
+                                   class="w-full px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text-secondary cursor-not-allowed">
+                            <p class="text-xs text-g-text-secondary mt-1">Category cannot be changed</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-g-text mb-1.5">Starting price ($)</label>
+                            <input type="number" name="startingPrice" th:value="${auction.startingPrice}" th:disabled="${hasBids}" step="0.01" min="1"
+                                   class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
+                                   th:classappend="${hasBids} ? 'bg-g-bg text-g-text-secondary cursor-not-allowed' : ''">
+                            <p th:if="${hasBids}" class="text-xs text-amber-600 mt-1">Cannot change — bids already placed</p>
+                        </div>
+                    </div>
+
+                    <!-- Current Image Preview -->
+                    <div th:if="${auction.imageUrl != null}">
+                        <label class="block text-sm font-medium text-g-text mb-1.5">Current Image</label>
+                        <div class="flex items-center gap-4 p-4 bg-g-bg rounded-xl border border-g-border">
+                            <img th:src="${auction.imageUrl}" th:alt="${auction.title}" class="w-20 h-20 rounded-xl object-cover">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs text-g-text-secondary truncate" th:text="${auction.imageUrl}">url</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image Upload or URL -->
+                    <div>
+                        <label class="block text-sm font-medium text-g-text mb-1.5">Change Image <span class="text-g-text-secondary font-normal">(optional)</span></label>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs text-g-text-secondary mb-1">Upload new image</label>
+                                <input type="file" name="auctionImage" accept="image/jpeg,image/png,image/gif,image/webp"
+                                       class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-g-blue-light file:text-g-blue hover:file:bg-blue-100 transition-all">
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="flex-1 border-t border-g-border"></div>
+                                <span class="text-xs text-g-text-secondary font-medium">OR</span>
+                                <div class="flex-1 border-t border-g-border"></div>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-g-text-secondary mb-1">Paste new image URL</label>
+                                <input type="url" name="imageUrl"
+                                       class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
+                                       placeholder="https://example.com/new-image.jpg">
+                            </div>
+                        </div>
+                        <p class="text-xs text-g-text-secondary mt-1">Leave empty to keep current image</p>
+                    </div>
+
+                    <!-- Category-specific fields -->
+                    <!-- CARS -->
+                    <fieldset th:if="${auction.category.name() == 'CARS'}" class="space-y-4 p-5 bg-blue-50/50 rounded-2xl border border-blue-100">
+                        <legend class="text-sm font-medium text-g-blue px-2">Vehicle Details</legend>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-g-text mb-1">Make</label>
+                                <input type="text" name="carMake" th:value="${auction instanceof T(com.auctionhouse.model.CarAuction) ? auction.make : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-g-text mb-1">Model</label>
+                                <input type="text" name="carModel" th:value="${auction instanceof T(com.auctionhouse.model.CarAuction) ? auction.model : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-g-text mb-1">Year</label>
+                                <input type="number" name="carYear" th:value="${auction instanceof T(com.auctionhouse.model.CarAuction) ? auction.year : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" min="1900" max="2030">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-g-text mb-1">Mileage</label>
+                                <input type="number" name="carMileage" th:value="${auction instanceof T(com.auctionhouse.model.CarAuction) ? auction.mileage : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" min="0">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-g-text mb-1">Condition</label>
+                                <input type="text" name="carCondition" th:value="${auction instanceof T(com.auctionhouse.model.CarAuction) ? auction.condition : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-g-text mb-1">Color</label>
+                                <input type="text" name="carColor" th:value="${auction instanceof T(com.auctionhouse.model.CarAuction) ? auction.color : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- WATCHES -->
+                    <fieldset th:if="${auction.category.name() == 'WATCHES'}" class="space-y-4 p-5 bg-amber-50/50 rounded-2xl border border-amber-100">
+                        <legend class="text-sm font-medium text-amber-700 px-2">Watch Details</legend>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-g-text mb-1">Brand</label>
+                                <input type="text" name="watchBrand" th:value="${auction instanceof T(com.auctionhouse.model.WatchAuction) ? auction.brand : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-g-text mb-1">Model Name</label>
+                                <input type="text" name="watchModelName" th:value="${auction instanceof T(com.auctionhouse.model.WatchAuction) ? auction.modelName : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-g-text mb-1">Movement</label>
+                                <input type="text" name="watchMovement" th:value="${auction instanceof T(com.auctionhouse.model.WatchAuction) ? auction.movement : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-g-text mb-1">Case Material</label>
+                                <input type="text" name="watchCaseMaterial" th:value="${auction instanceof T(com.auctionhouse.model.WatchAuction) ? auction.caseMaterial : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs font-medium text-g-text mb-1">Reference Number</label>
+                                <input type="text" name="watchReference" th:value="${auction instanceof T(com.auctionhouse.model.WatchAuction) ? auction.referenceNumber : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- JEWELRY -->
+                    <fieldset th:if="${auction.category.name() == 'JEWELRY'}" class="space-y-4 p-5 bg-pink-50/50 rounded-2xl border border-pink-100">
+                        <legend class="text-sm font-medium text-pink-700 px-2">Jewelry Details</legend>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div><label class="block text-xs font-medium text-g-text mb-1">Metal</label><input type="text" name="jewelryMetal" th:value="${auction instanceof T(com.auctionhouse.model.JewelryAuction) ? auction.metalType : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all"></div>
+                            <div><label class="block text-xs font-medium text-g-text mb-1">Gemstone</label><input type="text" name="jewelryGemstone" th:value="${auction instanceof T(com.auctionhouse.model.JewelryAuction) ? auction.gemstone : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all"></div>
+                            <div><label class="block text-xs font-medium text-g-text mb-1">Carat</label><input type="number" name="jewelryCarat" step="0.01" th:value="${auction instanceof T(com.auctionhouse.model.JewelryAuction) ? auction.carat : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all"></div>
+                            <div><label class="block text-xs font-medium text-g-text mb-1">Designer</label><input type="text" name="jewelryDesigner" th:value="${auction instanceof T(com.auctionhouse.model.JewelryAuction) ? auction.designer : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all"></div>
+                            <div class="sm:col-span-2"><label class="flex items-center gap-2 text-sm text-g-text"><input type="checkbox" name="jewelryCertified" value="true" th:checked="${auction instanceof T(com.auctionhouse.model.JewelryAuction) and auction.certified}" class="rounded border-g-border text-g-blue focus:ring-g-blue"><span>Certified</span></label></div>
+                        </div>
+                    </fieldset>
+
+                    <!-- ART -->
+                    <fieldset th:if="${auction.category.name() == 'ART'}" class="space-y-4 p-5 bg-purple-50/50 rounded-2xl border border-purple-100">
+                        <legend class="text-sm font-medium text-purple-700 px-2">Art Details</legend>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div><label class="block text-xs font-medium text-g-text mb-1">Artist</label><input type="text" name="artArtist" th:value="${auction instanceof T(com.auctionhouse.model.ArtAuction) ? auction.artist : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all"></div>
+                            <div><label class="block text-xs font-medium text-g-text mb-1">Medium</label><input type="text" name="artMedium" th:value="${auction instanceof T(com.auctionhouse.model.ArtAuction) ? auction.medium : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all"></div>
+                            <div><label class="block text-xs font-medium text-g-text mb-1">Year Created</label><input type="number" name="artYearCreated" th:value="${auction instanceof T(com.auctionhouse.model.ArtAuction) ? auction.yearCreated : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" min="1000" max="2030"></div>
+                            <div><label class="block text-xs font-medium text-g-text mb-1">Dimensions</label><input type="text" name="artDimensions" th:value="${auction instanceof T(com.auctionhouse.model.ArtAuction) ? auction.dimensions : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all"></div>
+                            <div class="sm:col-span-2"><label class="flex items-center gap-2 text-sm text-g-text"><input type="checkbox" name="artAuthenticated" value="true" th:checked="${auction instanceof T(com.auctionhouse.model.ArtAuction) and auction.authenticated}" class="rounded border-g-border text-g-blue focus:ring-g-blue"><span>Authenticated</span></label></div>
+                        </div>
+                    </fieldset>
+
+                    <!-- COLLECTIBLES -->
+                    <fieldset th:if="${auction.category.name() == 'COLLECTIBLES'}" class="space-y-4 p-5 bg-green-50/50 rounded-2xl border border-green-100">
+                        <legend class="text-sm font-medium text-g-green px-2">Collectible Details</legend>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div><label class="block text-xs font-medium text-g-text mb-1">Subcategory</label><input type="text" name="colSubcategory" th:value="${auction instanceof T(com.auctionhouse.model.CollectibleAuction) ? auction.subcategory : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all"></div>
+                            <div><label class="block text-xs font-medium text-g-text mb-1">Era / Period</label><input type="text" name="colEra" th:value="${auction instanceof T(com.auctionhouse.model.CollectibleAuction) ? auction.era : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all"></div>
+                            <div><label class="block text-xs font-medium text-g-text mb-1">Condition</label><input type="text" name="colCondition" th:value="${auction instanceof T(com.auctionhouse.model.CollectibleAuction) ? auction.condition : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all"></div>
+                            <div><label class="block text-xs font-medium text-g-text mb-1">Rarity</label><input type="text" name="colRarity" th:value="${auction instanceof T(com.auctionhouse.model.CollectibleAuction) ? auction.rarity : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all"></div>
+                            <div class="sm:col-span-2"><label class="block text-xs font-medium text-g-text mb-1">Provenance</label><input type="text" name="colProvenance" th:value="${auction instanceof T(com.auctionhouse.model.CollectibleAuction) ? auction.provenance : ''}" class="w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all"></div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Submit -->
+                    <div class="pt-4 border-t border-g-border flex flex-wrap gap-3">
+                        <button type="submit" id="saveBtn" class="inline-flex items-center gap-2 px-8 py-3.5 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover text-sm transition-colors shadow-g-sm">
+                            <span class="material-icons-outlined text-lg">save</span>
+                            Save Changes
+                        </button>
+                        <a href="/admin/auctions" class="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-g-text font-medium rounded-full border border-g-border hover:bg-g-hover text-sm transition-colors no-underline">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.getElementById('editAuctionForm').addEventListener('submit', function() {
+    var btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-icons-outlined text-lg animate-spin">hourglass_top</span> Saving...';
+});
+</script>
+</body>
+</html>

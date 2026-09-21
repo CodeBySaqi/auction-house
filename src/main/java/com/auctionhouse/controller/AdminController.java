@@ -8,7 +8,9 @@ import com.auctionhouse.service.AuctionService;
 import com.auctionhouse.service.ChatService;
 import com.auctionhouse.service.NotificationService;
 import com.auctionhouse.service.PaymentReleaseService;
+import com.auctionhouse.service.FileStorageService;
 import com.auctionhouse.service.UserService;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
@@ -52,6 +54,7 @@ public class AdminController {
     private final NotificationService notificationService;
     private final PasswordEncoder passwordEncoder;
     private final PaymentReleaseService paymentReleaseService;
+    private final FileStorageService fileStorageService;
     private final ChatService chatService;
     private final BroadcastRepository broadcastRepository;
 
@@ -1222,4 +1225,138 @@ public class AdminController {
         headers.setContentLength(bytes.length);
         return new ResponseEntity<>(bytes, headers, org.springframework.http.HttpStatus.OK);
     }
+
+    /* ==================== EDIT AUCTION ==================== */
+
+    @GetMapping("/auctions/edit/{id}")
+    public String editAuctionForm(@PathVariable Long id, Model model, Principal principal) {
+        User admin = requireAdmin(principal);
+        Auction auction = auctionService.findById(id)
+                .orElseThrow(() -> new RuntimeException("Auction not found"));
+
+        model.addAttribute("admin", admin);
+        model.addAttribute("auction", auction);
+        model.addAttribute("categories", AuctionCategory.values());
+        model.addAttribute("hasBids", auction.getBidCount() > 0);
+        addSidebarAttributes(model);
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
+        return "admin/edit-auction";
+    }
+
+    @PostMapping("/auctions/edit/{id}")
+    public String editAuction(@PathVariable Long id,
+                               @RequestParam String title,
+                               @RequestParam String description,
+                               @RequestParam double startingPrice,
+                               @RequestParam(required = false) String imageUrl,
+                               @RequestParam(required = false) MultipartFile auctionImage,
+                               @RequestParam(required = false) String carMake,
+                               @RequestParam(required = false) String carModel,
+                               @RequestParam(required = false, defaultValue = "0") int carYear,
+                               @RequestParam(required = false, defaultValue = "0") int carMileage,
+                               @RequestParam(required = false) String carCondition,
+                               @RequestParam(required = false) String carColor,
+                               @RequestParam(required = false) String watchBrand,
+                               @RequestParam(required = false) String watchModelName,
+                               @RequestParam(required = false) String watchMovement,
+                               @RequestParam(required = false) String watchCaseMaterial,
+                               @RequestParam(required = false) String watchReference,
+                               @RequestParam(required = false) String jewelryMetal,
+                               @RequestParam(required = false) String jewelryGemstone,
+                               @RequestParam(required = false, defaultValue = "0") double jewelryCarat,
+                               @RequestParam(required = false) String jewelryDesigner,
+                               @RequestParam(required = false, defaultValue = "false") boolean jewelryCertified,
+                               @RequestParam(required = false) String artArtist,
+                               @RequestParam(required = false) String artMedium,
+                               @RequestParam(required = false, defaultValue = "0") int artYearCreated,
+                               @RequestParam(required = false) String artDimensions,
+                               @RequestParam(required = false, defaultValue = "false") boolean artAuthenticated,
+                               @RequestParam(required = false) String colSubcategory,
+                               @RequestParam(required = false) String colEra,
+                               @RequestParam(required = false) String colCondition,
+                               @RequestParam(required = false) String colRarity,
+                               @RequestParam(required = false) String colProvenance,
+                               RedirectAttributes ra) {
+        try {
+            Auction auction = auctionService.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Auction not found"));
+
+            auction.setTitle(title.trim());
+            auction.setDescription(description.trim());
+
+            if (auction.getBidCount() == 0) {
+                auction.setStartingPrice(startingPrice);
+            }
+
+            if (auctionImage != null && !auctionImage.isEmpty()) {
+                String filename = fileStorageService.storeAuctionImage(auctionImage);
+                auction.setImageUrl("/uploads/auctions/" + filename);
+            } else if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                auction.setImageUrl(imageUrl.trim());
+            }
+
+            AuctionCategory cat = auction.getCategory();
+            switch (cat) {
+                case CARS:
+                    if (auction instanceof com.auctionhouse.model.CarAuction) {
+                        com.auctionhouse.model.CarAuction ca = (com.auctionhouse.model.CarAuction) auction;
+                        if (carMake != null && !carMake.trim().isEmpty()) ca.setMake(carMake.trim());
+                        if (carModel != null && !carModel.trim().isEmpty()) ca.setModel(carModel.trim());
+                        if (carYear > 0) ca.setYear(carYear);
+                        ca.setMileage(carMileage);
+                        if (carCondition != null && !carCondition.trim().isEmpty()) ca.setCondition(carCondition.trim());
+                        if (carColor != null && !carColor.trim().isEmpty()) ca.setColor(carColor.trim());
+                    }
+                    break;
+                case WATCHES:
+                    if (auction instanceof com.auctionhouse.model.WatchAuction) {
+                        com.auctionhouse.model.WatchAuction wa = (com.auctionhouse.model.WatchAuction) auction;
+                        if (watchBrand != null && !watchBrand.trim().isEmpty()) wa.setBrand(watchBrand.trim());
+                        if (watchModelName != null && !watchModelName.trim().isEmpty()) wa.setModelName(watchModelName.trim());
+                        if (watchMovement != null && !watchMovement.trim().isEmpty()) wa.setMovement(watchMovement.trim());
+                        if (watchCaseMaterial != null && !watchCaseMaterial.trim().isEmpty()) wa.setCaseMaterial(watchCaseMaterial.trim());
+                        if (watchReference != null && !watchReference.trim().isEmpty()) wa.setReferenceNumber(watchReference.trim());
+                    }
+                    break;
+                case JEWELRY:
+                    if (auction instanceof com.auctionhouse.model.JewelryAuction) {
+                        com.auctionhouse.model.JewelryAuction ja = (com.auctionhouse.model.JewelryAuction) auction;
+                        if (jewelryMetal != null && !jewelryMetal.trim().isEmpty()) ja.setMetalType(jewelryMetal.trim());
+                        if (jewelryGemstone != null && !jewelryGemstone.trim().isEmpty()) ja.setGemstone(jewelryGemstone.trim());
+                        if (jewelryCarat > 0) ja.setCarat(jewelryCarat);
+                        if (jewelryDesigner != null && !jewelryDesigner.trim().isEmpty()) ja.setDesigner(jewelryDesigner.trim());
+                        ja.setCertified(jewelryCertified);
+                    }
+                    break;
+                case ART:
+                    if (auction instanceof com.auctionhouse.model.ArtAuction) {
+                        com.auctionhouse.model.ArtAuction aa = (com.auctionhouse.model.ArtAuction) auction;
+                        if (artArtist != null && !artArtist.trim().isEmpty()) aa.setArtist(artArtist.trim());
+                        if (artMedium != null && !artMedium.trim().isEmpty()) aa.setMedium(artMedium.trim());
+                        if (artYearCreated > 0) aa.setYearCreated(artYearCreated);
+                        if (artDimensions != null && !artDimensions.trim().isEmpty()) aa.setDimensions(artDimensions.trim());
+                        aa.setAuthenticated(artAuthenticated);
+                    }
+                    break;
+                case COLLECTIBLES:
+                    if (auction instanceof com.auctionhouse.model.CollectibleAuction) {
+                        com.auctionhouse.model.CollectibleAuction co = (com.auctionhouse.model.CollectibleAuction) auction;
+                        if (colSubcategory != null && !colSubcategory.trim().isEmpty()) co.setSubcategory(colSubcategory.trim());
+                        if (colEra != null && !colEra.trim().isEmpty()) co.setEra(colEra.trim());
+                        if (colCondition != null && !colCondition.trim().isEmpty()) co.setCondition(colCondition.trim());
+                        if (colRarity != null && !colRarity.trim().isEmpty()) co.setRarity(colRarity.trim());
+                        if (colProvenance != null && !colProvenance.trim().isEmpty()) co.setProvenance(colProvenance.trim());
+                    }
+                    break;
+            }
+
+            auctionService.save(auction);
+            ra.addFlashAttribute("success", "Auction updated successfully!");
+            return "redirect:/admin/auctions";
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Failed to update auction: " + e.getMessage());
+            return "redirect:/admin/auctions/edit/" + id;
+        }
+    }
+
 }
