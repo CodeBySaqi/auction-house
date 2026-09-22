@@ -121,13 +121,68 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * Update profile picture path.
+     * Update user profile picture path.
      */
     @Transactional
     public void updateProfilePic(String username, String picPath) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         user.setProfilePicPath(picPath);
+        userRepository.save(user);
+    }
+
+    /**
+     * Update user's username, email, and optionally password.
+     * Validates uniqueness, format, and current password before making changes.
+     */
+    @Transactional
+    public void updateUserProfile(Long userId, String newUsername, String newEmail,
+                                   String currentPassword, String newPassword, String confirmNewPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+
+        // Validate username
+        if (newUsername == null || newUsername.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be empty.");
+        }
+        newUsername = newUsername.trim();
+        if (newUsername.length() < 3 || newUsername.length() > 30) {
+            throw new IllegalArgumentException("Username must be 3–30 characters.");
+        }
+        if (!newUsername.equals(user.getUsername()) && userRepository.existsByUsername(newUsername)) {
+            throw new IllegalArgumentException("Username '" + newUsername + "' is already taken.");
+        }
+
+        // Validate email
+        if (newEmail == null || newEmail.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email cannot be empty.");
+        }
+        newEmail = newEmail.trim();
+        if (!newEmail.contains("@") || newEmail.length() > 100) {
+            throw new IllegalArgumentException("Please enter a valid email address.");
+        }
+        if (!newEmail.equals(user.getEmail()) && userRepository.existsByEmail(newEmail)) {
+            throw new IllegalArgumentException("Email '" + newEmail + "' is already in use.");
+        }
+
+        // Update username and email
+        user.setUsername(newUsername);
+        user.setEmail(newEmail);
+
+        // Handle password change (only if current password field is provided)
+        if (currentPassword != null && !currentPassword.isEmpty()) {
+            if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                throw new IllegalArgumentException("Current password is incorrect.");
+            }
+            if (newPassword == null || newPassword.length() < 6) {
+                throw new IllegalArgumentException("New password must be at least 6 characters.");
+            }
+            if (!newPassword.equals(confirmNewPassword)) {
+                throw new IllegalArgumentException("New passwords do not match.");
+            }
+            user.setPassword(passwordEncoder.encode(newPassword));
+        }
+
         userRepository.save(user);
     }
 

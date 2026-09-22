@@ -52,42 +52,131 @@
         </form>
     </div>
 
-    <!-- Account Info -->
+    <!-- Account Settings -->
     <div class="bg-white rounded-3xl border border-g-border p-6 sm:p-8 mb-6">
         <h2 class="font-gsans font-medium text-g-text mb-6 flex items-center gap-2">
-            <span class="material-icons-outlined text-g-text-secondary">info</span> Account information
+            <span class="material-icons-outlined text-g-text-secondary">settings</span> Account settings
         </h2>
-        <div class="grid sm:grid-cols-2 gap-5">
-            <div>
-                <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">User ID</label>
-                <div class="flex items-center gap-2">
-                    <input type="text" th:value="'#' + ${user.id}" disabled id="userIdField"
-                           class="flex-1 px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text font-mono">
-                    <button type="button" onclick="copyUserId()" id="copyIdBtn"
-                            class="px-3 py-3 bg-g-blue-light text-g-blue rounded-xl hover:bg-blue-100 transition-colors flex items-center gap-1.5 text-xs font-medium"
-                            title="Copy User ID">
-                        <span class="material-icons-outlined text-lg" id="copyIdIcon">content_copy</span>
-                        <span id="copyIdText">Copy</span>
-                    </button>
+        <form th:action="@{/profile/update}" method="post">
+            <div class="space-y-5">
+                <!-- User ID (read-only) -->
+                <div class="grid sm:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">User ID</label>
+                        <div class="flex items-center gap-2">
+                            <input type="text" th:value="'#' + ${user.id}" disabled id="userIdField"
+                                   class="flex-1 px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text font-mono">
+                            <button type="button" onclick="copyUserId()" id="copyIdBtn"
+                                    class="px-3 py-3 bg-g-blue-light text-g-blue rounded-xl hover:bg-blue-100 transition-colors flex items-center gap-1.5 text-xs font-medium"
+                                    title="Copy User ID">
+                                <span class="material-icons-outlined text-lg" id="copyIdIcon">content_copy</span>
+                                <span id="copyIdText">Copy</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Member since</label>
+                        <input type="text" th:value="${#temporals.format(user.createdAt, 'MMMM dd, yyyy')}" disabled class="w-full px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text">
+                    </div>
+                </div>
+
+                <!-- Username -->
+                <div>
+                    <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Username</label>
+                    <div class="relative">
+                        <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">alternate_email</span>
+                        <input type="text" name="username" th:value="${user.username}" required minlength="3" maxlength="30"
+                               class="w-full pl-11 pr-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+                    </div>
+                    <p class="text-xs text-g-text-secondary mt-1.5">3–30 characters. This is your login username.</p>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Email address</label>
+                    <div class="relative">
+                        <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">email</span>
+                        <input type="email" name="email" th:value="${user.email}" required maxlength="100"
+                               class="w-full pl-11 pr-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+                    </div>
+                </div>
+
+                <!-- Wallet Balance (read-only) -->
+                <div>
+                    <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Wallet balance</label>
+                    <input type="text" th:value="'$' + ${#numbers.formatDecimal(user.walletBalance, 1, 'COMMA', 2, 'POINT')}" disabled class="w-full px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm font-medium text-g-text">
                 </div>
             </div>
-            <div>
-                <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Username</label>
-                <input type="text" th:value="${user.username}" disabled class="w-full px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text">
+
+            <div class="mt-6 flex justify-end">
+                <button type="submit" class="px-6 py-2.5 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover text-sm transition-colors flex items-center gap-2">
+                    <span class="material-icons-outlined text-lg">save</span> Save changes
+                </button>
             </div>
-            <div>
-                <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Email</label>
-                <input type="text" th:value="${user.email}" disabled class="w-full px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text">
+        </form>
+    </div>
+
+    <!-- Change Password -->
+    <div class="bg-white rounded-3xl border border-g-border p-6 sm:p-8 mb-6">
+        <h2 class="font-gsans font-medium text-g-text mb-2 flex items-center gap-2">
+            <span class="material-icons-outlined text-g-text-secondary">lock</span> Change password
+        </h2>
+        <p class="text-xs text-g-text-secondary mb-6">Leave blank to keep your current password.</p>
+        <form th:action="@{/profile/update}" method="post">
+            <!-- Hidden fields for username and email (keep current values) -->
+            <input type="hidden" name="username" th:value="${user.username}">
+            <input type="hidden" name="email" th:value="${user.email}">
+
+            <div class="space-y-5">
+                <!-- Current Password -->
+                <div>
+                    <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Current password</label>
+                    <div class="relative">
+                        <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">lock_outline</span>
+                        <input type="password" name="currentPassword" id="currentPassword" autocomplete="current-password"
+                               class="w-full pl-11 pr-12 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
+                               placeholder="Enter current password">
+                        <button type="button" onclick="toggleVisibility('currentPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-g-text-secondary hover:text-g-text transition-colors">
+                            <span class="material-icons-outlined text-lg">visibility_off</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- New Password -->
+                <div class="grid sm:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">New password</label>
+                        <div class="relative">
+                            <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">lock</span>
+                            <input type="password" name="newPassword" id="newPassword" autocomplete="new-password" minlength="6"
+                                   class="w-full pl-11 pr-12 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
+                                   placeholder="Min 6 characters">
+                            <button type="button" onclick="toggleVisibility('newPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-g-text-secondary hover:text-g-text transition-colors">
+                                <span class="material-icons-outlined text-lg">visibility_off</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Confirm new password</label>
+                        <div class="relative">
+                            <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">lock</span>
+                            <input type="password" name="confirmNewPassword" id="confirmNewPassword" autocomplete="new-password"
+                                   class="w-full pl-11 pr-12 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
+                                   placeholder="Confirm new password">
+                            <button type="button" onclick="toggleVisibility('confirmNewPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-g-text-secondary hover:text-g-text transition-colors">
+                                <span class="material-icons-outlined text-lg">visibility_off</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Member since</label>
-                <input type="text" th:value="${#temporals.format(user.createdAt, 'MMMM dd, yyyy')}" disabled class="w-full px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text">
+
+            <div class="mt-6 flex justify-end">
+                <button type="submit" class="px-6 py-2.5 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover text-sm transition-colors flex items-center gap-2">
+                    <span class="material-icons-outlined text-lg">lock_reset</span> Update password
+                </button>
             </div>
-            <div>
-                <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Wallet balance</label>
-                <input type="text" th:value="'$' + ${#numbers.formatDecimal(user.walletBalance, 1, 'COMMA', 2, 'POINT')}" disabled class="w-full px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm font-medium text-g-text">
-            </div>
-        </div>
+        </form>
     </div>
 
     <a href="/dashboard" class="inline-flex items-center gap-2 text-sm text-g-blue font-medium hover:underline">
@@ -116,6 +205,18 @@
                 btn.classList.add('bg-g-blue-light', 'text-g-blue');
             }, 2000);
         });
+    }
+
+    function toggleVisibility(inputId, btn) {
+        var input = document.getElementById(inputId);
+        var icon = btn.querySelector('.material-icons-outlined');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.textContent = 'visibility';
+        } else {
+            input.type = 'password';
+            icon.textContent = 'visibility_off';
+        }
     }
 </script>
 </body>
