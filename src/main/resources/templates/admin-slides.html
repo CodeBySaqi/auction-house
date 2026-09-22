@@ -212,9 +212,16 @@
                                                 <input type="color" name="subtitleColor" th:value="${slide.subtitleColor}" class="w-full h-8 rounded border border-g-border cursor-pointer">
                                             </div>
                                         </div>
-                                        <div>
-                                            <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Sort Order</label>
-                                            <input type="number" name="sortOrder" th:value="${slide.sortOrder}" min="0" class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs focus:outline-none focus:border-g-blue transition-all">
+                                        <div class="flex gap-3 items-end">
+                                            <div class="flex-1">
+                                                <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Sort Order</label>
+                                                <input type="number" name="sortOrder" th:value="${slide.sortOrder}" min="0" class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs focus:outline-none focus:border-g-blue transition-all">
+                                            </div>
+                                            <label class="flex items-center gap-1.5 text-xs text-g-text pb-2 cursor-pointer">
+                                                <input type="hidden" name="active" value="false">
+                                                <input type="checkbox" name="active" value="true" th:checked="${slide.active}" class="rounded border-g-border text-g-blue focus:ring-g-blue">
+                                                Active
+                                            </label>
                                         </div>
                                     </div>
                                     <div class="flex justify-end pt-1">

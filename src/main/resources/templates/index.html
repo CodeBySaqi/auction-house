@@ -190,7 +190,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalSlides = slidesContainer.children.length;
     let autoPlayInterval;
 
+    // Hide slider entirely if no slides exist
+    if (totalSlides === 0) {
+        const slider = document.getElementById('heroSlider');
+        if (slider) slider.style.display = 'none';
+        return;
+    }
+
     totalSlidesEl.textContent = totalSlides;
+
+    // Hide navigation if only 1 slide
+    if (totalSlides === 1) {
+        if (prevBtn) prevBtn.style.display = 'none';
+        if (nextBtn) nextBtn.style.display = 'none';
+        const dotsContainer = document.getElementById('sliderDots');
+        if (dotsContainer) dotsContainer.style.display = 'none';
+        const counter = document.getElementById('sliderCurrentSlide');
+        if (counter) counter.parentElement.style.display = 'none';
+    }
 
     function updateSlider() {
         slidesContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
