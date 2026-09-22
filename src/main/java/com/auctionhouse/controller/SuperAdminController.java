@@ -238,4 +238,62 @@ public class SuperAdminController {
         addSidebarCounts(model);
         return "super-admin/audit-logs";
     }
+
+    // ==================== API: REAL-TIME VALIDATION ====================
+
+    @GetMapping("/api/check-username")
+    @ResponseBody
+    public java.util.Map<String, Object> checkUsername(@RequestParam String username,
+                                                        @AuthenticationPrincipal UserDetails userDetails) {
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        String trimmed = username != null ? username.trim() : "";
+
+        if (trimmed.length() < 3 || trimmed.length() > 30) {
+            result.put("available", false);
+            result.put("message", "Username must be 3–30 characters");
+            return result;
+        }
+
+        if (userDetails != null && trimmed.equals(userDetails.getUsername())) {
+            result.put("available", true);
+            result.put("message", "Current username");
+            return result;
+        }
+
+        boolean taken = superAdminService.findUserByUsername(trimmed).isPresent();
+        result.put("available", !taken);
+        result.put("message", taken ? "Username is taken" : "Username is available");
+        return result;
+    }
+
+    @GetMapping("/api/check-email")
+    @ResponseBody
+    public java.util.Map<String, Object> checkEmail(@RequestParam String email,
+                                                      @AuthenticationPrincipal UserDetails userDetails) {
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        String trimmed = email != null ? email.trim() : "";
+
+        if (!trimmed.contains("@") || trimmed.length() > 100) {
+            result.put("available", false);
+            result.put("message", "Enter a valid email");
+            return result;
+        }
+
+        if (userDetails != null) {
+            User currentUser = superAdminService.findUserByUsername(userDetails.getUsername()).orElse(null);
+            if (currentUser != null && trimmed.equals(currentUser.getEmail())) {
+                result.put("available", true);
+                result.put("message", "Current email");
+                return result;
+            }
+        }
+
+        boolean taken = superAdminService.findUserByUsername(trimmed).isPresent();
+        // Also check by email specifically
+        boolean emailTaken = superAdminService.getAllUsers().stream()
+                .anyMatch(u -> trimmed.equalsIgnoreCase(u.getEmail()));
+        result.put("available", !emailTaken);
+        result.put("message", emailTaken ? "Email is already in use" : "Email is available");
+        return result;
+    }
 }

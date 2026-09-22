@@ -15,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -191,5 +192,68 @@ public class ProfileController {
         model.addAttribute("userAuctions", userAuctions);
         model.addAttribute("user", user);
         return "profile/myauctions";
+    }
+
+    /**
+     * Check if a username is available (not taken by another user).
+     * Returns JSON: {"available": true/false}
+     */
+    @GetMapping("/api/check-username")
+    @ResponseBody
+    public java.util.Map<String, Object> checkUsername(@RequestParam String username,
+                                                        @AuthenticationPrincipal UserDetails userDetails) {
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        String trimmed = username != null ? username.trim() : "";
+
+        if (trimmed.length() < 3 || trimmed.length() > 30) {
+            result.put("available", false);
+            result.put("message", "Username must be 3–30 characters");
+            return result;
+        }
+
+        // If it's the user's own current username, it's "available" (no change)
+        if (userDetails != null && trimmed.equals(userDetails.getUsername())) {
+            result.put("available", true);
+            result.put("message", "Current username");
+            return result;
+        }
+
+        boolean taken = userService.findByUsername(trimmed).isPresent();
+        result.put("available", !taken);
+        result.put("message", taken ? "Username is taken" : "Username is available");
+        return result;
+    }
+
+    /**
+     * Check if an email is available (not used by another user).
+     * Returns JSON: {"available": true/false}
+     */
+    @GetMapping("/api/check-email")
+    @ResponseBody
+    public java.util.Map<String, Object> checkEmail(@RequestParam String email,
+                                                      @AuthenticationPrincipal UserDetails userDetails) {
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        String trimmed = email != null ? email.trim() : "";
+
+        if (!trimmed.contains("@") || trimmed.length() > 100) {
+            result.put("available", false);
+            result.put("message", "Enter a valid email");
+            return result;
+        }
+
+        // If it's the user's own current email, it's "available" (no change)
+        if (userDetails != null) {
+            User currentUser = userService.getCurrentUser(userDetails.getUsername());
+            if (trimmed.equals(currentUser.getEmail())) {
+                result.put("available", true);
+                result.put("message", "Current email");
+                return result;
+            }
+        }
+
+        boolean taken = userService.findByEmail(trimmed).isPresent();
+        result.put("available", !taken);
+        result.put("message", taken ? "Email is already in use" : "Email is available");
+        return result;
     }
 }

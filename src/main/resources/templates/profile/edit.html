@@ -59,20 +59,17 @@
         </h2>
         <form th:action="@{/profile/update}" method="post">
             <div class="space-y-5">
-                <!-- User ID (read-only) -->
+                <!-- User ID + Member Since -->
                 <div class="grid sm:grid-cols-2 gap-5">
                     <div>
                         <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">User ID</label>
-                        <div class="flex items-center gap-2">
-                            <input type="text" th:value="'#' + ${user.id}" disabled id="userIdField"
-                                   class="flex-1 px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text font-mono">
-                            <button type="button" onclick="copyUserId()" id="copyIdBtn"
-                                    class="px-3 py-3 bg-g-blue-light text-g-blue rounded-xl hover:bg-blue-100 transition-colors flex items-center gap-1.5 text-xs font-medium"
-                                    title="Copy User ID">
-                                <span class="material-icons-outlined text-lg" id="copyIdIcon">content_copy</span>
-                                <span id="copyIdText">Copy</span>
-                            </button>
+                        <div class="relative">
+                            <input type="text" th:value="'#' + ${user.id}" readonly id="userIdField"
+                                   onclick="copyUserId()" title="Click to copy" style="cursor:pointer;"
+                                   class="w-full px-4 py-3 pr-10 bg-g-bg border border-g-border rounded-xl text-sm text-g-text font-mono hover:border-g-blue transition-all">
+                            <span class="material-icons-outlined absolute right-3 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg pointer-events-none" id="copyIdIcon">content_copy</span>
                         </div>
+                        <p class="text-xs text-g-text-secondary mt-1.5" id="copyIdHint">Click to copy</p>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Member since</label>
@@ -80,25 +77,30 @@
                     </div>
                 </div>
 
-                <!-- Username -->
+                <!-- Username (with real-time availability check) -->
                 <div>
                     <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Username</label>
                     <div class="relative">
                         <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">alternate_email</span>
-                        <input type="text" name="username" th:value="${user.username}" required minlength="3" maxlength="30"
-                               class="w-full pl-11 pr-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+                        <input type="text" name="username" id="usernameInput" th:value="${user.username}" required minlength="3" maxlength="30"
+                               class="w-full pl-11 pr-10 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
+                               autocomplete="off">
+                        <span id="usernameStatus" class="absolute right-3 top-1/2 -translate-y-1/2 text-lg hidden"></span>
                     </div>
-                    <p class="text-xs text-g-text-secondary mt-1.5">3–30 characters. This is your login username.</p>
+                    <p class="text-xs mt-1.5" id="usernameHint"><span class="text-g-text-secondary">3–30 characters. This is your login username.</span></p>
                 </div>
 
-                <!-- Email -->
+                <!-- Email (with real-time availability check) -->
                 <div>
                     <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Email address</label>
                     <div class="relative">
                         <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">email</span>
-                        <input type="email" name="email" th:value="${user.email}" required maxlength="100"
-                               class="w-full pl-11 pr-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+                        <input type="email" name="email" id="emailInput" th:value="${user.email}" required maxlength="100"
+                               class="w-full pl-11 pr-10 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
+                               autocomplete="off">
+                        <span id="emailStatus" class="absolute right-3 top-1/2 -translate-y-1/2 text-lg hidden"></span>
                     </div>
+                    <p class="text-xs mt-1.5" id="emailHint"><span class="text-g-text-secondary"></span></p>
                 </div>
 
                 <!-- Wallet Balance (read-only) -->
@@ -187,26 +189,30 @@
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 <div th:replace="~{fragments/layout :: scripts}"></div>
 <script>
+    // ===== User ID click-to-copy =====
     function copyUserId() {
         var field = document.getElementById('userIdField');
-        var userId = field.value;
-        navigator.clipboard.writeText(userId).then(function() {
-            var icon = document.getElementById('copyIdIcon');
-            var text = document.getElementById('copyIdText');
-            var btn = document.getElementById('copyIdBtn');
+        var hint = document.getElementById('copyIdHint');
+        var icon = document.getElementById('copyIdIcon');
+        navigator.clipboard.writeText(field.value).then(function() {
             icon.textContent = 'check';
-            text.textContent = 'Copied!';
-            btn.classList.remove('bg-g-blue-light', 'text-g-blue');
-            btn.classList.add('bg-green-100', 'text-g-green');
+            icon.classList.remove('text-g-text-secondary');
+            icon.classList.add('text-g-green');
+            hint.textContent = 'Copied!';
+            hint.classList.remove('text-g-text-secondary');
+            hint.classList.add('text-g-green');
             setTimeout(function() {
                 icon.textContent = 'content_copy';
-                text.textContent = 'Copy';
-                btn.classList.remove('bg-green-100', 'text-g-green');
-                btn.classList.add('bg-g-blue-light', 'text-g-blue');
+                icon.classList.remove('text-g-green');
+                icon.classList.add('text-g-text-secondary');
+                hint.textContent = 'Click to copy';
+                hint.classList.remove('text-g-green');
+                hint.classList.add('text-g-text-secondary');
             }, 2000);
         });
     }
 
+    // ===== Password visibility toggle =====
     function toggleVisibility(inputId, btn) {
         var input = document.getElementById(inputId);
         var icon = btn.querySelector('.material-icons-outlined');
@@ -218,6 +224,98 @@
             icon.textContent = 'visibility_off';
         }
     }
+
+    // ===== Real-time username availability check =====
+    (function() {
+        var usernameInput = document.getElementById('usernameInput');
+        var usernameStatus = document.getElementById('usernameStatus');
+        var usernameHint = document.getElementById('usernameHint');
+        var debounceTimer = null;
+
+        usernameInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            var val = this.value.trim();
+
+            // Reset if too short
+            if (val.length < 3) {
+                usernameStatus.classList.add('hidden');
+                usernameHint.innerHTML = '<span class="text-g-text-secondary">3–30 characters. This is your login username.</span>';
+                this.style.borderColor = '';
+                return;
+            }
+
+            // Show loading
+            usernameStatus.textContent = '⏳';
+            usernameStatus.classList.remove('hidden');
+
+            debounceTimer = setTimeout(function() {
+                fetch('/api/check-username?username=' + encodeURIComponent(val))
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.available) {
+                            usernameStatus.textContent = '✅';
+                            usernameStatus.classList.remove('hidden');
+                            usernameHint.innerHTML = '<span class="text-g-green">' + data.message + '</span>';
+                            usernameInput.style.borderColor = '#34a853';
+                        } else {
+                            usernameStatus.textContent = '❌';
+                            usernameStatus.classList.remove('hidden');
+                            usernameHint.innerHTML = '<span class="text-g-red">' + data.message + '</span>';
+                            usernameInput.style.borderColor = '#ea4335';
+                        }
+                    })
+                    .catch(function() {
+                        usernameStatus.classList.add('hidden');
+                    });
+            }, 400);
+        });
+    })();
+
+    // ===== Real-time email availability check =====
+    (function() {
+        var emailInput = document.getElementById('emailInput');
+        var emailStatus = document.getElementById('emailStatus');
+        var emailHint = document.getElementById('emailHint');
+        var debounceTimer = null;
+
+        emailInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            var val = this.value.trim();
+
+            // Reset if not a valid-looking email
+            if (!val.includes('@') || val.length < 5) {
+                emailStatus.classList.add('hidden');
+                emailHint.innerHTML = '<span class="text-g-text-secondary"></span>';
+                this.style.borderColor = '';
+                return;
+            }
+
+            // Show loading
+            emailStatus.textContent = '⏳';
+            emailStatus.classList.remove('hidden');
+
+            debounceTimer = setTimeout(function() {
+                fetch('/api/check-email?email=' + encodeURIComponent(val))
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.available) {
+                            emailStatus.textContent = '✅';
+                            emailStatus.classList.remove('hidden');
+                            emailHint.innerHTML = '<span class="text-g-green">' + data.message + '</span>';
+                            emailInput.style.borderColor = '#34a853';
+                        } else {
+                            emailStatus.textContent = '❌';
+                            emailStatus.classList.remove('hidden');
+                            emailHint.innerHTML = '<span class="text-g-red">' + data.message + '</span>';
+                            emailInput.style.borderColor = '#ea4335';
+                        }
+                    })
+                    .catch(function() {
+                        emailStatus.classList.add('hidden');
+                    });
+            }, 400);
+        });
+    })();
 </script>
 </body>
 </html>
