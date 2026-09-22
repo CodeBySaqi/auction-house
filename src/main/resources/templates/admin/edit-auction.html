@@ -44,9 +44,9 @@
         <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
             <!-- Flash messages -->
-            <div th:if="${error}" class="flex items-center gap-3 p-4 mb-6 bg-red-50 rounded-2xl border border-red-200">
+            <div th:if="${errorMessage}" class="flex items-center gap-3 p-4 mb-6 bg-red-50 rounded-2xl border border-red-200">
                 <span class="material-icons-outlined text-g-red">error</span>
-                <span class="text-sm text-red-800" th:text="${error}">Error</span>
+                <span class="text-sm text-red-800" th:text="${errorMessage}">Error</span>
             </div>
 
             <div class="bg-white rounded-3xl border border-g-border p-6 sm:p-8">

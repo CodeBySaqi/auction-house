@@ -66,6 +66,7 @@ public class AdminController {
                            NotificationService notificationService,
                            PasswordEncoder passwordEncoder,
                            PaymentReleaseService paymentReleaseService,
+                           FileStorageService fileStorageService,
                            ChatService chatService,
                            BroadcastRepository broadcastRepository) {
         this.userService = userService;
@@ -75,6 +76,7 @@ public class AdminController {
         this.notificationService = notificationService;
         this.passwordEncoder = passwordEncoder;
         this.paymentReleaseService = paymentReleaseService;
+        this.fileStorageService = fileStorageService;
         this.chatService = chatService;
         this.broadcastRepository = broadcastRepository;
     }
@@ -1247,7 +1249,7 @@ public class AdminController {
     public String editAuction(@PathVariable Long id,
                                @RequestParam String title,
                                @RequestParam String description,
-                               @RequestParam double startingPrice,
+                               @RequestParam(required = false, defaultValue = "0") double startingPrice,
                                @RequestParam(required = false) String imageUrl,
                                @RequestParam(required = false) MultipartFile auctionImage,
                                @RequestParam(required = false) String carMake,
@@ -1351,10 +1353,10 @@ public class AdminController {
             }
 
             auctionService.save(auction);
-            ra.addFlashAttribute("success", "Auction updated successfully!");
+            ra.addFlashAttribute("successMessage", "Auction updated successfully!");
             return "redirect:/admin/auctions";
         } catch (Exception e) {
-            ra.addFlashAttribute("error", "Failed to update auction: " + e.getMessage());
+            ra.addFlashAttribute("errorMessage", "Failed to update auction: " + e.getMessage());
             return "redirect:/admin/auctions/edit/" + id;
         }
     }
