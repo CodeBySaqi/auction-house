@@ -35,7 +35,7 @@ public class Conversation {
     @JoinColumn(name = "seller_id", nullable = false)
     private User seller;
 
-    @Column(name = "is_direct_message", nullable = false)
+    @Column(name = "is_direct_message", nullable = false, columnDefinition = "boolean default false")
     private boolean directMessage = false;
 
     @Column(name = "created_at", nullable = false)

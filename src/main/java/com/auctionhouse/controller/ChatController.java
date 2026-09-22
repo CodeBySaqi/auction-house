@@ -10,9 +10,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
@@ -28,11 +31,13 @@ public class ChatController {
 
     private final ChatService chatService;
     private final UserService userService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Autowired
-    public ChatController(ChatService chatService, UserService userService) {
+    public ChatController(ChatService chatService, UserService userService, SimpMessagingTemplate messagingTemplate) {
         this.chatService = chatService;
         this.userService = userService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     /**
@@ -75,6 +80,49 @@ public class ChatController {
             return ResponseEntity.status(403).build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(404).build();
+        }
+    }
+
+    /**
+     * POST /chat/{conversationId}/send
+     * HTTP fallback for sending messages when WebSocket is unavailable.
+     * Redirects back to the conversation thread.
+     */
+    @PostMapping("/{conversationId}/send")
+    public String sendMessageHttp(@PathVariable Long conversationId,
+                                   @RequestParam String content,
+                                   @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return "redirect:/login";
+        }
+
+        User user = userService.findByUsername(userDetails.getUsername()).orElse(null);
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            ChatMessage saved = chatService.sendMessage(conversationId, user.getId(), content);
+
+            // Broadcast via WebSocket if available (best-effort)
+            try {
+                com.auctionhouse.dto.ChatMessageDTO dto = new com.auctionhouse.dto.ChatMessageDTO(
+                    saved.getId(),
+                    saved.getSender().getUsername(),
+                    false,
+                    saved.getContent(),
+                    saved.getCreatedAt()
+                );
+                messagingTemplate.convertAndSend("/topic/chat/" + conversationId, dto);
+            } catch (Exception ignored) {
+                // WebSocket broadcast failure is non-fatal — message is already saved
+            }
+
+            return "redirect:/messages/" + conversationId;
+        } catch (SecurityException e) {
+            return "redirect:/messages";
+        } catch (IllegalArgumentException e) {
+            return "redirect:/messages/" + conversationId;
         }
     }
 }

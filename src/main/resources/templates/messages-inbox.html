@@ -107,11 +107,21 @@
     <footer th:replace="~{fragments/layout :: footer}"></footer>
     <div th:replace="~{fragments/layout :: scripts}"></div>
 
+    <script th:inline="javascript">
+    const csrfToken = /*[[${_csrf.token}]]*/ '';
+    const csrfParam = /*[[${_csrf.parameterName}]]*/ '_csrf';
+    </script>
     <script>
     // User search with debounce
     const searchInput = document.getElementById('userSearchInput');
     const searchResults = document.getElementById('userSearchResults');
     let searchTimeout = null;
+
+    function escapeHtml(text) {
+        var d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+    }
 
     searchInput.addEventListener('input', function() {
         clearTimeout(searchTimeout);
@@ -134,13 +144,14 @@
                     }
                     searchResults.innerHTML = users.map(u => `
                         <form action="/messages/start/${encodeURIComponent(u.username)}" method="post" class="m-0">
+                            <input type="hidden" name="${csrfParam}" value="${csrfToken}">
                             <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-g-hover transition-colors text-left">
                                 <div class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center shrink-0">
-                                    <span class="text-white font-gsans font-medium text-sm">${u.username.charAt(0).toUpperCase()}</span>
+                                    <span class="text-white font-gsans font-medium text-sm">${escapeHtml(u.username.charAt(0).toUpperCase())}</span>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-g-text truncate">${u.username}</p>
-                                    <p class="text-[11px] text-g-text-secondary">${u.role}</p>
+                                    <p class="text-sm font-medium text-g-text truncate">${escapeHtml(u.username)}</p>
+                                    <p class="text-[11px] text-g-text-secondary">${escapeHtml(u.role)}</p>
                                 </div>
                                 <span class="material-icons-outlined text-g-blue text-lg">chat</span>
                             </button>

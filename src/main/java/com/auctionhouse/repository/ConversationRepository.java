@@ -29,8 +29,9 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
 
     /**
      * Find all conversations (DM + auction) for a user, ordered by last message time.
+     * Falls back to createdAt when lastMessageAt is null (pre-existing conversations).
      */
-    @Query("SELECT c FROM Conversation c WHERE (c.buyer.id = :userId OR c.seller.id = :userId) ORDER BY c.lastMessageAt DESC")
+    @Query("SELECT c FROM Conversation c WHERE (c.buyer.id = :userId OR c.seller.id = :userId) ORDER BY COALESCE(c.lastMessageAt, c.createdAt) DESC")
     List<Conversation> findAllByUserId(@Param("userId") Long userId);
 
     /**

@@ -96,6 +96,7 @@
     <!-- Hidden data -->
     <input type="hidden" id="conversation-id" th:value="${conversation.id}">
     <input type="hidden" id="current-username" th:value="${currentUser.username}">
+    <input type="hidden" id="csrf-token" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
     <!-- SockJS and STOMP -->
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
@@ -198,13 +199,20 @@
                 chatInput.focus();
             } else {
                 // Fallback: HTTP POST (will reload)
+                const csrfInput = document.getElementById('csrf-token');
                 const form = document.createElement('form');
                 form.method = 'post';
                 form.action = '/chat/' + conversationId + '/send';
-                const input = document.createElement('input');
-                input.name = 'content';
-                input.value = content;
-                form.appendChild(input);
+                const contentInput = document.createElement('input');
+                contentInput.name = 'content';
+                contentInput.value = content;
+                form.appendChild(contentInput);
+                if (csrfInput) {
+                    const csrf = document.createElement('input');
+                    csrf.name = csrfInput.name;
+                    csrf.value = csrfInput.value;
+                    form.appendChild(csrf);
+                }
                 document.body.appendChild(form);
                 form.submit();
             }
