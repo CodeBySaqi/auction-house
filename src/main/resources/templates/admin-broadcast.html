@@ -439,6 +439,11 @@
         </main>
     </div>
 
+    <script th:inline="javascript">
+        var totalUsersCount = /*[[${totalUsers}]]*/ 100;
+        var activeUsersCount = /*[[${activeUsers}]]*/ 87;
+        var biddersCount = /*[[${topBiddersCount}]]*/ 25;
+    </script>
     <script>
 
         function toggleProfileDropdown() {
@@ -562,10 +567,16 @@
         function updateRecipientInfo() {
             var type = document.getElementById('audienceInput').value;
             var info = document.getElementById('recipientInfo');
-            if (type === 'custom') {
+            var label = 'all ' + totalUsersCount + ' users';
+            if (type === 'active') {
+                label = activeUsersCount + ' active users';
+            } else if (type === 'bidders') {
+                label = 'up to ' + biddersCount + ' top bidders';
+            } else if (type === 'custom') {
                 var count = selectedUserIds.length;
-                info.innerHTML = '<span class="material-icons-outlined text-lg">people</span><span>Sending to <strong class="text-g-text">' + count + '</strong> selected user' + (count !== 1 ? 's' : '') + '</span>';
+                label = count + ' selected user' + (count !== 1 ? 's' : '');
             }
+            info.innerHTML = '<span class="material-icons-outlined text-lg">people</span><span>Sending to <strong class="text-g-text">' + label + '</strong></span>';
         }
 
         // Before form submit, inject selected user IDs as hidden fields

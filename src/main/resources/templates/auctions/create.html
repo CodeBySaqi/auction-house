@@ -289,7 +289,7 @@
 
             <!-- Submit -->
             <div class="pt-4 border-t border-g-border flex flex-wrap gap-3">
-                <button type="submit" class="inline-flex items-center gap-2 px-8 py-3.5 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover text-sm transition-colors shadow-g-sm">
+                <button type="submit" id="launchBtn" class="inline-flex items-center gap-2 px-8 py-3.5 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover text-sm transition-colors shadow-g-sm">
                     <span class="material-icons-outlined text-lg">gavel</span>
                     Launch Auction
                 </button>
@@ -337,6 +337,11 @@
             alert('Please upload an image or paste an image URL.');
             return false;
         }
+
+        // Double-submit prevention
+        var btn = document.getElementById('launchBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-icons-outlined text-lg animate-spin">hourglass_top</span> Creating...';
     });
 })();
 </script>

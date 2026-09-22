@@ -164,6 +164,20 @@ public class AuctionController {
                                 @AuthenticationPrincipal UserDetails userDetails,
                                 RedirectAttributes redirectAttributes) {
         try {
+            // Server-side validation
+            if (title == null || title.trim().isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Title is required.");
+                return "redirect:/auctions/create";
+            }
+            if (startingPrice < 1) {
+                redirectAttributes.addFlashAttribute("error", "Starting price must be at least $1.");
+                return "redirect:/auctions/create";
+            }
+            if (durationMinutes < 1) {
+                redirectAttributes.addFlashAttribute("error", "Invalid duration selected.");
+                return "redirect:/auctions/create";
+            }
+
             User creator = userService.getCurrentUser(userDetails.getUsername());
             AuctionCategory cat = AuctionCategory.valueOf(category.toUpperCase());
 
