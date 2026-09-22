@@ -5,6 +5,17 @@
 
 <nav th:replace="~{fragments/layout :: navbar}"></nav>
 
+<!-- Floating blob animation -->
+<style>
+    @keyframes blobFloat {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-12px); }
+    }
+    .slide-blob {
+        animation: blobFloat 4s ease-in-out infinite;
+    }
+</style>
+
 <!-- Hero Slider -->
 <div class="w-full px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
     <div class="max-w-7xl mx-auto relative overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-g-md bg-white" id="heroSlider">
@@ -36,7 +47,7 @@
                             <img th:if="${slide.imageUrl != null and !slide.imageUrl.isEmpty()}"
                                  th:src="${slide.imageUrl}"
                                  th:alt="${slide.title}"
-                                 th:class="'max-w-full max-h-full shadow-2xl object-contain ' + ${slide.imageShape}"
+                                 th:class="'max-w-full max-h-full shadow-2xl object-contain slide-blob ' + ${slide.imageShape}"
                                  style="aspect-ratio: 1/1;">
                         </div>
                     </div>
