@@ -25,7 +25,11 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <a th:href="@{/super-admin}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Dashboard"><span class="material-icons-outlined">dashboard</span></a>
-                    <a th:href="@{/logout}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Logout"><span class="material-icons-outlined">logout</span></a>
+                    <form th:action="@{/logout}" method="post" class="m-0">
+                        <button type="submit" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Logout">
+                            <span class="material-icons-outlined">logout</span>
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

@@ -62,9 +62,10 @@ public class ProfileController {
                         a.getHighestBidder().getId().equals(user.getId()))
                 .collect(Collectors.toList());
 
-        // Get active bids (bids on active auctions)
+        // Get active bids (bids on active auctions). Skip orphaned bids whose
+        // auction row no longer exists — otherwise NPE crashes the dashboard.
         List<Bid> activeBids = userBids.stream()
-                .filter(b -> b.getAuction().getStatus() == AuctionStatus.ACTIVE)
+                .filter(b -> b.getAuction() != null && b.getAuction().getStatus() == AuctionStatus.ACTIVE)
                 .collect(Collectors.toList());
 
         // Get payment releases where user is seller (needs to submit delivery details)

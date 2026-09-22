@@ -92,6 +92,48 @@ public class FileStorageService {
         if (file.getSize() > 5 * 1024 * 1024) {
             throw new IOException("File size must be less than 5MB");
         }
+
+        // SECURITY: verify actual file content (magic bytes), not just the
+        // client-controlled Content-Type header. Blocks disguised uploads
+        // (e.g. HTML/JS renamed to .png) from being served to other users.
+        if (!hasValidImageMagicBytes(file)) {
+            throw new IOException("File content is not a valid image");
+        }
+    }
+
+    /**
+     * Checks the file's leading bytes against known image signatures:
+     * JPEG (FF D8 FF), PNG (89 50 4E 47 ...), GIF (GIF87a/GIF89a),
+     * WebP (RIFF....WEBP).
+     */
+    private boolean hasValidImageMagicBytes(MultipartFile file) throws IOException {
+        byte[] b = new byte[12];
+        int n = 0;
+        try (java.io.InputStream in = file.getInputStream()) {
+            while (n < b.length) {
+                int r = in.read(b, n, b.length - n);
+                if (r == -1) break;
+                n += r;
+            }
+        }
+        if (n < 6) return false;
+
+        // JPEG: FF D8 FF
+        if ((b[0] & 0xFF) == 0xFF && (b[1] & 0xFF) == 0xD8 && (b[2] & 0xFF) == 0xFF) return true;
+
+        // PNG: 89 50 4E 47 0D 0A 1A 0A
+        if (n >= 8 && (b[0] & 0xFF) == 0x89 && b[1] == 0x50 && b[2] == 0x4E && b[3] == 0x47
+                && b[4] == 0x0D && b[5] == 0x0A && b[6] == 0x1A && b[7] == 0x0A) return true;
+
+        // GIF: "GIF87a" or "GIF89a"
+        String head6 = new String(b, 0, 6, java.nio.charset.StandardCharsets.US_ASCII);
+        if (head6.equals("GIF87a") || head6.equals("GIF89a")) return true;
+
+        // WebP: "RIFF" + 4 bytes + "WEBP"
+        if (n >= 12 && new String(b, 0, 4, java.nio.charset.StandardCharsets.US_ASCII).equals("RIFF")
+                && new String(b, 8, 4, java.nio.charset.StandardCharsets.US_ASCII).equals("WEBP")) return true;
+
+        return false;
     }
 
     /**

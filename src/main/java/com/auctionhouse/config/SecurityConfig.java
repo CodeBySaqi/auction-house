@@ -68,15 +68,28 @@ public class SecurityConfig {
                 .permitAll()
             .and()
             .logout()
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "POST"))
                 .logoutSuccessUrl("/login?logout=true")
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
                 .permitAll()
             .and()
-            .headers().frameOptions().sameOrigin()
+            .headers()
+                .frameOptions(frame -> frame.sameOrigin())
+                .referrerPolicy(referrer -> referrer.policy(
+                        org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                .contentSecurityPolicy(csp -> csp.policyDirectives(
+                        "default-src 'self'; "
+                      + "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; "
+                      + "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com https://cdn.jsdelivr.net; "
+                      + "font-src 'self' https://fonts.gstatic.com data:; "
+                      + "img-src 'self' data: https:; "
+                      + "connect-src 'self' ws: wss:; "
+                      + "frame-ancestors 'self'; "
+                      + "base-uri 'self'; "
+                      + "form-action 'self'"))
             .and()
-            .csrf().ignoringAntMatchers("/h2-console/**", "/api/**", "/login", "/register", "/logout", "/ws/**");
+            .csrf().ignoringAntMatchers("/h2-console/**", "/api/**", "/login", "/register", "/ws/**");
 
         return http.build();
     }

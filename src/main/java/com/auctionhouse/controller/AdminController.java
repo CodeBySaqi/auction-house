@@ -187,6 +187,8 @@ public class AdminController {
                               "bg-amber-50 text-amber-600", "bg-red-50 text-g-red"};
         int bidColorIdx = 0;
         for (Bid bid : recentBidsRaw) {
+            // Skip orphaned bids (deleted bidder or auction) to avoid NPE rendering the console
+            if (bid.getBidder() == null || bid.getAuction() == null) continue;
             Map<String, Object> b = new LinkedHashMap<>();
             b.put("username", bid.getBidder().getUsername());
             b.put("initials", bid.getBidder().getUsername().substring(0, 2).toUpperCase());
@@ -1125,6 +1127,8 @@ public class AdminController {
         List<Map<String, Object>> recentBids = new ArrayList<>();
         
         for (Bid bid : recentBidsRaw) {
+            // Skip orphaned bids (deleted bidder or auction) to avoid NPE rendering the page
+            if (bid.getBidder() == null || bid.getAuction() == null) continue;
             Map<String, Object> b = new LinkedHashMap<>();
             b.put("bidder", bid.getBidder());
             b.put("auction", bid.getAuction());
@@ -1159,8 +1163,8 @@ public class AdminController {
         List<Bid> allBids = bidRepository.findAll();
         for (Bid b : allBids) {
             sb.append(b.getId()).append(',')
-              .append(csv(b.getBidder().getUsername())).append(',')
-              .append(csv(b.getAuction().getTitle())).append(',')
+              .append(csv(b.getBidder() != null ? b.getBidder().getUsername() : "[deleted user]")).append(',')
+              .append(csv(b.getAuction() != null ? b.getAuction().getTitle() : "[deleted auction]")).append(',')
               .append(fmtMoney(b.getAmount())).append(',')
               .append(b.getTimestamp() != null ? b.getTimestamp().format(DATE_TIME) : "")
               .append('\n');
