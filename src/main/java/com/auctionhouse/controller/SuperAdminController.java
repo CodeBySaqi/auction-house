@@ -56,6 +56,39 @@ public class SuperAdminController {
         return "super-admin/dashboard";
     }
 
+    // ==================== PROFILE ====================
+
+    @GetMapping("/profile")
+    public String profile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        User superAdmin = superAdminService.findUserByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Super Admin not found"));
+        model.addAttribute("superAdmin", superAdmin);
+        addSidebarCounts(model);
+        return "super-admin/profile";
+    }
+
+    @PostMapping("/profile")
+    public String updateProfile(@RequestParam String username,
+                                 @RequestParam String email,
+                                 @RequestParam(required = false) String currentPassword,
+                                 @RequestParam(required = false) String newPassword,
+                                 @RequestParam(required = false) String confirmNewPassword,
+                                 @AuthenticationPrincipal UserDetails userDetails,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            User superAdmin = superAdminService.findUserByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Super Admin not found"));
+            superAdminService.updateSuperAdminProfile(superAdmin.getId(), username, email,
+                    currentPassword, newPassword, confirmNewPassword);
+            redirectAttributes.addFlashAttribute("success", "Profile updated successfully.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "An unexpected error occurred: " + e.getMessage());
+        }
+        return "redirect:/super-admin/profile";
+    }
+
     // ==================== USER MANAGEMENT ====================
 
     @GetMapping("/users")

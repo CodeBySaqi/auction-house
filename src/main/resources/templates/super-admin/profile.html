@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Super Admin</title>
+    <script>(function(){var t=localStorage.getItem('theme')||'light';if(t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}})();</script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script th:replace="~{fragments/layout :: tailwindConfig}"></script>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>body{font-family:'Roboto',system-ui,sans-serif;}.font-gsans{font-family:'Google Sans','Roboto',system-ui,sans-serif;}.tabular-nums{font-variant-numeric:tabular-nums;}</style>
+</head>
+<body class="bg-g-bg font-roboto text-g-text min-h-screen">
+    <nav class="bg-white border-b border-g-border sticky top-0 z-40">
+        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-purple-600 rounded-xl flex items-center justify-center"><span class="material-icons-outlined text-white text-xl">shield</span></div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-gsans font-medium text-xl text-g-text">Auction<span class="text-purple-600">House</span></span>
+                        <span class="px-2.5 py-1 bg-purple-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-md">Super Admin</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a th:href="@{/super-admin}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Dashboard"><span class="material-icons-outlined">dashboard</span></a>
+                    <a th:href="@{/logout}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Logout"><span class="material-icons-outlined">logout</span></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-2 text-sm text-g-text-secondary mb-6">
+            <a th:href="@{/super-admin}" class="hover:text-purple-600 transition-colors">Dashboard</a>
+            <span class="material-icons-outlined text-xs">chevron_right</span>
+            <span>My Profile</span>
+        </div>
+
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">My Profile</h1>
+            <p class="text-sm text-g-text-secondary mt-1">Manage your super admin account settings.</p>
+        </div>
+
+        <!-- Flash Messages -->
+        <div th:if="${success}" class="flex items-center gap-3 p-4 mb-6 bg-green-50 rounded-2xl border border-green-200">
+            <span class="material-icons-outlined text-g-green">check_circle</span>
+            <span class="text-sm text-green-800" th:text="${success}">Success</span>
+        </div>
+        <div th:if="${error}" class="flex items-center gap-3 p-4 mb-6 bg-red-50 rounded-2xl border border-red-200">
+            <span class="material-icons-outlined text-g-red">error</span>
+            <span class="text-sm text-red-800" th:text="${error}">Error</span>
+        </div>
+
+        <!-- Profile Header Card -->
+        <div class="bg-white rounded-2xl border border-g-border p-6 mb-6">
+            <div class="flex items-center gap-5">
+                <div class="w-20 h-20 rounded-full bg-purple-600 flex items-center justify-center text-white text-2xl font-medium shrink-0"
+                     th:text="${#strings.substring(superAdmin.username, 0, 2).toUpperCase()}">SA</div>
+                <div>
+                    <h2 class="font-gsans text-xl font-medium text-g-text" th:text="${superAdmin.username}">superadmin</h2>
+                    <p class="text-sm text-g-text-secondary" th:text="${superAdmin.email}">superadmin@auctionhouse.com</p>
+                    <div class="flex items-center gap-2 mt-2">
+                        <span class="px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-full">Super Admin</span>
+                        <span class="text-xs text-g-text-secondary">Joined <span th:text="${#temporals.format(superAdmin.createdAt, 'MMM dd, yyyy')}">Jan 01, 2025</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form th:action="@{/super-admin/profile}" method="post">
+            <!-- Account Details -->
+            <div class="bg-white rounded-2xl border border-g-border p-6 mb-6">
+                <h2 class="font-gsans text-lg font-medium text-g-text mb-5 flex items-center gap-2">
+                    <span class="material-icons-outlined text-purple-600">person</span> Account Details
+                </h2>
+                <div class="space-y-5">
+                    <!-- User ID (read-only) -->
+                    <div>
+                        <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">User ID</label>
+                        <input type="text" th:value="'#' + ${superAdmin.id}" disabled
+                               class="w-full px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text font-mono">
+                    </div>
+
+                    <!-- Username -->
+                    <div>
+                        <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Username</label>
+                        <div class="relative">
+                            <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">alternate_email</span>
+                            <input type="text" name="username" th:value="${superAdmin.username}" required minlength="3" maxlength="30"
+                                   class="w-full pl-11 pr-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                                   placeholder="Enter username">
+                        </div>
+                        <p class="text-xs text-g-text-secondary mt-1.5">3–30 characters. This is your login username.</p>
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Email Address</label>
+                        <div class="relative">
+                            <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">email</span>
+                            <input type="email" name="email" th:value="${superAdmin.email}" required maxlength="100"
+                                   class="w-full pl-11 pr-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                                   placeholder="Enter email address">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Change Password -->
+            <div class="bg-white rounded-2xl border border-g-border p-6 mb-6">
+                <h2 class="font-gsans text-lg font-medium text-g-text mb-2 flex items-center gap-2">
+                    <span class="material-icons-outlined text-purple-600">lock</span> Change Password
+                </h2>
+                <p class="text-xs text-g-text-secondary mb-5">Leave blank to keep your current password.</p>
+                <div class="space-y-5">
+                    <!-- Current Password -->
+                    <div>
+                        <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Current Password</label>
+                        <div class="relative">
+                            <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">lock_outline</span>
+                            <input type="password" name="currentPassword" id="currentPassword" autocomplete="current-password"
+                                   class="w-full pl-11 pr-12 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                                   placeholder="Enter current password">
+                            <button type="button" onclick="toggleVisibility('currentPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-g-text-secondary hover:text-g-text transition-colors">
+                                <span class="material-icons-outlined text-lg">visibility_off</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- New Password -->
+                    <div>
+                        <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">New Password</label>
+                        <div class="relative">
+                            <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">lock</span>
+                            <input type="password" name="newPassword" id="newPassword" autocomplete="new-password" minlength="6"
+                                   class="w-full pl-11 pr-12 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                                   placeholder="Enter new password">
+                            <button type="button" onclick="toggleVisibility('newPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-g-text-secondary hover:text-g-text transition-colors">
+                                <span class="material-icons-outlined text-lg">visibility_off</span>
+                            </button>
+                        </div>
+                        <p class="text-xs text-g-text-secondary mt-1.5">Minimum 6 characters.</p>
+                    </div>
+
+                    <!-- Confirm New Password -->
+                    <div>
+                        <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Confirm New Password</label>
+                        <div class="relative">
+                            <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">lock</span>
+                            <input type="password" name="confirmNewPassword" id="confirmNewPassword" autocomplete="new-password"
+                                   class="w-full pl-11 pr-12 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                                   placeholder="Confirm new password">
+                            <button type="button" onclick="toggleVisibility('confirmNewPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-g-text-secondary hover:text-g-text transition-colors">
+                                <span class="material-icons-outlined text-lg">visibility_off</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-between">
+                <a th:href="@{/super-admin}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-g-border rounded-full text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
+                    <span class="material-icons-outlined text-lg">arrow_back</span> Back to Dashboard
+                </a>
+                <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-purple-600 text-white rounded-full text-sm font-medium hover:bg-purple-700 transition-colors">
+                    <span class="material-icons-outlined text-lg">save</span> Save Changes
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <!-- Mobile Sidebar (FAB Nav) -->
+    <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay"></div>
+    <div class="mobile-sidebar" id="mobileSidebar">
+        <div class="px-5 py-4 border-b border-g-border flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                    <span class="material-icons-outlined text-white text-lg">shield</span>
+                </div>
+                <span class="font-gsans font-medium text-sm text-g-text">Super Admin</span>
+            </div>
+            <button onclick="document.getElementById('mobileSidebarOverlay').click()" class="p-1.5 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                <span class="material-icons-outlined text-xl">close</span>
+            </button>
+        </div>
+        <nav class="py-3 px-3 space-y-0.5">
+            <div class="px-3 py-1.5"><span class="text-[10px] font-semibold uppercase tracking-wider text-g-text-secondary">Management</span></div>
+            <a th:href="@{/super-admin}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl text-g-text-secondary">dashboard</span> Dashboard
+            </a>
+            <a th:href="@{/super-admin/users}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl text-g-text-secondary">people</span> Manage Users
+                <span class="ml-auto px-2 py-0.5 bg-g-bg rounded-full text-[10px] font-semibold text-g-text-secondary tabular-nums" th:text="${totalUsers}">0</span>
+            </a>
+            <a th:href="@{/super-admin/admins}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl text-g-text-secondary">admin_panel_settings</span> Manage Admins
+                <span class="ml-auto px-2 py-0.5 bg-g-bg rounded-full text-[10px] font-semibold text-g-text-secondary tabular-nums" th:text="${totalAdmins}">0</span>
+            </a>
+            <div class="px-3 py-1.5 mt-3"><span class="text-[10px] font-semibold uppercase tracking-wider text-g-text-secondary">Security</span></div>
+            <a th:href="@{/super-admin/audit-logs}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl text-g-text-secondary">history</span> Audit Logs
+            </a>
+            <div class="px-3 py-1.5 mt-3"><span class="text-[10px] font-semibold uppercase tracking-wider text-g-text-secondary">Account</span></div>
+            <a th:href="@{/super-admin/profile}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-purple-50 text-purple-700 font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl">person</span> My Profile
+            </a>
+        </nav>
+    </div>
+    <button class="admin-fab super-admin" id="adminFab" type="button" aria-label="Open admin menu">&#9776;</button>
+
+    <script th:src="@{/js/main.js}"></script>
+    <script>
+        function toggleVisibility(inputId, btn) {
+            var input = document.getElementById(inputId);
+            var icon = btn.querySelector('.material-icons-outlined');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility_off';
+            }
+        }
+    </script>
+</body>
+</html>

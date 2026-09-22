@@ -98,6 +98,60 @@ public class SuperAdminService {
         return auditLogRepository.findByTargetUserIdOrderByCreatedAtDesc(userId);
     }
 
+    // ==================== PROFILE MANAGEMENT ====================
+
+    /**
+     * Update super admin's own username, email, and optionally password.
+     */
+    @Transactional
+    public void updateSuperAdminProfile(Long userId, String newUsername, String newEmail,
+                                         String currentPassword, String newPassword, String confirmNewPassword) {
+        User user = requireUser(userId);
+        validateSuperAdmin(user);
+
+        // Validate username
+        if (newUsername == null || newUsername.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be empty.");
+        }
+        if (newUsername.length() < 3 || newUsername.length() > 30) {
+            throw new IllegalArgumentException("Username must be 3–30 characters.");
+        }
+        if (!newUsername.equals(user.getUsername()) && userRepository.existsByUsername(newUsername)) {
+            throw new IllegalArgumentException("Username '" + newUsername + "' is already taken.");
+        }
+
+        // Validate email
+        if (newEmail == null || newEmail.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email cannot be empty.");
+        }
+        if (!newEmail.contains("@") || newEmail.length() > 100) {
+            throw new IllegalArgumentException("Please enter a valid email address.");
+        }
+        if (!newEmail.equals(user.getEmail()) && userRepository.existsByEmail(newEmail)) {
+            throw new IllegalArgumentException("Email '" + newEmail + "' is already in use.");
+        }
+
+        // Update username and email
+        user.setUsername(newUsername.trim());
+        user.setEmail(newEmail.trim());
+
+        // Handle password change (only if current password is provided)
+        if (currentPassword != null && !currentPassword.isEmpty()) {
+            if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                throw new IllegalArgumentException("Current password is incorrect.");
+            }
+            if (newPassword == null || newPassword.length() < 6) {
+                throw new IllegalArgumentException("New password must be at least 6 characters.");
+            }
+            if (!newPassword.equals(confirmNewPassword)) {
+                throw new IllegalArgumentException("New passwords do not match.");
+            }
+            user.setPassword(passwordEncoder.encode(newPassword));
+        }
+
+        userRepository.save(user);
+    }
+
     // ==================== USER ACTIVATION / DEACTIVATION ====================
 
     /**

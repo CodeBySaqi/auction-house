@@ -25,7 +25,9 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <a th:href="@{/super-admin/users}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors"><span class="material-icons-outlined">arrow_back</span></a>
+                    <a th:href="@{/super-admin/profile}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="My Profile"><span class="material-icons-outlined">manage_accounts</span></a>
                     <a th:href="@{/super-admin}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors"><span class="material-icons-outlined">dashboard</span></a>
+                    <a th:href="@{/logout}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Logout"><span class="material-icons-outlined">logout</span></a>
                 </div>
             </div>
         </div>
@@ -210,6 +212,10 @@
             <div class="px-3 py-1.5 mt-3"><span class="text-[10px] font-semibold uppercase tracking-wider text-g-text-secondary">Security</span></div>
             <a th:href="@{/super-admin/audit-logs}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
                 <span class="material-icons-outlined text-xl text-g-text-secondary">history</span> Audit Logs
+            </a>
+            <div class="px-3 py-1.5 mt-3"><span class="text-[10px] font-semibold uppercase tracking-wider text-g-text-secondary">Account</span></div>
+            <a th:href="@{/super-admin/profile}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl text-g-text-secondary">person</span> My Profile
             </a>
         </nav>
 
