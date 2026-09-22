@@ -34,13 +34,10 @@ public class SchemaMigration {
              Statement stmt = conn.createStatement()) {
 
             // Migration: Make auction_id nullable in conversations (for DM support)
-            // Hibernate ddl-auto=update added the column as NOT NULL originally,
-            // but DM conversations don't have an auction.
             try {
                 stmt.execute("ALTER TABLE conversations ALTER COLUMN auction_id DROP NOT NULL");
                 log.info("Migration: conversations.auction_id is now nullable");
             } catch (Exception e) {
-                // Already nullable or syntax differs — not an error
                 log.debug("auction_id nullable check: {}", e.getMessage());
             }
 
@@ -52,9 +49,19 @@ public class SchemaMigration {
                 log.debug("payment_release_id nullable check: {}", e.getMessage());
             }
 
-            // Migration: Drop unique constraint on payment_release_id if it prevents
-            // multiple NULL values (some DB engines don't allow multiple NULLs in unique cols)
-            // H2 allows multiple NULLs in unique columns, so this is a no-op for H2.
+            // Migration: Mark all existing chat messages as read.
+            // The is_read column was added with default false, which makes every
+            // pre-existing message appear "unread" and inflates the badge count.
+            try {
+                int updated = stmt.executeUpdate(
+                    "UPDATE chat_messages SET is_read = true WHERE is_read = false AND created_at < CURRENT_TIMESTAMP"
+                );
+                if (updated > 0) {
+                    log.info("Migration: marked {} existing chat messages as read", updated);
+                }
+            } catch (Exception e) {
+                log.debug("chat_messages is_read migration: {}", e.getMessage());
+            }
 
         } catch (Exception e) {
             log.warn("Schema migration check failed (non-fatal): {}", e.getMessage());
