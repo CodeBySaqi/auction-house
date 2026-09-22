@@ -63,7 +63,7 @@
                     </div>
                 </div>
 
-                <form th:action="@{/admin/slides/add}" method="post" class="space-y-4">
+                <form th:action="@{/admin/slides/add}" method="post" enctype="multipart/form-data" class="space-y-4">
                     <div class="grid sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-medium text-g-text mb-1">Title *</label>
@@ -81,11 +81,21 @@
                             <label class="block text-xs font-medium text-g-text mb-1">Button URL</label>
                             <input type="text" name="buttonUrl" value="/auctions" class="w-full px-3 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
                         </div>
-                        <div>
-                            <label class="block text-xs font-medium text-g-text mb-1">Image URL</label>
-                            <input type="text" name="imageUrl" class="w-full px-3 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="https://... or /images/...">
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-medium text-g-text mb-1">Slide Image</label>
+                            <div class="space-y-2">
+                                <input type="file" name="slideImage" accept="image/jpeg,image/png,image/gif,image/webp"
+                                       class="w-full px-3 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm text-g-text file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-g-blue-light file:text-g-blue hover:file:bg-blue-100 transition-all">
+                                <div class="flex items-center gap-2">
+                                    <div class="flex-1 border-t border-g-border"></div>
+                                    <span class="text-[10px] text-g-text-secondary font-medium">OR paste URL</span>
+                                    <div class="flex-1 border-t border-g-border"></div>
+                                </div>
+                                <input type="text" name="imageUrl" class="w-full px-3 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="https://... or /images/...">
+                            </div>
+                            <p class="text-[10px] text-g-text-secondary mt-1">Upload takes priority over URL</p>
                         </div>
-                        <div>
+                        <div class="sm:col-span-2">
                             <label class="block text-xs font-medium text-g-text mb-1">Background Gradient</label>
                             <input type="text" name="backgroundGradient" class="w-full px-3 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all font-mono text-xs" placeholder="linear-gradient(135deg, #fce7f3, #fbcfe8)">
                         </div>
@@ -168,7 +178,7 @@
                                     <span class="material-icons-outlined text-sm group-open:rotate-90 transition-transform">chevron_right</span>
                                     Edit slide
                                 </summary>
-                                <form th:action="@{'/admin/slides/update/' + ${slide.id}}" method="post" class="space-y-3 mt-3">
+                                <form th:action="@{'/admin/slides/update/' + ${slide.id}}" method="post" enctype="multipart/form-data" class="space-y-3 mt-3">
                                     <div class="grid sm:grid-cols-2 gap-3">
                                         <div>
                                             <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Title</label>
@@ -186,11 +196,21 @@
                                             <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Button URL</label>
                                             <input type="text" name="buttonUrl" th:value="${slide.buttonUrl}" class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs focus:outline-none focus:border-g-blue transition-all">
                                         </div>
-                                        <div>
-                                            <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Image URL</label>
-                                            <input type="text" name="imageUrl" th:value="${slide.imageUrl}" class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs focus:outline-none focus:border-g-blue transition-all">
+                                        <div class="sm:col-span-2">
+                                            <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Change Image</label>
+                                            <div class="space-y-1.5">
+                                                <input type="file" name="slideImage" accept="image/jpeg,image/png,image/gif,image/webp"
+                                                       class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs text-g-text file:mr-3 file:py-0.5 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-medium file:bg-g-blue-light file:text-g-blue hover:file:bg-blue-100 transition-all">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="flex-1 border-t border-g-border"></div>
+                                                    <span class="text-[10px] text-g-text-secondary">OR paste URL</span>
+                                                    <div class="flex-1 border-t border-g-border"></div>
+                                                </div>
+                                                <input type="text" name="imageUrl" th:value="${slide.imageUrl}" class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs focus:outline-none focus:border-g-blue transition-all">
+                                            </div>
+                                            <p class="text-[10px] text-g-text-secondary mt-0.5">Upload takes priority. Leave empty to keep current.</p>
                                         </div>
-                                        <div>
+                                        <div class="sm:col-span-2">
                                             <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Gradient</label>
                                             <input type="text" name="backgroundGradient" th:value="${slide.backgroundGradient}" class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs font-mono focus:outline-none focus:border-g-blue transition-all" placeholder="linear-gradient(...)">
                                         </div>

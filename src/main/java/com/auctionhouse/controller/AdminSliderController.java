@@ -3,6 +3,7 @@ package com.auctionhouse.controller;
 import com.auctionhouse.model.Slide;
 import com.auctionhouse.model.User;
 import com.auctionhouse.repository.SlideRepository;
+import com.auctionhouse.service.FileStorageService;
 import com.auctionhouse.service.NotificationService;
 import com.auctionhouse.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
@@ -26,14 +28,17 @@ public class AdminSliderController {
     private final SlideRepository slideRepository;
     private final UserService userService;
     private final NotificationService notificationService;
+    private final FileStorageService fileStorageService;
 
     @Autowired
     public AdminSliderController(SlideRepository slideRepository,
                                   UserService userService,
-                                  NotificationService notificationService) {
+                                  NotificationService notificationService,
+                                  FileStorageService fileStorageService) {
         this.slideRepository = slideRepository;
         this.userService = userService;
         this.notificationService = notificationService;
+        this.fileStorageService = fileStorageService;
     }
 
     @GetMapping({"", "/"})
@@ -59,6 +64,7 @@ public class AdminSliderController {
                            @RequestParam(required = false, defaultValue = "#1f2937") String textColor,
                            @RequestParam(required = false, defaultValue = "#4b5563") String subtitleColor,
                            @RequestParam(required = false) String imageUrl,
+                           @RequestParam(required = false) MultipartFile slideImage,
                            @RequestParam(required = false, defaultValue = "rounded-[40%_60%_70%_30%/40%_50%_60%_50%]") String imageShape,
                            @RequestParam(required = false, defaultValue = "0") int sortOrder,
                            @RequestParam(required = false, defaultValue = "true") boolean active,
@@ -66,6 +72,18 @@ public class AdminSliderController {
         if (title == null || title.trim().isEmpty()) {
             ra.addFlashAttribute("error", "Title is required.");
             return "redirect:/admin/slides";
+        }
+
+        // Resolve image: upload takes priority over URL
+        String finalImageUrl = (imageUrl != null && !imageUrl.trim().isEmpty()) ? imageUrl.trim() : "";
+        if (slideImage != null && !slideImage.isEmpty()) {
+            try {
+                String filename = fileStorageService.storeAuctionImage(slideImage);
+                finalImageUrl = "/uploads/auctions/" + filename;
+            } catch (Exception e) {
+                ra.addFlashAttribute("error", "Failed to upload image: " + e.getMessage());
+                return "redirect:/admin/slides";
+            }
         }
 
         Slide slide = new Slide();
@@ -78,7 +96,7 @@ public class AdminSliderController {
         slide.setBackgroundGradient(backgroundGradient != null && !backgroundGradient.trim().isEmpty() ? backgroundGradient.trim() : null);
         slide.setTextColor(textColor);
         slide.setSubtitleColor(subtitleColor);
-        slide.setImageUrl(imageUrl != null ? imageUrl.trim() : "");
+        slide.setImageUrl(finalImageUrl);
         slide.setImageShape(imageShape);
         slide.setSortOrder(sortOrder);
         slide.setActive(active);
@@ -100,6 +118,7 @@ public class AdminSliderController {
                               @RequestParam(required = false, defaultValue = "#1f2937") String textColor,
                               @RequestParam(required = false, defaultValue = "#4b5563") String subtitleColor,
                               @RequestParam(required = false) String imageUrl,
+                              @RequestParam(required = false) MultipartFile slideImage,
                               @RequestParam(required = false, defaultValue = "rounded-[40%_60%_70%_30%/40%_50%_60%_50%]") String imageShape,
                               @RequestParam(required = false, defaultValue = "0") int sortOrder,
                               @RequestParam(required = false, defaultValue = "true") boolean active,
@@ -119,10 +138,24 @@ public class AdminSliderController {
         slide.setBackgroundGradient(backgroundGradient != null && !backgroundGradient.trim().isEmpty() ? backgroundGradient.trim() : null);
         slide.setTextColor(textColor);
         slide.setSubtitleColor(subtitleColor);
-        slide.setImageUrl(imageUrl != null ? imageUrl.trim() : "");
         slide.setImageShape(imageShape);
         slide.setSortOrder(sortOrder);
         slide.setActive(active);
+
+        // Image: upload takes priority, then URL, then keep existing
+        if (slideImage != null && !slideImage.isEmpty()) {
+            try {
+                String filename = fileStorageService.storeAuctionImage(slideImage);
+                slide.setImageUrl("/uploads/auctions/" + filename);
+            } catch (Exception e) {
+                ra.addFlashAttribute("error", "Failed to upload image: " + e.getMessage());
+                return "redirect:/admin/slides";
+            }
+        } else if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+            slide.setImageUrl(imageUrl.trim());
+        }
+        // else: keep existing imageUrl unchanged
+
         slideRepository.save(slide);
 
         ra.addFlashAttribute("success", "Slide updated!");
