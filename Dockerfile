@@ -24,4 +24,7 @@ EXPOSE 8080
 # Use PORT env variable (set by hosting platform)
 ENV PORT=8080
 
+# Activate production profile for Railway
+ENV SPRING_PROFILES_ACTIVE=prod
+
 ENTRYPOINT ["java", "-jar", "app.jar"]
