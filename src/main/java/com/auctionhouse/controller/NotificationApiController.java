@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -65,5 +66,17 @@ public class NotificationApiController {
         response.put("totalCount", all.size());
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/mark-all-read")
+    public ResponseEntity<?> markAllRead(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
+        }
+
+        User user = userService.getCurrentUser(userDetails.getUsername());
+        notificationService.markAllAsRead(user.getId());
+
+        return ResponseEntity.ok(Map.of("success", true, "unreadCount", 0));
     }
 }

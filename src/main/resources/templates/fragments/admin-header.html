@@ -120,9 +120,30 @@
         var popover = document.getElementById('notifPopover');
         var isOpen = !popover.classList.contains('hidden');
         popover.classList.toggle('hidden');
-        if (!isOpen && !notifLoaded) {
+        if (!isOpen) {
+            // Opening the popover — fetch notifications and mark as read
             fetchNotifications();
+            markAllNotificationsRead();
         }
+    }
+
+    function markAllNotificationsRead() {
+        // Hide badge immediately for instant feedback
+        var badge = document.getElementById('notifBadge');
+        if (badge) badge.style.display = 'none';
+        var label = document.getElementById('notifUnreadLabel');
+        if (label) label.classList.add('hidden');
+
+        // Get CSRF token if available
+        var csrfMeta = document.querySelector('meta[name="_csrf"]');
+        var csrfHeader = document.querySelector('meta[name="_csrf_header"]');
+        var headers = {};
+        if (csrfMeta && csrfHeader) {
+            headers[csrfHeader.getAttribute('content')] = csrfMeta.getAttribute('content');
+        }
+
+        fetch('/api/notifications/mark-all-read', { method: 'POST', headers: headers })
+            .catch(function() {}); // Silent fail — badge already hidden
     }
 
     function fetchNotifications() {
@@ -135,16 +156,11 @@
                 notifLoaded = true;
                 if (loading) loading.style.display = 'none';
                 renderNotifications(data.notifications, data.unreadCount);
+                // Since we mark all as read on open, force badge to 0
                 var badge = document.getElementById('notifBadge');
-                if (badge) {
-                    if (data.unreadCount > 0) { badge.textContent = data.unreadCount > 99 ? '99+' : data.unreadCount; badge.style.display = 'flex'; }
-                    else { badge.style.display = 'none'; }
-                }
+                if (badge) badge.style.display = 'none';
                 var label = document.getElementById('notifUnreadLabel');
-                if (label) {
-                    if (data.unreadCount > 0) { label.textContent = data.unreadCount + ' new'; label.classList.remove('hidden'); }
-                    else { label.classList.add('hidden'); }
-                }
+                if (label) label.classList.add('hidden');
             })
             .catch(function() {
                 if (loading) loading.innerHTML = '<p class="text-xs text-g-red">Failed to load</p>';

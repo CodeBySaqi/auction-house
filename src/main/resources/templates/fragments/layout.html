@@ -346,9 +346,28 @@
             const popover = document.getElementById('notifPopover');
             const isOpen = !popover.classList.contains('hidden');
             popover.classList.toggle('hidden');
-            if (!isOpen && !notifLoaded) {
+            if (!isOpen) {
                 fetchNotifications();
+                markAllNotificationsRead();
             }
+        }
+
+        function markAllNotificationsRead() {
+            // Hide badge immediately
+            var badge = document.getElementById('notifBadge');
+            if (badge) badge.style.display = 'none';
+            var label = document.getElementById('notifUnreadLabel');
+            if (label) label.classList.add('hidden');
+
+            var csrfMeta = document.querySelector('meta[name="_csrf"]');
+            var csrfHeader = document.querySelector('meta[name="_csrf_header"]');
+            var headers = {};
+            if (csrfMeta && csrfHeader) {
+                headers[csrfHeader.getAttribute('content')] = csrfMeta.getAttribute('content');
+            }
+
+            fetch('/api/notifications/mark-all-read', { method: 'POST', headers: headers })
+                .catch(function() {});
         }
 
         function fetchNotifications() {
@@ -361,26 +380,11 @@
                     notifLoaded = true;
                     document.getElementById('notifLoading').style.display = 'none';
                     renderNotifications(data.notifications, data.unreadCount);
-                    // Update badge
+                    // Since we mark all as read on open, force badge to 0
                     const badge = document.getElementById('notifBadge');
-                    if (badge) {
-                        if (data.unreadCount > 0) {
-                            badge.textContent = data.unreadCount > 99 ? '99+' : data.unreadCount;
-                            badge.style.display = 'flex';
-                        } else {
-                            badge.style.display = 'none';
-                        }
-                    }
-                    // Update label
+                    if (badge) badge.style.display = 'none';
                     const label = document.getElementById('notifUnreadLabel');
-                    if (label) {
-                        if (data.unreadCount > 0) {
-                            label.textContent = data.unreadCount + ' new';
-                            label.classList.remove('hidden');
-                        } else {
-                            label.classList.add('hidden');
-                        }
-                    }
+                    if (label) label.classList.add('hidden');
                 })
                 .catch(() => {
                     document.getElementById('notifLoading').innerHTML = '<p class="text-xs text-g-red">Failed to load</p>';
