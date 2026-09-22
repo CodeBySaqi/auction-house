@@ -179,7 +179,7 @@
                                 <span class="material-icons-outlined text-sm"
                                       th:classappend="${log.action.contains('DEACTIVATED') || log.action.contains('DEMOTED')} ? 'text-g-red' : 'text-g-green'"
                                       th:text="${log.action.contains('DEACTIVATED') || log.action.contains('DEMOTED')} ? 'remove_circle' : 'check_circle'">check</span>
-                                <span class="text-xs font-medium text-g-text" th:text="${log.action}">ACTION</span>
+                                <span class="text-xs font-medium text-g-text" th:text="${log.action == 'USER_ACTIVATED'} ? 'User Activated' : (${log.action == 'USER_DEACTIVATED'} ? 'User Deactivated' : (${log.action == 'ROLE_CHANGED'} ? 'Role Changed' : (${log.action == 'ADMIN_CREATED'} ? 'Admin Promoted' : (${log.action == 'ADMIN_DEMOTED'} ? 'Admin Demoted' : ${log.action}))))">ACTION</span>
                                 <span class="text-xs text-g-text-secondary ml-auto" th:text="${#temporals.format(log.createdAt, 'MMM dd HH:mm')}">time</span>
                             </div>
                             <p class="text-xs text-g-text-secondary mt-1" th:text="${log.details}">Details</p>

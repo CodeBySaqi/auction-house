@@ -35,7 +35,7 @@
         <!-- Header -->
         <div class="mb-6">
             <div class="flex items-center gap-2 text-sm text-g-text-secondary mb-2">
-                <a href="/super-admin" class="hover:text-purple-600 transition-colors">Dashboard</a>
+                <a th:href="@{/super-admin}" class="hover:text-purple-600 transition-colors">Dashboard</a>
                 <span class="material-icons-outlined text-xs">chevron_right</span>
                 <span>Audit Logs</span>
             </div>
@@ -78,10 +78,11 @@
                             <td class="px-6 py-4">
                                 <span class="px-2.5 py-1 text-xs font-semibold rounded-full"
                                       th:classappend="${log.action.contains('DEACTIVATED') || log.action.contains('DEMOTED')} ? 'bg-red-50 text-g-red' : 'bg-green-50 text-g-green'"
-                                      th:text="${log.action}">ACTION</span>
+                                      th:text="${log.action == 'USER_ACTIVATED'} ? 'User Activated' : (${log.action == 'USER_DEACTIVATED'} ? 'User Deactivated' : (${log.action == 'ROLE_CHANGED'} ? 'Role Changed' : (${log.action == 'ADMIN_CREATED'} ? 'Admin Promoted' : (${log.action == 'ADMIN_DEMOTED'} ? 'Admin Demoted' : ${log.action}))))">ACTION</span>
                             </td>
                             <td class="px-6 py-4">
-                                <a th:href="@{/super-admin/users/{id}(id=${log.targetUserId})}" class="text-sm text-g-blue hover:underline" th:text="${log.targetUsername}">user</a>
+                                <a th:if="${log.targetUserId != null}" th:href="@{/super-admin/users/{id}(id=${log.targetUserId})}" class="text-sm text-g-blue hover:underline" th:text="${log.targetUsername}">user</a>
+                                <span th:if="${log.targetUserId == null}" class="text-sm text-g-text-secondary" th:text="${log.targetUsername != null} ? ${log.targetUsername} : '—'">—</span>
                             </td>
                             <td class="px-6 py-4">
                                 <span class="text-sm text-g-text" th:text="${log.performedBy.username}">admin</span>

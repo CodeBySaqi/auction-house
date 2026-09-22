@@ -30,6 +30,14 @@ public class SuperAdminController {
         this.superAdminService = superAdminService;
     }
 
+    /**
+     * Add shared model attributes needed by all super-admin pages (sidebar badges).
+     */
+    private void addSidebarCounts(Model model) {
+        model.addAttribute("totalUsers", superAdminService.countTotalUsers());
+        model.addAttribute("totalAdmins", superAdminService.countAdmins());
+    }
+
     // ==================== DASHBOARD ====================
 
     @GetMapping({"", "/", "/dashboard"})
@@ -64,6 +72,7 @@ public class SuperAdminController {
         model.addAttribute("users", users);
         model.addAttribute("search", search != null ? search : "");
         model.addAttribute("currentSuperAdmin", superAdminService.findUserByUsername(userDetails.getUsername()).orElse(null));
+        addSidebarCounts(model);
 
         return "super-admin/users";
     }
@@ -82,6 +91,7 @@ public class SuperAdminController {
         model.addAttribute("targetUser", target);
         model.addAttribute("auditLogs", superAdminService.getAuditLogsForUser(id));
         model.addAttribute("currentSuperAdmin", superAdminService.findUserByUsername(userDetails.getUsername()).orElse(null));
+        addSidebarCounts(model);
 
         return "super-admin/user-detail";
     }
@@ -145,6 +155,7 @@ public class SuperAdminController {
         model.addAttribute("admins", superAdminService.getAdmins());
         model.addAttribute("superAdmins", superAdminService.getSuperAdmins());
         model.addAttribute("currentSuperAdmin", superAdminService.findUserByUsername(userDetails.getUsername()).orElse(null));
+        addSidebarCounts(model);
 
         return "super-admin/admins";
     }
@@ -191,6 +202,7 @@ public class SuperAdminController {
     public String auditLogs(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         model.addAttribute("auditLogs", superAdminService.getAuditLogs());
         model.addAttribute("currentSuperAdmin", superAdminService.findUserByUsername(userDetails.getUsername()).orElse(null));
+        addSidebarCounts(model);
         return "super-admin/audit-logs";
     }
 }
