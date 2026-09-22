@@ -4,7 +4,7 @@
 
 <!-- Admin Top Header Fragment -->
 <!-- Usage: <nav th:replace="~{fragments/admin-header :: adminHeader}"></nav> -->
-<!-- Requires: ${admin} and ${unreadCount} in model -->
+<!-- Uses GlobalModelAdvice: ${currentUser} and ${unreadCount} are auto-injected -->
 <nav th:fragment="adminHeader" class="bg-white border-b border-g-border sticky top-0 z-40 flex-shrink-0">
     <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
@@ -63,12 +63,12 @@
                 <!-- Profile Dropdown -->
                 <div class="relative">
                     <button onclick="toggleProfileDropdown()" class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm hover:shadow-g-sm transition-shadow cursor-pointer">
-                        <span th:text="${admin != null ? admin.username.substring(0,1).toUpperCase() : 'A'}">A</span>
+                        <span th:text="${currentUser != null ? currentUser.username.substring(0,1).toUpperCase() : 'A'}">A</span>
                     </button>
                     <div id="profileDropdown" class="hidden absolute right-0 top-12 w-56 bg-white border border-g-border rounded-2xl shadow-g-lg z-50 py-2">
                         <div class="px-4 py-3 border-b border-g-border mb-1">
-                            <p class="text-sm font-medium text-g-text" th:text="${admin != null ? admin.username : 'Admin'}">Admin User</p>
-                            <p class="text-xs text-g-text-secondary truncate" th:text="${admin != null ? admin.email : ''}">admin@auctionhouse.com</p>
+                            <p class="text-sm font-medium text-g-text" th:text="${currentUser != null ? currentUser.username : 'Admin'}">Admin User</p>
+                            <p class="text-xs text-g-text-secondary truncate" th:text="${currentUser != null ? currentUser.email : ''}">admin@auctionhouse.com</p>
                         </div>
                         <a th:href="@{/profile/edit}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
                             <span class="material-icons-outlined text-lg text-g-text-secondary">person</span>

@@ -20,70 +20,8 @@
 </head>
 <body class="bg-g-bg font-roboto text-g-text h-screen overflow-hidden flex flex-col">
 
-    <!-- App Bar -->
-    <nav class="bg-white border-b border-g-border sticky top-0 z-40">
-        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center gap-3">
-                    <a href="/admin/support" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
-                        <span class="material-icons-outlined">arrow_back</span>
-                    </a>
-                    <div class="flex items-center gap-2">
-                        <span class="font-gsans font-medium text-lg text-g-text">Ticket <span class="text-g-blue" th:text="${ticket.ticketNumber}">#10001</span></span>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase" id="statusBadge"
-                              th:classappend="${ticket.status.name() == 'OPEN'} ? 'bg-blue-100 text-blue-700' :
-                                              (${ticket.status.name() == 'IN_PROGRESS'} ? 'bg-amber-100 text-amber-700' :
-                                              (${ticket.status.name() == 'RESOLVED'} ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'))"
-                              th:text="${ticket.status.displayName}"
-                              th:data-status="${ticket.status.name()}">Status</span>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <!-- Status Change -->
-                    <div class="relative" th:if="${ticket.status.name() != 'CLOSED'}">
-                        <button onclick="document.getElementById('statusMenu').classList.toggle('hidden')"
-                                class="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-g-text bg-white border border-g-border rounded-full hover:bg-g-hover transition-colors">
-                            <span class="material-icons-outlined text-sm">swap_horiz</span> Change Status
-                        </button>
-                        <div id="statusMenu" class="hidden absolute right-0 top-10 w-48 bg-white border border-g-border rounded-xl shadow-g-lg z-50 py-1">
-                            <!-- Only show valid transitions based on current status -->
-                            <!-- OPEN → IN_PROGRESS, CLOSED -->
-                            <form th:if="${ticket.status.name() == 'OPEN'}" th:action="@{'/admin/support/' + ${ticket.id} + '/status'}" method="post" class="m-0">
-                                <input type="hidden" name="status" value="IN_PROGRESS">
-                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-g-text hover:bg-g-hover transition-colors">In Progress</button>
-                            </form>
-                            <form th:if="${ticket.status.name() == 'OPEN'}" th:action="@{'/admin/support/' + ${ticket.id} + '/status'}" method="post" class="m-0">
-                                <input type="hidden" name="status" value="CLOSED">
-                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-g-text hover:bg-g-hover transition-colors">Close</button>
-                            </form>
-                            <!-- IN_PROGRESS → RESOLVED, CLOSED, OPEN -->
-                            <form th:if="${ticket.status.name() == 'IN_PROGRESS'}" th:action="@{'/admin/support/' + ${ticket.id} + '/status'}" method="post" class="m-0">
-                                <input type="hidden" name="status" value="RESOLVED">
-                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-g-text hover:bg-g-hover transition-colors">Resolve</button>
-                            </form>
-                            <form th:if="${ticket.status.name() == 'IN_PROGRESS'}" th:action="@{'/admin/support/' + ${ticket.id} + '/status'}" method="post" class="m-0">
-                                <input type="hidden" name="status" value="CLOSED">
-                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-g-text hover:bg-g-hover transition-colors">Close</button>
-                            </form>
-                            <form th:if="${ticket.status.name() == 'IN_PROGRESS'}" th:action="@{'/admin/support/' + ${ticket.id} + '/status'}" method="post" class="m-0">
-                                <input type="hidden" name="status" value="OPEN">
-                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-g-text hover:bg-g-hover transition-colors">Reopen</button>
-                            </form>
-                            <!-- RESOLVED → OPEN, CLOSED -->
-                            <form th:if="${ticket.status.name() == 'RESOLVED'}" th:action="@{'/admin/support/' + ${ticket.id} + '/status'}" method="post" class="m-0">
-                                <input type="hidden" name="status" value="OPEN">
-                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-g-text hover:bg-g-hover transition-colors">Reopen</button>
-                            </form>
-                            <form th:if="${ticket.status.name() == 'RESOLVED'}" th:action="@{'/admin/support/' + ${ticket.id} + '/status'}" method="post" class="m-0">
-                                <input type="hidden" name="status" value="CLOSED">
-                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-g-text hover:bg-g-hover transition-colors">Close</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+        <!-- App Bar -->
+    <nav th:replace="~{fragments/admin-header :: adminHeader}"></nav>
 
     <!-- Main Layout -->
     <div class="max-w-[1680px] mx-auto flex flex-1 overflow-hidden w-full">
@@ -280,5 +218,6 @@ document.addEventListener('click', function(e) {
     }
 });
 </script>
+    <div th:replace="~{fragments/admin-header :: adminHeaderScripts}"></div>
 </body>
 </html>

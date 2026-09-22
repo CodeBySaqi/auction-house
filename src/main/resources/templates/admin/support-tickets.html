@@ -21,43 +21,8 @@
 </head>
 <body class="bg-g-bg font-roboto text-g-text h-screen overflow-hidden flex flex-col">
 
-    <!-- App Bar -->
-    <nav class="bg-white border-b border-g-border sticky top-0 z-40">
-        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 bg-g-blue rounded-xl flex items-center justify-center">
-                        <span class="material-icons-outlined text-white text-xl">gavel</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-gsans font-medium text-xl text-g-text">Auction<span class="text-g-blue">House</span></span>
-                        <span class="px-2.5 py-1 bg-g-text text-white text-[10px] font-bold uppercase tracking-wider rounded-md">Admin</span>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <a th:href="@{/}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
-                        <span class="material-icons-outlined">home</span>
-                    </a>
-                    <div class="relative">
-                        <button onclick="document.getElementById('adminProfileMenu').classList.toggle('hidden')" class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm">A</button>
-                        <div id="adminProfileMenu" class="hidden absolute right-0 top-12 w-56 bg-white border border-g-border rounded-2xl shadow-g-lg z-50 py-2">
-                            <div class="px-4 py-3 border-b border-g-border mb-1">
-                                <p class="text-sm font-medium text-g-text" th:text="${admin.username}">Admin</p>
-                            </div>
-                            <a th:href="@{/}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
-                                <span class="material-icons-outlined text-lg text-g-text-secondary">home</span> View Site
-                            </a>
-                            <form th:action="@{/logout}" method="post" class="m-0">
-                                <button type="submit" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-red hover:bg-red-50 transition-colors w-full">
-                                    <span class="material-icons-outlined text-lg">logout</span> Logout
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+        <!-- App Bar -->
+    <nav th:replace="~{fragments/admin-header :: adminHeader}"></nav>
 
     <!-- Main Layout -->
     <div class="max-w-[1680px] mx-auto flex flex-1 overflow-hidden w-full">
@@ -173,5 +138,6 @@
             }
         });
     </script>
+    <div th:replace="~{fragments/admin-header :: adminHeaderScripts}"></div>
 </body>
 </html>

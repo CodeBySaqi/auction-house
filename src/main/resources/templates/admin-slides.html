@@ -31,8 +31,16 @@
         <span th:text="${error}">Error</span>
     </div>
 
-    <div class="flex-1 overflow-y-auto">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <!-- Main Layout -->
+    <div class="max-w-[1680px] mx-auto flex flex-1 overflow-hidden w-full">
+
+        <!-- Sidebar -->
+        <aside th:replace="~{fragments/admin-sidebar :: sidebar('slides')}"></aside>
+        <div th:replace="~{fragments/admin-sidebar :: mobile-nav('slides')}"></div>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto scrollbar-hide">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
             <!-- Add New Slide -->
             <div class="bg-white rounded-2xl border border-g-border p-6">
@@ -245,7 +253,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script>

@@ -28,29 +28,8 @@
 </head>
 <body class="bg-g-bg font-roboto text-g-text h-screen overflow-hidden flex flex-col">
 
-    <!-- App Bar -->
-    <nav class="bg-white border-b border-g-border sticky top-0 z-40">
-        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 bg-g-blue rounded-xl flex items-center justify-center">
-                        <span class="material-icons-outlined text-white text-xl">gavel</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-gsans font-medium text-xl text-g-text">Auction<span class="text-g-blue">House</span></span>
-                        <span class="px-2.5 py-1 bg-g-text text-white text-[10px] font-bold uppercase tracking-wider rounded-md">Admin</span>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    
-                    <div class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm">
-                        A
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+        <!-- App Bar -->
+    <nav th:replace="~{fragments/admin-header :: adminHeader}"></nav>
 
     <!-- Main Layout -->
     <div class="max-w-[1680px] mx-auto flex flex-1 overflow-hidden w-full">
@@ -215,5 +194,6 @@
     <script>
     </script>
 
+    <div th:replace="~{fragments/admin-header :: adminHeaderScripts}"></div>
 </body>
 </html>
