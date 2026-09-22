@@ -10,7 +10,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Scheduled task that checks for pending scheduled broadcasts and sends them
@@ -71,9 +74,24 @@ public class BroadcastScheduler {
             case "active":
                 recipients = allUsers.stream().filter(User::isActive).toList();
                 break;
+            case "bidders":
+                // Send to all active users as fallback (bidders list not stored)
+                recipients = allUsers.stream().filter(User::isActive).toList();
+                break;
             case "custom":
-                // For custom audience, we'd need stored user IDs — for now send to all
-                recipients = allUsers;
+                // Use stored custom user IDs
+                if (broadcast.getCustomUserIds() != null && !broadcast.getCustomUserIds().isEmpty()) {
+                    Set<Long> ids = Arrays.stream(broadcast.getCustomUserIds().split(","))
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .map(Long::parseLong)
+                            .collect(Collectors.toSet());
+                    recipients = allUsers.stream()
+                            .filter(u -> ids.contains(u.getId()))
+                            .toList();
+                } else {
+                    recipients = allUsers; // Fallback if IDs not stored
+                }
                 break;
             default:
                 recipients = allUsers;

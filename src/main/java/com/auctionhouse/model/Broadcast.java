@@ -43,6 +43,9 @@ public class Broadcast {
     @Column(name = "is_scheduled")
     private boolean scheduled = false;
 
+    @Column(name = "custom_user_ids", length = 2000)
+    private String customUserIds; // comma-separated user IDs for custom audience
+
     public Broadcast() {
         this.sentAt = LocalDateTime.now();
     }
@@ -105,4 +108,7 @@ public class Broadcast {
 
     public boolean isScheduled() { return scheduled; }
     public void setScheduled(boolean scheduled) { this.scheduled = scheduled; }
+
+    public String getCustomUserIds() { return customUserIds; }
+    public void setCustomUserIds(String customUserIds) { this.customUserIds = customUserIds; }
 }

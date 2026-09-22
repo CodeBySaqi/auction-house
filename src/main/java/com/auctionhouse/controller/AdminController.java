@@ -975,6 +975,10 @@ public class AdminController {
             broadcast.setScheduledFor(scheduledTime);
             broadcast.setRecipientCount(recipients.size());
             broadcast.setSentAt(null);
+            // Store custom user IDs so the scheduler can send to the right people
+            if ("custom".equals(audience) && userIds != null && !userIds.isEmpty()) {
+                broadcast.setCustomUserIds(userIds.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(",")));
+            }
             broadcastRepository.save(broadcast);
 
             ra.addFlashAttribute("success", "Broadcast scheduled for " + broadcast.getFormattedScheduledTime() + " (" + audienceLabel + ").");
@@ -998,14 +1002,44 @@ public class AdminController {
     }
 
     @PostMapping("/broadcast/cancel/{id}")
+    @org.springframework.transaction.annotation.Transactional
     public String cancelScheduledBroadcast(@PathVariable Long id, Principal principal, RedirectAttributes ra) {
         requireAdmin(principal);
-        broadcastRepository.findById(id).ifPresent(b -> {
-            if (b.isScheduled()) {
-                broadcastRepository.delete(b);
+        Broadcast b = broadcastRepository.findById(id).orElse(null);
+        if (b != null && b.isScheduled()) {
+            broadcastRepository.delete(b);
+            ra.addFlashAttribute("success", "Scheduled broadcast cancelled.");
+        } else {
+            ra.addFlashAttribute("error", "Broadcast not found or already sent.");
+        }
+        return "redirect:/admin/broadcast";
+    }
+
+    @PostMapping("/broadcast/extend/{id}")
+    @org.springframework.transaction.annotation.Transactional
+    public String extendScheduledBroadcast(@PathVariable Long id,
+                                           @RequestParam String newScheduledFor,
+                                           Principal principal,
+                                           RedirectAttributes ra) {
+        requireAdmin(principal);
+        Broadcast b = broadcastRepository.findById(id).orElse(null);
+        if (b == null || !b.isScheduled()) {
+            ra.addFlashAttribute("error", "Broadcast not found or already sent.");
+            return "redirect:/admin/broadcast";
+        }
+
+        try {
+            LocalDateTime newTime = LocalDateTime.parse(newScheduledFor);
+            if (!newTime.isAfter(LocalDateTime.now())) {
+                ra.addFlashAttribute("error", "New time must be in the future.");
+                return "redirect:/admin/broadcast";
             }
-        });
-        ra.addFlashAttribute("success", "Scheduled broadcast cancelled.");
+            b.setScheduledFor(newTime);
+            broadcastRepository.save(b);
+            ra.addFlashAttribute("success", "Broadcast rescheduled to " + b.getFormattedScheduledTime() + ".");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Invalid date format.");
+        }
         return "redirect:/admin/broadcast";
     }
 
