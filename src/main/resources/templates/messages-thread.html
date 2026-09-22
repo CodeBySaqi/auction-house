@@ -84,7 +84,7 @@
                 placeholder="Type a message..."
                 maxlength="2000"
                 autocomplete="off"
-                class="flex-1 px-4 py-3 bg-g-bg border border-g-border rounded-full text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
+                class="emoji-enabled flex-1 px-4 py-3 bg-g-bg border border-g-border rounded-full text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
                 required>
             <button type="submit" id="sendBtn"
                     class="w-11 h-11 bg-g-blue text-white rounded-full flex items-center justify-center hover:bg-g-blue-hover shadow-g-sm transition-all shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -98,6 +98,8 @@
     <input type="hidden" id="current-username" th:value="${currentUser.username}">
     <input type="hidden" id="csrf-token" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
+    <!-- Emoji Picker -->
+    <script th:src="@{/js/emoji-picker.js}"></script>
     <!-- SockJS and STOMP -->
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>

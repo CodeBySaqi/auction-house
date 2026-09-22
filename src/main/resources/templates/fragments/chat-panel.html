@@ -46,7 +46,7 @@
                     id="chat-input" 
                     placeholder="Type your message..." 
                     maxlength="2000"
-                    class="flex-1 px-4 py-2.5 bg-g-bg border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
+                    class="emoji-enabled flex-1 px-4 py-2.5 bg-g-bg border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
                     required
                 >
                 <button 
@@ -83,6 +83,8 @@
     <input type="hidden" id="conversation-id" th:value="${conversation.id}">
     <input type="hidden" id="current-username" th:value="${#authentication.name}">
 
+    <!-- Emoji Picker -->
+    <script th:src="@{/js/emoji-picker.js}"></script>
     <!-- Load SockJS and STOMP client libraries -->
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>

@@ -88,7 +88,7 @@
                 <div class="border-t border-g-border p-4 flex-shrink-0" th:if="${ticket.status.name() != 'CLOSED'}">
                     <form id="messageForm" th:action="@{'/admin/support/' + ${ticket.id} + '/reply'}" method="post" class="flex gap-3">
                         <input type="text" name="content" id="messageInput" autocomplete="off" maxlength="2000"
-                               class="flex-1 px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
+                               class="emoji-enabled flex-1 px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
                                placeholder="Type your reply...">
                         <button type="submit" id="sendBtn"
                                 class="px-5 py-3 bg-g-blue text-white font-medium rounded-xl hover:bg-g-blue-hover text-sm transition-colors flex items-center gap-2">
@@ -107,6 +107,7 @@
     </div>
 
 <!-- WebSocket -->
+<script th:src="@{/js/emoji-picker.js}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 <script th:inline="javascript">
