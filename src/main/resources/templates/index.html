@@ -11,75 +11,32 @@
         <!-- Slides Container -->
         <div class="flex transition-transform duration-500 ease-in-out" id="slidesContainer">
             
-            <!-- Slide 1: White -->
-            <div class="w-full flex-shrink-0">
-                <div class="flex flex-row aspect-[16/9] sm:aspect-[21/9] bg-white">
+            <!-- Dynamic Slides from DB -->
+            <div th:each="slide : ${slides}" class="w-full flex-shrink-0">
+                <div class="flex flex-row aspect-[16/9] sm:aspect-[21/9]"
+                     th:style="${slide.backgroundGradient != null and !slide.backgroundGradient.isEmpty()} ? 'background:' + ${slide.backgroundGradient} : 'background:' + ${slide.backgroundColor}">
                     <!-- Text Side -->
                     <div class="w-1/2 flex items-center" style="padding: clamp(12px, 3vw, 48px);">
-                        <div class="text-gray-800 w-full">
-                            <h2 class="font-gsans font-bold leading-tight mb-2" style="font-size: clamp(14px, 2.5vw, 48px); color: #1f2937;">Welcome to AuctionHouse</h2>
-                            <p style="font-size: clamp(9px, 1.2vw, 18px); margin-bottom: clamp(8px, 1.5vw, 24px); color: #4b5563;">Bid on luxury cars, watches, art & more</p>
-                            <a href="/auctions" class="inline-block rounded-full font-semibold transition-colors shadow-lg text-white hover:opacity-90" style="font-size: clamp(8px, 1vw, 16px); padding: clamp(6px, 1vw, 12px) clamp(12px, 2vw, 32px); background: #3b82f6;">
-                                Browse Auctions
+                        <div class="w-full">
+                            <h2 class="font-gsans font-bold leading-tight mb-2"
+                                th:style="'font-size: clamp(14px, 2.5vw, 48px); color:' + ${slide.textColor}"
+                                th:text="${slide.title}">Slide Title</h2>
+                            <p th:style="'font-size: clamp(9px, 1.2vw, 18px); margin-bottom: clamp(8px, 1.5vw, 24px); color:' + ${slide.subtitleColor}"
+                               th:text="${slide.subtitle}">Slide subtitle</p>
+                            <a th:href="${slide.buttonUrl}" th:text="${slide.buttonText}"
+                               th:style="'font-size: clamp(8px, 1vw, 16px); padding: clamp(6px, 1vw, 12px) clamp(12px, 2vw, 32px); background:' + ${slide.buttonColor}"
+                               class="inline-block rounded-full font-semibold transition-colors shadow-lg text-white hover:opacity-90">
+                                Button
                             </a>
                         </div>
                     </div>
                     <!-- Image Side -->
                     <div class="w-1/2 flex items-center justify-center" style="padding: clamp(8px, 2vw, 48px);">
                         <div class="w-full h-full flex items-center justify-center">
-                            <img th:src="@{/images/1985-couple.jpg}" 
-                                 alt="1985 couple portrait" 
-                                 class="max-w-full max-h-full rounded-[40%_60%_70%_30%/40%_50%_60%_50%] shadow-2xl object-cover"
-                                 style="aspect-ratio: 1/1;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 2: Blush Pink -->
-            <div class="w-full flex-shrink-0">
-                <div class="flex flex-row aspect-[16/9] sm:aspect-[21/9]" style="background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);">
-                    <!-- Text Side -->
-                    <div class="w-1/2 flex items-center" style="padding: clamp(12px, 3vw, 48px);">
-                        <div class="text-gray-800 w-full">
-                            <h2 class="font-gsans font-bold leading-tight mb-2" style="font-size: clamp(14px, 2.5vw, 48px); color: #831843;">Luxury Cars Auction</h2>
-                            <p style="font-size: clamp(9px, 1.2vw, 18px); margin-bottom: clamp(8px, 1.5vw, 24px); color: #9d174d;">Ferrari, Lamborghini, Porsche & more - Starting at $50K</p>
-                            <a href="/auctions?category=CARS" class="inline-block rounded-full font-semibold transition-colors shadow-lg text-white hover:opacity-90" style="font-size: clamp(8px, 1vw, 16px); padding: clamp(6px, 1vw, 12px) clamp(12px, 2vw, 32px); background: #db2777;">
-                                View Cars
-                            </a>
-                        </div>
-                    </div>
-                    <!-- Image Side -->
-                    <div class="w-1/2 flex items-center justify-center" style="padding: clamp(8px, 2vw, 48px);">
-                        <div class="w-full h-full flex items-center justify-center">
-                            <img src="https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&q=80" 
-                                 alt="Luxury car" 
-                                 class="max-w-full max-h-full rounded-[60%_40%_30%_70%/60%_30%_70%_40%] shadow-2xl object-contain"
-                                 style="aspect-ratio: 1/1;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 3: Lavender -->
-            <div class="w-full flex-shrink-0">
-                <div class="flex flex-row aspect-[16/9] sm:aspect-[21/9]" style="background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%);">
-                    <!-- Text Side -->
-                    <div class="w-1/2 flex items-center" style="padding: clamp(12px, 3vw, 48px);">
-                        <div class="text-gray-800 w-full">
-                            <h2 class="font-gsans font-bold leading-tight mb-2" style="font-size: clamp(14px, 2.5vw, 48px); color: #581c87;">Start with $50K</h2>
-                            <p style="font-size: clamp(9px, 1.2vw, 18px); margin-bottom: clamp(8px, 1.5vw, 24px); color: #6b21a8;">Create your account and get instant demo funds</p>
-                            <a href="/register" class="inline-block rounded-full font-semibold transition-colors shadow-lg text-white hover:opacity-90" style="font-size: clamp(8px, 1vw, 16px); padding: clamp(6px, 1vw, 12px) clamp(12px, 2vw, 32px); background: #9333ea;">
-                                Sign Up Free
-                            </a>
-                        </div>
-                    </div>
-                    <!-- Image Side -->
-                    <div class="w-1/2 flex items-center justify-center" style="padding: clamp(8px, 2vw, 48px);">
-                        <div class="w-full h-full flex items-center justify-center">
-                            <img src="https://images.unsplash.com/photo-1579621970588-a35d0e7ab9b6?w=600&q=80" 
-                                 alt="Money and wallet" 
-                                 class="max-w-full max-h-full rounded-[70%_30%_50%_50%/40%_60%_40%_60%] shadow-2xl object-contain"
+                            <img th:if="${slide.imageUrl != null and !slide.imageUrl.isEmpty()}"
+                                 th:src="${slide.imageUrl}"
+                                 th:alt="${slide.title}"
+                                 th:class="'max-w-full max-h-full shadow-2xl object-contain ' + ${slide.imageShape}"
                                  style="aspect-ratio: 1/1;">
                         </div>
                     </div>
@@ -98,9 +55,7 @@
 
         <!-- Dots Indicator -->
         <div class="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2" id="sliderDots">
-            <button class="slider-dot rounded-full bg-white/50 hover:bg-white/80 transition-all" style="width: clamp(8px, 1.2vw, 12px); height: clamp(8px, 1.2vw, 12px);" data-index="0"></button>
-            <button class="slider-dot rounded-full bg-white/50 hover:bg-white/80 transition-all" style="width: clamp(8px, 1.2vw, 12px); height: clamp(8px, 1.2vw, 12px);" data-index="1"></button>
-            <button class="slider-dot rounded-full bg-white/50 hover:bg-white/80 transition-all" style="width: clamp(8px, 1.2vw, 12px); height: clamp(8px, 1.2vw, 12px);" data-index="2"></button>
+            <button th:each="slide, iterStat : ${slides}" class="slider-dot rounded-full bg-white/50 hover:bg-white/80 transition-all" style="width: clamp(8px, 1.2vw, 12px); height: clamp(8px, 1.2vw, 12px);" th:attr="data-index=${iterStat.index}"></button>
         </div>
 
         <!-- Slide Counter -->
@@ -232,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!slidesContainer) return; // Slider not on this page
     
     let currentSlide = 0;
-    const totalSlides = 3;
+    const totalSlides = slidesContainer.children.length;
     let autoPlayInterval;
 
     totalSlidesEl.textContent = totalSlides;

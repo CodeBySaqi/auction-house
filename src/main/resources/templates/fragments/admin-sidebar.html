@@ -83,6 +83,12 @@
             <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'broadcast'} ? '' : 'text-g-text-secondary'">campaign</span>
             Broadcast
         </a>
+        <a th:href="@{/admin/slides}"
+           th:classappend="${activePage == 'slides'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'"
+           class="flex items-center gap-3 px-4 py-2.5 rounded-full font-medium text-sm transition-colors">
+            <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'slides'} ? '' : 'text-g-text-secondary'">slideshow</span>
+            Hero Slides
+        </a>
         <a th:href="@{/admin/export/auctions.csv}"
            class="flex items-center gap-3 px-4 py-2.5 rounded-full text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
             <span class="material-icons-outlined text-xl text-g-text-secondary">download</span>
@@ -151,6 +157,9 @@
             <div class="px-3 py-1.5 mt-3"><span class="text-[10px] font-semibold uppercase tracking-wider text-g-text-secondary">Tools</span></div>
             <a th:href="@{/admin/broadcast}" th:classappend="${activePage == 'broadcast'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors">
                 <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'broadcast'} ? '' : 'text-g-text-secondary'">campaign</span> Broadcast
+            </a>
+            <a th:href="@{/admin/slides}" th:classappend="${activePage == 'slides'} ? 'bg-g-blue-light text-g-blue' : 'text-g-text hover:bg-g-hover'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors">
+                <span class="material-icons-outlined text-xl" th:classappend="${activePage == 'slides'} ? '' : 'text-g-text-secondary'">slideshow</span> Hero Slides
             </a>
             <a th:href="@{/admin/export/auctions.csv}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-g-text hover:bg-g-hover font-medium text-sm transition-colors">
                 <span class="material-icons-outlined text-xl text-g-text-secondary">download</span> Export Auctions

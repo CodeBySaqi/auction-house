@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Slides — Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script th:replace="~{fragments/layout :: tailwindConfig}"></script>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-g-bg font-roboto text-g-text h-screen overflow-hidden flex flex-col">
+
+    <!-- App Bar -->
+    <nav class="bg-white border-b border-g-border sticky top-0 z-40 flex-shrink-0">
+        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <a href="/admin/console" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                        <span class="material-icons-outlined">arrow_back</span>
+                    </a>
+                    <div class="flex items-center gap-2">
+                        <span class="font-gsans font-medium text-lg text-g-text">Hero Slider</span>
+                        <span class="px-2 py-0.5 bg-g-blue-light text-g-blue text-xs font-semibold rounded-full" th:text="${slides.size()}">3</span>
+                    </div>
+                </div>
+                <a th:href="@{/}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="View site">
+                    <span class="material-icons-outlined">home</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash -->
+    <div th:if="${success}" class="fixed top-20 right-4 z-50 bg-green-50 border border-green-200 text-green-800 px-5 py-3 rounded-xl shadow-g-md flex items-center gap-2 text-sm animate-slide-in">
+        <span class="material-icons-outlined text-g-green">check_circle</span>
+        <span th:text="${success}">Success</span>
+    </div>
+    <div th:if="${error}" class="fixed top-20 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-5 py-3 rounded-xl shadow-g-md flex items-center gap-2 text-sm animate-slide-in">
+        <span class="material-icons-outlined text-g-red">error</span>
+        <span th:text="${error}">Error</span>
+    </div>
+
+    <div class="flex-1 overflow-y-auto">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+            <!-- Add New Slide -->
+            <div class="bg-white rounded-2xl border border-g-border p-6">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-10 h-10 bg-g-blue-light rounded-xl flex items-center justify-center">
+                        <span class="material-icons-outlined text-g-blue">add_photo_alternate</span>
+                    </div>
+                    <div>
+                        <h2 class="font-gsans text-lg font-medium text-g-text">Add New Slide</h2>
+                        <p class="text-xs text-g-text-secondary">Create a new hero banner for the homepage</p>
+                    </div>
+                </div>
+
+                <form th:action="@{/admin/slides/add}" method="post" class="space-y-4">
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-g-text mb-1">Title *</label>
+                            <input type="text" name="title" required class="w-full px-3 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="Welcome to AuctionHouse">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-g-text mb-1">Subtitle</label>
+                            <input type="text" name="subtitle" class="w-full px-3 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="Bid on luxury cars, watches, art...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-g-text mb-1">Button Text</label>
+                            <input type="text" name="buttonText" value="Browse Auctions" class="w-full px-3 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-g-text mb-1">Button URL</label>
+                            <input type="text" name="buttonUrl" value="/auctions" class="w-full px-3 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-g-text mb-1">Image URL</label>
+                            <input type="text" name="imageUrl" class="w-full px-3 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="https://... or /images/...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-g-text mb-1">Background Gradient</label>
+                            <input type="text" name="backgroundGradient" class="w-full px-3 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all font-mono text-xs" placeholder="linear-gradient(135deg, #fce7f3, #fbcfe8)">
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="flex-1">
+                                <label class="block text-xs font-medium text-g-text mb-1">Button Color</label>
+                                <input type="color" name="buttonColor" value="#3b82f6" class="w-full h-10 rounded-lg border border-g-border cursor-pointer">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-xs font-medium text-g-text mb-1">BG Color</label>
+                                <input type="color" name="backgroundColor" value="#ffffff" class="w-full h-10 rounded-lg border border-g-border cursor-pointer">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-xs font-medium text-g-text mb-1">Text Color</label>
+                                <input type="color" name="textColor" value="#1f2937" class="w-full h-10 rounded-lg border border-g-border cursor-pointer">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-xs font-medium text-g-text mb-1">Subtitle Color</label>
+                                <input type="color" name="subtitleColor" value="#4b5563" class="w-full h-10 rounded-lg border border-g-border cursor-pointer">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-g-text mb-1">Sort Order</label>
+                            <input type="number" name="sortOrder" value="0" min="0" class="w-full px-3 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                        </div>
+                    </div>
+                    <div class="flex justify-end pt-2">
+                        <button type="submit" class="px-6 py-2.5 bg-g-blue text-white rounded-full text-sm font-medium hover:bg-g-blue-hover transition-colors shadow-g-sm flex items-center gap-2">
+                            <span class="material-icons-outlined text-lg">add</span>
+                            Add Slide
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Existing Slides -->
+            <div class="space-y-4">
+                <h2 class="font-gsans text-lg font-medium text-g-text">Current Slides</h2>
+
+                <div th:if="${slides.isEmpty()}" class="bg-white rounded-2xl border border-g-border p-12 text-center">
+                    <span class="material-icons-outlined text-5xl text-g-text-secondary/30 mb-3">slideshow</span>
+                    <p class="text-sm text-g-text-secondary">No slides yet. Add one above!</p>
+                </div>
+
+                <div th:each="slide : ${slides}" class="bg-white rounded-2xl border border-g-border overflow-hidden" th:classappend="${!slide.active} ? 'opacity-60'">
+                    <div class="flex flex-col sm:flex-row">
+                        <!-- Preview -->
+                        <div class="sm:w-80 flex-shrink-0 p-4">
+                            <div class="aspect-[16/9] rounded-xl overflow-hidden flex items-center justify-center relative"
+                                 th:style="${slide.backgroundGradient != null} ? 'background:' + ${slide.backgroundGradient} : 'background:' + ${slide.backgroundColor}">
+                                <img th:if="${slide.imageUrl != null and !slide.imageUrl.isEmpty()}" th:src="${slide.imageUrl}" class="max-w-[60%] max-h-[80%] object-contain" alt="">
+                                <div class="absolute top-2 left-2 px-2 py-0.5 bg-black/50 text-white text-[10px] font-bold rounded-full" th:text="'#' + ${slide.sortOrder}">#0</div>
+                            </div>
+                        </div>
+
+                        <!-- Details + Edit Form -->
+                        <div class="flex-1 p-5 border-t sm:border-t-0 sm:border-l border-g-border">
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <h3 class="font-gsans font-medium text-g-text" th:text="${slide.title}">Slide Title</h3>
+                                    <p class="text-xs text-g-text-secondary mt-0.5" th:text="${slide.subtitle}">Subtitle text</p>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <form th:action="@{'/admin/slides/toggle/' + ${slide.id}}" method="post" class="m-0">
+                                        <button type="submit" class="p-1.5 rounded-lg hover:bg-g-hover transition-colors" th:title="${slide.active} ? 'Deactivate' : 'Activate'">
+                                            <span class="material-icons-outlined text-lg" th:classappend="${slide.active} ? 'text-g-green' : 'text-g-text-secondary'" th:text="${slide.active} ? 'toggle_on' : 'toggle_off'">toggle_on</span>
+                                        </button>
+                                    </form>
+                                    <form th:action="@{'/admin/slides/delete/' + ${slide.id}}" method="post" class="m-0" onsubmit="return confirm('Delete this slide?');">
+                                        <button type="submit" class="p-1.5 rounded-lg text-g-red hover:bg-red-50 transition-colors" title="Delete">
+                                            <span class="material-icons-outlined text-lg">delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Edit form (collapsible) -->
+                            <details class="group">
+                                <summary class="cursor-pointer text-xs font-medium text-g-blue hover:text-g-blue-hover transition-colors flex items-center gap-1 mb-3">
+                                    <span class="material-icons-outlined text-sm group-open:rotate-90 transition-transform">chevron_right</span>
+                                    Edit slide
+                                </summary>
+                                <form th:action="@{'/admin/slides/update/' + ${slide.id}}" method="post" class="space-y-3 mt-3">
+                                    <div class="grid sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Title</label>
+                                            <input type="text" name="title" th:value="${slide.title}" required class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs focus:outline-none focus:border-g-blue transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Subtitle</label>
+                                            <input type="text" name="subtitle" th:value="${slide.subtitle}" class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs focus:outline-none focus:border-g-blue transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Button Text</label>
+                                            <input type="text" name="buttonText" th:value="${slide.buttonText}" class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs focus:outline-none focus:border-g-blue transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Button URL</label>
+                                            <input type="text" name="buttonUrl" th:value="${slide.buttonUrl}" class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs focus:outline-none focus:border-g-blue transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Image URL</label>
+                                            <input type="text" name="imageUrl" th:value="${slide.imageUrl}" class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs focus:outline-none focus:border-g-blue transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Gradient</label>
+                                            <input type="text" name="backgroundGradient" th:value="${slide.backgroundGradient}" class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs font-mono focus:outline-none focus:border-g-blue transition-all" placeholder="linear-gradient(...)">
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <div class="flex-1">
+                                                <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Btn</label>
+                                                <input type="color" name="buttonColor" th:value="${slide.buttonColor}" class="w-full h-8 rounded border border-g-border cursor-pointer">
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">BG</label>
+                                                <input type="color" name="backgroundColor" th:value="${slide.backgroundColor}" class="w-full h-8 rounded border border-g-border cursor-pointer">
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Text</label>
+                                                <input type="color" name="textColor" th:value="${slide.textColor}" class="w-full h-8 rounded border border-g-border cursor-pointer">
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Sub</label>
+                                                <input type="color" name="subtitleColor" th:value="${slide.subtitleColor}" class="w-full h-8 rounded border border-g-border cursor-pointer">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Sort Order</label>
+                                            <input type="number" name="sortOrder" th:value="${slide.sortOrder}" min="0" class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs focus:outline-none focus:border-g-blue transition-all">
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-end pt-1">
+                                        <button type="submit" class="px-5 py-2 bg-g-blue text-white rounded-full text-xs font-medium hover:bg-g-blue-hover transition-colors flex items-center gap-1.5">
+                                            <span class="material-icons-outlined text-sm">save</span>
+                                            Save Changes
+                                        </button>
+                                    </div>
+                                </form>
+                            </details>
+
+                            <div class="flex items-center gap-3 mt-3 text-[10px] text-g-text-secondary">
+                                <span class="flex items-center gap-1"><span class="material-icons-outlined text-xs">link</span> <span th:text="${slide.buttonUrl}">/auctions</span></span>
+                                <span th:if="${slide.active}" class="flex items-center gap-1 text-g-green font-medium"><span class="material-icons-outlined text-xs">check_circle</span> Active</span>
+                                <span th:unless="${slide.active}" class="flex items-center gap-1 text-g-text-secondary font-medium"><span class="material-icons-outlined text-xs">cancel</span> Hidden</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-hide flash messages
+        setTimeout(() => {
+            document.querySelectorAll('.fixed.top-20').forEach(msg => {
+                msg.style.transition = 'opacity 0.3s ease';
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 300);
+            });
+        }, 4000);
+    </script>
+</body>
+</html>
