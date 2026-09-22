@@ -23,6 +23,9 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     
     @Query("SELECT COUNT(m) FROM ChatMessage m WHERE m.conversation.id = :conversationId")
     long countByConversationId(@Param("conversationId") Long conversationId);
+
+    @Query("SELECT COUNT(m) FROM ChatMessage m WHERE m.conversation.id = :conversationId AND m.sender.id != :userId")
+    long countMessagesNotFromUser(@Param("conversationId") Long conversationId, @Param("userId") Long userId);
     
     @Modifying
     @Query("DELETE FROM ChatMessage m WHERE m.conversation IN " +

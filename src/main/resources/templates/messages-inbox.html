@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages — AuctionHouse</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script th:replace="~{fragments/layout :: tailwindConfig}"></script>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-g-bg min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <!-- Flash Messages -->
+    <div th:if="${errorMessage}" class="max-w-3xl mx-auto w-full px-4 mt-4">
+        <div class="flex items-center gap-3 p-4 bg-red-50 rounded-2xl border border-red-200">
+            <span class="material-icons-outlined text-g-red">error</span>
+            <span class="text-sm text-red-800" th:text="${errorMessage}">Error</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-3xl mx-auto w-full px-4 py-6">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="font-gsans text-2xl font-medium text-g-text">Messages</h1>
+                <p class="text-sm text-g-text-secondary mt-0.5">Chat with other users</p>
+            </div>
+        </div>
+
+        <!-- Search Users to Start New Chat -->
+        <div class="bg-white rounded-2xl border border-g-border p-5 mb-6">
+            <label class="block text-sm font-medium text-g-text mb-2">Start a new conversation</label>
+            <div class="relative" id="userSearchContainer">
+                <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-xl">person_search</span>
+                <input type="text" id="userSearchInput" placeholder="Search by username..."
+                       autocomplete="off"
+                       class="w-full pl-11 pr-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+                <!-- Search Results Dropdown -->
+                <div id="userSearchResults" class="hidden absolute top-full left-0 right-0 mt-2 bg-white rounded-xl border border-g-border shadow-g-lg z-30 overflow-hidden max-h-64 overflow-y-auto">
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversation List -->
+        <div class="bg-white rounded-2xl border border-g-border overflow-hidden">
+            <div class="px-5 py-4 border-b border-g-border flex items-center justify-between">
+                <h2 class="font-gsans font-medium text-g-text">Conversations</h2>
+                <span class="text-xs text-g-text-secondary bg-g-bg px-2.5 py-1 rounded-full" th:text="${conversations.size()} + ' total'">0 total</span>
+            </div>
+
+            <!-- Empty State -->
+            <div th:if="${conversations.isEmpty()}" class="p-12 text-center">
+                <span class="material-icons-outlined text-5xl text-g-text-secondary/40 mb-3">forum</span>
+                <p class="text-sm font-medium text-g-text-secondary">No conversations yet</p>
+                <p class="text-xs text-g-text-secondary mt-1">Search for a user above to start chatting</p>
+            </div>
+
+            <!-- Conversation Items -->
+            <div th:if="${!conversations.isEmpty()}" class="divide-y divide-g-border">
+                <a th:each="preview : ${conversations}"
+                   th:href="@{'/messages/' + ${preview.conversation.id}}"
+                   class="flex items-center gap-4 px-5 py-4 hover:bg-g-hover transition-colors no-underline group">
+                    
+                    <!-- Avatar -->
+                    <div class="w-12 h-12 rounded-full bg-g-blue flex items-center justify-center shrink-0 overflow-hidden">
+                        <img th:if="${preview.otherUser != null and preview.otherUser.hasProfilePic()}"
+                             th:src="${preview.otherUser.profilePicPath.startsWith('http')} ? @{${preview.otherUser.profilePicPath}} : @{'/uploads/' + ${preview.otherUser.profilePicPath}}"
+                             class="w-full h-full object-cover" alt="">
+                        <span th:if="${preview.otherUser == null}" class="text-white font-gsans font-medium text-lg">?</span>
+                        <span th:if="${preview.otherUser != null and !preview.otherUser.hasProfilePic()}" class="text-white font-gsans font-medium text-lg" th:text="${preview.otherUser.username.substring(0,1).toUpperCase()}">U</span>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2">
+                            <p class="text-sm font-medium text-g-text truncate" th:text="${preview.otherUser != null ? preview.otherUser.username : 'Unknown'}">Username</p>
+                            <span class="text-[11px] text-g-text-secondary shrink-0" th:if="${preview.lastMessage != null}" th:text="${#temporals.format(preview.lastMessage.createdAt, 'MMM d')}">Jan 1</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                            <span th:if="${preview.conversation.directMessage}" class="material-icons-outlined text-xs text-g-text-secondary">mail</span>
+                            <span th:unless="${preview.conversation.directMessage}" class="material-icons-outlined text-xs text-g-text-secondary">gavel</span>
+                            <p class="text-xs text-g-text-secondary truncate" th:text="${preview.lastMessage != null ? preview.lastMessage.content : 'No messages yet'}">Last message preview...</p>
+                        </div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <span class="material-icons-outlined text-g-text-secondary group-hover:text-g-blue transition-colors shrink-0">chevron_right</span>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+
+    <script>
+    // User search with debounce
+    const searchInput = document.getElementById('userSearchInput');
+    const searchResults = document.getElementById('userSearchResults');
+    let searchTimeout = null;
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const q = this.value.trim();
+
+        if (q.length < 2) {
+            searchResults.classList.add('hidden');
+            searchResults.innerHTML = '';
+            return;
+        }
+
+        searchTimeout = setTimeout(() => {
+            fetch('/messages/search?q=' + encodeURIComponent(q))
+                .then(r => r.json())
+                .then(users => {
+                    if (users.length === 0) {
+                        searchResults.innerHTML = '<div class="p-4 text-center text-sm text-g-text-secondary">No users found</div>';
+                        searchResults.classList.remove('hidden');
+                        return;
+                    }
+                    searchResults.innerHTML = users.map(u => `
+                        <form action="/messages/start/${encodeURIComponent(u.username)}" method="post" class="m-0">
+                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-g-hover transition-colors text-left">
+                                <div class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center shrink-0">
+                                    <span class="text-white font-gsans font-medium text-sm">${u.username.charAt(0).toUpperCase()}</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-g-text truncate">${u.username}</p>
+                                    <p class="text-[11px] text-g-text-secondary">${u.role}</p>
+                                </div>
+                                <span class="material-icons-outlined text-g-blue text-lg">chat</span>
+                            </button>
+                        </form>
+                    `).join('');
+                    searchResults.classList.remove('hidden');
+                })
+                .catch(() => {
+                    searchResults.innerHTML = '<div class="p-4 text-center text-sm text-g-text-secondary">Search failed</div>';
+                    searchResults.classList.remove('hidden');
+                });
+        }, 300);
+    });
+
+    // Close dropdown on outside click
+    document.addEventListener('click', function(e) {
+        if (!document.getElementById('userSearchContainer').contains(e.target)) {
+            searchResults.classList.add('hidden');
+        }
+    });
+
+    // Show dropdown on focus if there are results
+    searchInput.addEventListener('focus', function() {
+        if (searchResults.innerHTML.trim() && this.value.trim().length >= 2) {
+            searchResults.classList.remove('hidden');
+        }
+    });
+    </script>
+</body>
+</html>

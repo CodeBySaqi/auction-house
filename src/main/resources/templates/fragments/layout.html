@@ -146,6 +146,10 @@
                         <span class="material-icons-outlined dark:hidden">dark_mode</span>
                         <span class="material-icons-outlined hidden dark:inline">light_mode</span>
                     </button>
+                    <!-- Messages -->
+                    <a href="/messages" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Messages">
+                        <span class="material-icons-outlined">chat_bubble</span>
+                    </a>
                     <!-- Notification Bell + Popover -->
                     <div class="relative" id="notifBell">
                         <button onclick="toggleNotifPopover()" class="relative p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
@@ -210,6 +214,9 @@
                                 <a href="/my-wins" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
                                     <span class="material-icons-outlined text-g-text-secondary text-xl">emoji_events</span> My Wins
                                 </a>
+                                <a href="/messages" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                    <span class="material-icons-outlined text-g-text-secondary text-xl">chat</span> Messages
+                                </a>
                                 <a href="/profile/edit" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
                                     <span class="material-icons-outlined text-g-text-secondary text-xl">settings</span> Edit Profile
                                 </a>
@@ -263,6 +270,13 @@
 
 <!-- Scripts Fragment -->
 <div th:fragment="scripts">
+    <!-- Floating Chat Button (authenticated users only) -->
+    <a th:if="${currentUser != null}" href="/messages"
+       class="fixed bottom-6 left-6 z-40 w-14 h-14 bg-g-blue text-white rounded-full shadow-g-lg hover:bg-g-blue-hover hover:shadow-g-xl transition-all flex items-center justify-center group"
+       title="Messages">
+        <span class="material-icons-outlined text-2xl group-hover:scale-110 transition-transform">chat</span>
+    </a>
+
     <script th:src="@{/js/main.js}"></script>
     <script>
         // Theme toggle function

@@ -20,6 +20,7 @@ import java.util.List;
 /**
  * Service for managing chat conversations and messages.
  * Handles creation, sending, access control, and cleanup.
+ * Supports both auction-linked and direct message conversations.
  */
 @Service
 public class ChatService {
@@ -54,6 +55,26 @@ public class ChatService {
                 c.setAuction(paymentRelease.getAuction());
                 c.setBuyer(paymentRelease.getBuyer());
                 c.setSeller(paymentRelease.getSeller());
+                c.setDirectMessage(false);
+                return conversationRepository.save(c);
+            });
+    }
+
+    /**
+     * Find or create a direct message conversation between two users.
+     * Idempotent — returns existing conversation if one already exists.
+     */
+    @Transactional
+    public Conversation findOrCreateDirectConversation(User user1, User user2) {
+        if (user1.getId().equals(user2.getId())) {
+            throw new IllegalArgumentException("Cannot create a conversation with yourself.");
+        }
+        return conversationRepository.findDirectConversation(user1.getId(), user2.getId())
+            .orElseGet(() -> {
+                Conversation c = new Conversation();
+                c.setBuyer(user1);
+                c.setSeller(user2);
+                c.setDirectMessage(true);
                 return conversationRepository.save(c);
             });
     }
@@ -88,7 +109,13 @@ public class ChatService {
         message.setConversation(conversation);
         message.setSender(sender);
         message.setContent(content.trim());
-        return chatMessageRepository.save(message);
+        ChatMessage saved = chatMessageRepository.save(message);
+
+        // Update last message timestamp on conversation
+        conversation.setLastMessageAt(saved.getCreatedAt());
+        conversationRepository.save(conversation);
+
+        return saved;
     }
 
     /**
@@ -113,6 +140,29 @@ public class ChatService {
     }
 
     /**
+     * Get all conversations for a user, ordered by last message time.
+     */
+    public List<Conversation> getUserConversations(Long userId) {
+        return conversationRepository.findAllByUserId(userId);
+    }
+
+    /**
+     * Get the last message in a conversation (for preview in inbox).
+     */
+    public ChatMessage getLastMessage(Conversation conversation) {
+        List<ChatMessage> msgs = chatMessageRepository.findByConversationId(conversation.getId());
+        return msgs.isEmpty() ? null : msgs.get(msgs.size() - 1);
+    }
+
+    /**
+     * Count unread messages (messages not sent by the given user, for inbox badge).
+     * Simplified: returns total messages in conversation not from this user.
+     */
+    public long getUnreadCount(Conversation conversation, Long userId) {
+        return chatMessageRepository.countMessagesNotFromUser(conversation.getId(), userId);
+    }
+
+    /**
      * Get conversation for a given auction, if one exists.
      */
     public Conversation getConversationByAuctionId(Long auctionId) {
@@ -124,6 +174,13 @@ public class ChatService {
      */
     public Conversation getConversationByPaymentRelease(PaymentRelease paymentRelease) {
         return conversationRepository.findByPaymentRelease(paymentRelease).orElse(null);
+    }
+
+    /**
+     * Find conversation by ID.
+     */
+    public Conversation findById(Long id) {
+        return conversationRepository.findById(id).orElse(null);
     }
 
     /**
