@@ -19,24 +19,7 @@
 <body class="bg-g-bg font-roboto text-g-text h-screen overflow-hidden flex flex-col">
 
     <!-- App Bar -->
-    <nav class="bg-white border-b border-g-border sticky top-0 z-40 flex-shrink-0">
-        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center gap-3">
-                    <a href="/admin/console" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
-                        <span class="material-icons-outlined">arrow_back</span>
-                    </a>
-                    <div class="flex items-center gap-2">
-                        <span class="font-gsans font-medium text-lg text-g-text">Hero Slider</span>
-                        <span class="px-2 py-0.5 bg-g-blue-light text-g-blue text-xs font-semibold rounded-full" th:text="${slides.size()}">3</span>
-                    </div>
-                </div>
-                <a th:href="@{/}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="View site">
-                    <span class="material-icons-outlined">home</span>
-                </a>
-            </div>
-        </div>
-    </nav>
+    <nav th:replace="~{fragments/admin-header :: adminHeader}"></nav>
 
     <!-- Flash -->
     <div th:if="${success}" class="fixed top-20 right-4 z-50 bg-green-50 border border-green-200 text-green-800 px-5 py-3 rounded-xl shadow-g-md flex items-center gap-2 text-sm animate-slide-in">
@@ -275,5 +258,6 @@
             });
         }, 4000);
     </script>
+    <div th:replace="~{fragments/admin-header :: adminHeaderScripts}"></div>
 </body>
 </html>
