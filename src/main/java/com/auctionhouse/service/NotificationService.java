@@ -27,6 +27,11 @@ public class NotificationService {
      */
     @Transactional
     public Notification createNotification(User user, String message, String type, Long auctionId) {
+        // Defensive truncation: never let an oversized message break persistence
+        // (column is varchar(1200)). Protects every caller, not just broadcasts.
+        if (message != null && message.length() > 1200) {
+            message = message.substring(0, 1197) + "...";
+        }
         Notification notification = new Notification(user, message, type, auctionId);
         return notificationRepository.save(notification);
     }

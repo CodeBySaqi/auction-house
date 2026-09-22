@@ -2,6 +2,7 @@ package com.auctionhouse.service;
 
 import com.auctionhouse.model.Broadcast;
 import com.auctionhouse.model.User;
+import com.auctionhouse.repository.BidRepository;
 import com.auctionhouse.repository.BroadcastRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +12,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,14 +30,17 @@ public class BroadcastScheduler {
     private final BroadcastRepository broadcastRepository;
     private final UserService userService;
     private final NotificationService notificationService;
+    private final BidRepository bidRepository;
 
     @Autowired
     public BroadcastScheduler(BroadcastRepository broadcastRepository,
                               UserService userService,
-                              NotificationService notificationService) {
+                              NotificationService notificationService,
+                              BidRepository bidRepository) {
         this.broadcastRepository = broadcastRepository;
         this.userService = userService;
         this.notificationService = notificationService;
+        this.bidRepository = bidRepository;
     }
 
     /**
@@ -64,7 +70,7 @@ public class BroadcastScheduler {
             case "new_feature" -> "✨ ";
             default -> "📢 ";
         };
-        String fullMessage = typePrefix + "**" + broadcast.getSubject() + "**\n\n" + broadcast.getMessage();
+        String fullMessage = typePrefix + broadcast.getSubject() + "\n\n" + broadcast.getMessage();
 
         // Determine recipients
         List<User> allUsers = userService.findAllUsers();
@@ -75,8 +81,21 @@ public class BroadcastScheduler {
                 recipients = allUsers.stream().filter(User::isActive).toList();
                 break;
             case "bidders":
-                // Send to all active users as fallback (bidders list not stored)
-                recipients = allUsers.stream().filter(User::isActive).toList();
+                // Real top-25 bidders (must match the immediate-send logic in
+                // AdminController.sendBroadcast — previously this fell back to
+                // ALL active users, sending to the wrong audience).
+                Map<Long, Long> bidsPerUser = new HashMap<>();
+                for (Object[] row : bidRepository.countBidsGroupedByBidder()) {
+                    if (row[0] != null) bidsPerUser.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+                }
+                final Map<Long, Long> bidsByUser = bidsPerUser;
+                recipients = allUsers.stream()
+                        .filter(u -> bidsByUser.containsKey(u.getId()))
+                        .sorted((a, b) -> Long.compare(
+                                bidsByUser.getOrDefault(b.getId(), 0L),
+                                bidsByUser.getOrDefault(a.getId(), 0L)))
+                        .limit(25)
+                        .collect(Collectors.toList());
                 break;
             case "custom":
                 // Use stored custom user IDs

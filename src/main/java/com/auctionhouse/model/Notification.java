@@ -19,7 +19,7 @@ public class Notification {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, length = 500)
+    @Column(nullable = false, length = 1200)
     private String message;
 
     @Column(name = "notification_type")

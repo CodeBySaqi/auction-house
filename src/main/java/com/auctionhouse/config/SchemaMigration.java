@@ -63,6 +63,28 @@ public class SchemaMigration {
                 log.debug("chat_messages is_read migration: {}", e.getMessage());
             }
 
+            // Migration: Widen notifications.message to 1200 chars.
+            // Broadcasts allow a 1000-char message plus subject/type prefix, which
+            // overflowed the old varchar(500) column and crashed the broadcast
+            // page with a DataIntegrityViolationException on PostgreSQL.
+            // (ddl-auto=update does not widen existing columns, so this is needed
+            // for databases created before this change.)
+            boolean widened = false;
+            try {
+                stmt.execute("ALTER TABLE notifications ALTER COLUMN message TYPE varchar(1200)"); // PostgreSQL
+                widened = true;
+            } catch (Exception e) {
+                try {
+                    stmt.execute("ALTER TABLE notifications ALTER COLUMN message VARCHAR(1200)"); // H2
+                    widened = true;
+                } catch (Exception e2) {
+                    log.debug("notifications.message widen migration: {}", e2.getMessage());
+                }
+            }
+            if (widened) {
+                log.info("Migration: notifications.message widened to varchar(1200)");
+            }
+
         } catch (Exception e) {
             log.warn("Schema migration check failed (non-fatal): {}", e.getMessage());
         }

@@ -842,9 +842,10 @@ public class AdminController {
         model.addAttribute("totalUsers", allUsers.size());
         model.addAttribute("activeUsers", allUsers.stream().filter(User::isActive).count());
 
-        // Count users who have bids (using repository query to avoid LazyInitException)
+        // Count users who have bids (using repository query to avoid LazyInitException).
+        // Capped at 25 — the send path only ever messages the top 25 bidders.
         long biddersCount = bidRepository.countBidsGroupedByBidder().size();
-        model.addAttribute("topBiddersCount", biddersCount);
+        model.addAttribute("topBiddersCount", Math.min(biddersCount, 25));
 
         // Broadcast stats from database
         long totalBroadcasts = broadcastRepository.count();
@@ -909,14 +910,16 @@ public class AdminController {
             }
         }
 
-        // Build the notification message with type prefix
+        // Build the notification message with type prefix.
+        // NOTE: no markdown — notifications render as plain text, so ** markers
+        // would show as literal asterisks to users.
         String typePrefix = switch (type) {
             case "alert" -> "⚠️ ";
             case "update" -> "🔄 ";
             case "new_feature" -> "✨ ";
             default -> "📢 ";
         };
-        String fullMessage = typePrefix + "**" + subject.trim() + "**\n\n" + message.trim();
+        String fullMessage = typePrefix + subject.trim() + "\n\n" + message.trim();
 
         // Determine recipients based on audience
         List<User> allUsers = userService.findAllUsers();
