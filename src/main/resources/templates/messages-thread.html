@@ -220,6 +220,20 @@
 
         // Focus input
         chatInput.focus();
+
+        // Mark messages as read when thread is opened
+        var csrfEl = document.getElementById('csrf-token');
+        var csrfHeaders = {};
+        if (csrfEl) {
+            csrfHeaders[csrfEl.name] = csrfEl.value;
+        }
+        fetch('/messages/' + conversationId + '/read', { method: 'POST', headers: csrfHeaders })
+            .then(r => r.json())
+            .then(data => {
+                // Update badge on this page's FAB if present
+                updateChatBadge(data.unreadCount);
+            })
+            .catch(() => {});
     })();
     </script>
 </body>

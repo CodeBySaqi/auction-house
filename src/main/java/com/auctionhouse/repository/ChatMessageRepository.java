@@ -27,6 +27,20 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     @Query("SELECT COUNT(m) FROM ChatMessage m WHERE m.conversation.id = :conversationId AND m.sender.id != :userId")
     long countMessagesNotFromUser(@Param("conversationId") Long conversationId, @Param("userId") Long userId);
     
+    @Query("SELECT COUNT(m) FROM ChatMessage m WHERE m.conversation.id = :conversationId AND m.sender.id != :userId AND m.read = false")
+    long countUnreadInConversation(@Param("conversationId") Long conversationId, @Param("userId") Long userId);
+
+    /**
+     * Count total unread messages for a user across all conversations.
+     */
+    @Query("SELECT COUNT(m) FROM ChatMessage m WHERE m.read = false AND m.sender.id != :userId " +
+           "AND (m.conversation.buyer.id = :userId OR m.conversation.seller.id = :userId)")
+    long countTotalUnread(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("UPDATE ChatMessage m SET m.read = true WHERE m.conversation.id = :conversationId AND m.sender.id != :userId AND m.read = false")
+    int markAsRead(@Param("conversationId") Long conversationId, @Param("userId") Long userId);
+
     @Modifying
     @Query("DELETE FROM ChatMessage m WHERE m.conversation IN " +
            "(SELECT c FROM Conversation c JOIN c.paymentRelease pr " +

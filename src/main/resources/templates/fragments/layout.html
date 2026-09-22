@@ -298,6 +298,7 @@
         <!-- FAB Button -->
         <button onclick="toggleChatPopover()" class="w-14 h-14 bg-g-blue text-white rounded-full shadow-g-lg hover:bg-g-blue-hover hover:shadow-g-xl transition-all flex items-center justify-center group relative">
             <span class="material-icons-outlined text-2xl group-hover:scale-110 transition-transform">chat</span>
+            <span id="chatBadge" class="hidden absolute -top-1 -right-1 min-w-[20px] h-5 bg-g-red rounded-full text-[11px] text-white font-bold flex items-center justify-center px-1 shadow-sm">0</span>
         </button>
     </div>
 
@@ -427,36 +428,42 @@
         }
 
         // ===== Chat Popover =====
-        let chatPopLoaded = false;
+        var chatPopLoaded = false;
+        var chatPollInterval = null;
 
         function toggleChatPopover() {
             var popover = document.getElementById('chatPopover');
             var isOpen = !popover.classList.contains('hidden');
             popover.classList.toggle('hidden');
-            if (!isOpen && !chatPopLoaded) {
+            if (!isOpen) {
                 fetchChatConversations();
             }
         }
 
         function fetchChatConversations() {
             var list = document.getElementById('chatPopList');
-            document.getElementById('chatPopLoading').style.display = 'block';
+            if (document.getElementById('chatPopLoading')) {
+                document.getElementById('chatPopLoading').style.display = 'block';
+            }
 
             fetch('/messages/recent')
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     chatPopLoaded = true;
-                    document.getElementById('chatPopLoading').style.display = 'none';
+                    var loading = document.getElementById('chatPopLoading');
+                    if (loading) loading.style.display = 'none';
                     renderChatConversations(data.conversations, data.total);
+                    updateChatBadge(data.unreadCount);
                 })
                 .catch(function() {
-                    document.getElementById('chatPopLoading').innerHTML = '<p class="text-xs text-g-red p-4 text-center">Failed to load</p>';
+                    var loading = document.getElementById('chatPopLoading');
+                    if (loading) loading.innerHTML = '<p class="text-xs text-g-red p-4 text-center">Failed to load</p>';
                 });
         }
 
         function renderChatConversations(conversations, total) {
             var list = document.getElementById('chatPopList');
-            // Remove old items
+            if (!list) return;
             list.querySelectorAll('.chat-pop-item').forEach(function(el) { el.remove(); });
 
             if (!conversations || conversations.length === 0) {
@@ -484,6 +491,40 @@
                 list.insertAdjacentHTML('beforeend', html);
             });
         }
+
+        // Badge management
+        function updateChatBadge(count) {
+            var badge = document.getElementById('chatBadge');
+            if (!badge) return;
+            if (count && count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+            } else {
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+            }
+        }
+
+        // Poll for unread count every 30 seconds
+        function startChatBadgePolling() {
+            if (chatPollInterval) return;
+            // Initial fetch
+            fetch('/messages/unread-count')
+                .then(function(r) { return r.json(); })
+                .then(function(data) { updateChatBadge(data.unreadCount); })
+                .catch(function() {});
+            // Poll every 30s
+            chatPollInterval = setInterval(function() {
+                fetch('/messages/unread-count')
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) { updateChatBadge(data.unreadCount); })
+                    .catch(function() {});
+            }, 30000);
+        }
+
+        // Start polling on page load
+        startChatBadgePolling();
     </script>
 </div>
 

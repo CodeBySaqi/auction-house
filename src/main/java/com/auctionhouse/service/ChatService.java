@@ -184,6 +184,21 @@ public class ChatService {
     }
 
     /**
+     * Get total unread message count for a user (across all conversations).
+     */
+    public long getTotalUnreadCount(Long userId) {
+        return chatMessageRepository.countTotalUnread(userId);
+    }
+
+    /**
+     * Mark all messages in a conversation as read for the given user.
+     */
+    @Transactional
+    public int markMessagesAsRead(Long conversationId, Long userId) {
+        return chatMessageRepository.markAsRead(conversationId, userId);
+    }
+
+    /**
      * Delete messages older than 90 days after payment release.
      * Called by scheduled cleanup job.
      */

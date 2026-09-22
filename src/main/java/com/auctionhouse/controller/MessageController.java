@@ -196,7 +196,46 @@ public class MessageController {
         Map<String, Object> result = new HashMap<>();
         result.put("conversations", items);
         result.put("total", conversations.size());
+        result.put("unreadCount", chatService.getTotalUnreadCount(user.getId()));
         return ResponseEntity.ok(result);
+    }
+
+    /**
+     * POST /messages/{id}/read — Mark all messages in a conversation as read (AJAX)
+     */
+    @PostMapping("/{id}/read")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> markAsRead(@PathVariable Long id, Principal principal) {
+        User user = userService.findByUsername(principal.getName()).orElse(null);
+        if (user == null) return ResponseEntity.status(401).build();
+
+        Conversation conversation = chatService.findById(id);
+        if (conversation == null) return ResponseEntity.status(404).build();
+
+        boolean isParticipant = user.getId().equals(conversation.getBuyer().getId())
+            || user.getId().equals(conversation.getSeller().getId());
+        if (!isParticipant) return ResponseEntity.status(403).build();
+
+        int marked = chatService.markMessagesAsRead(id, user.getId());
+
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("marked", marked);
+        resp.put("unreadCount", chatService.getTotalUnreadCount(user.getId()));
+        return ResponseEntity.ok(resp);
+    }
+
+    /**
+     * GET /messages/unread-count — Lightweight endpoint for badge polling
+     */
+    @GetMapping("/unread-count")
+    @ResponseBody
+    public ResponseEntity<Map<String, Long>> unreadCount(Principal principal) {
+        User user = userService.findByUsername(principal.getName()).orElse(null);
+        if (user == null) return ResponseEntity.status(401).build();
+
+        Map<String, Long> resp = new HashMap<>();
+        resp.put("unreadCount", chatService.getTotalUnreadCount(user.getId()));
+        return ResponseEntity.ok(resp);
     }
 
     private String formatTimeAgo(java.time.LocalDateTime dateTime) {

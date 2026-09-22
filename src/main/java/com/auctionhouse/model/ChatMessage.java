@@ -29,6 +29,9 @@ public class ChatMessage {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "is_read", nullable = false, columnDefinition = "boolean default false")
+    private boolean read = false;
+
     public ChatMessage() {
         this.createdAt = LocalDateTime.now();
     }
@@ -48,4 +51,7 @@ public class ChatMessage {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public boolean isRead() { return read; }
+    public void setRead(boolean read) { this.read = read; }
 }
