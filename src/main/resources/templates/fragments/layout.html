@@ -270,12 +270,36 @@
 
 <!-- Scripts Fragment -->
 <div th:fragment="scripts">
-    <!-- Floating Chat Button (authenticated users only) -->
-    <a th:if="${currentUser != null}" href="/messages"
-       class="fixed bottom-6 left-6 z-40 w-14 h-14 bg-g-blue text-white rounded-full shadow-g-lg hover:bg-g-blue-hover hover:shadow-g-xl transition-all flex items-center justify-center group"
-       title="Messages">
-        <span class="material-icons-outlined text-2xl group-hover:scale-110 transition-transform">chat</span>
-    </a>
+    <!-- Floating Chat Button + Popover (authenticated users only) -->
+    <div th:if="${currentUser != null}" class="fixed bottom-6 left-6 z-40" id="chatFab">
+        <!-- Popover Panel (above the button) -->
+        <div id="chatPopover" class="hidden absolute bottom-16 left-0 w-80 sm:w-96 bg-white rounded-2xl shadow-g-xl border border-g-border overflow-hidden mb-2">
+            <!-- Header -->
+            <div class="px-4 py-3 border-b border-g-border flex items-center justify-between">
+                <h3 class="font-gsans font-medium text-sm text-g-text">Messages</h3>
+                <a href="/messages" class="text-[11px] font-semibold text-g-blue hover:text-g-blue-hover transition-colors">View all &rarr;</a>
+            </div>
+            <!-- Conversation List -->
+            <div id="chatPopList" class="max-h-80 overflow-y-auto divide-y divide-g-border scrollbar-hide">
+                <div id="chatPopLoading" class="p-6 text-center">
+                    <div class="w-6 h-6 border-2 border-g-blue border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    <p class="text-xs text-g-text-secondary">Loading...</p>
+                </div>
+            </div>
+            <!-- Footer -->
+            <div class="border-t border-g-border px-4 py-2.5">
+                <a href="/messages" class="flex items-center justify-center gap-1.5 text-sm font-medium text-g-blue hover:text-g-blue-hover transition-colors py-1">
+                    Open Inbox
+                    <span class="material-icons-outlined text-base">arrow_forward</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- FAB Button -->
+        <button onclick="toggleChatPopover()" class="w-14 h-14 bg-g-blue text-white rounded-full shadow-g-lg hover:bg-g-blue-hover hover:shadow-g-xl transition-all flex items-center justify-center group relative">
+            <span class="material-icons-outlined text-2xl group-hover:scale-110 transition-transform">chat</span>
+        </button>
+    </div>
 
     <script th:src="@{/js/main.js}"></script>
     <script>
@@ -305,6 +329,12 @@
             const popover = document.getElementById('notifPopover');
             if (bell && popover && !bell.contains(e.target)) {
                 popover.classList.add('hidden');
+            }
+            // Close chat popover when clicking outside
+            const chatFab = document.getElementById('chatFab');
+            const chatPop = document.getElementById('chatPopover');
+            if (chatFab && chatPop && !chatFab.contains(e.target)) {
+                chatPop.classList.add('hidden');
             }
         });
 
@@ -394,6 +424,65 @@
             var div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // ===== Chat Popover =====
+        let chatPopLoaded = false;
+
+        function toggleChatPopover() {
+            var popover = document.getElementById('chatPopover');
+            var isOpen = !popover.classList.contains('hidden');
+            popover.classList.toggle('hidden');
+            if (!isOpen && !chatPopLoaded) {
+                fetchChatConversations();
+            }
+        }
+
+        function fetchChatConversations() {
+            var list = document.getElementById('chatPopList');
+            document.getElementById('chatPopLoading').style.display = 'block';
+
+            fetch('/messages/recent')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    chatPopLoaded = true;
+                    document.getElementById('chatPopLoading').style.display = 'none';
+                    renderChatConversations(data.conversations, data.total);
+                })
+                .catch(function() {
+                    document.getElementById('chatPopLoading').innerHTML = '<p class="text-xs text-g-red p-4 text-center">Failed to load</p>';
+                });
+        }
+
+        function renderChatConversations(conversations, total) {
+            var list = document.getElementById('chatPopList');
+            // Remove old items
+            list.querySelectorAll('.chat-pop-item').forEach(function(el) { el.remove(); });
+
+            if (!conversations || conversations.length === 0) {
+                list.insertAdjacentHTML('beforeend',
+                    '<div class="chat-pop-item p-6 text-center">' +
+                    '<span class="material-icons-outlined text-g-text-secondary text-3xl">forum</span>' +
+                    '<p class="text-sm text-g-text-secondary mt-2">No conversations yet</p>' +
+                    '<p class="text-xs text-g-text-secondary mt-1">Search for users to start chatting</p></div>');
+                return;
+            }
+
+            conversations.forEach(function(c) {
+                var icon = c.isDirect ? 'mail' : 'gavel';
+                var html = '<a href="/messages/' + c.id + '" class="chat-pop-item flex items-center gap-3 px-4 py-3 hover:bg-g-hover transition-colors no-underline">' +
+                    '<div class="w-10 h-10 rounded-full bg-g-blue flex items-center justify-center shrink-0">' +
+                    '<span class="text-white font-gsans font-medium text-sm">' + escapeHtml(c.initial) + '</span></div>' +
+                    '<div class="flex-1 min-w-0">' +
+                    '<div class="flex items-center justify-between gap-2">' +
+                    '<p class="text-sm font-medium text-g-text truncate">' + escapeHtml(c.username) + '</p>' +
+                    '<span class="text-[10px] text-g-text-secondary shrink-0">' + escapeHtml(c.time) + '</span></div>' +
+                    '<div class="flex items-center gap-1 mt-0.5">' +
+                    '<span class="material-icons-outlined text-[12px] text-g-text-secondary">' + icon + '</span>' +
+                    '<p class="text-xs text-g-text-secondary truncate">' + escapeHtml(c.lastMessage) + '</p></div>' +
+                    '</div></a>';
+                list.insertAdjacentHTML('beforeend', html);
+            });
         }
     </script>
 </div>

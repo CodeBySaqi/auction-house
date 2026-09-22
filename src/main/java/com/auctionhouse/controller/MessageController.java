@@ -161,4 +161,51 @@ public class MessageController {
 
         return ResponseEntity.ok(results);
     }
+
+    /**
+     * GET /messages/recent — AJAX endpoint returning recent conversations for the floating popover
+     */
+    @GetMapping("/recent")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> recentConversations(Principal principal) {
+        User user = userService.findByUsername(principal.getName()).orElse(null);
+        if (user == null) return ResponseEntity.status(401).build();
+
+        List<Conversation> conversations = chatService.getUserConversations(user.getId());
+
+        List<Map<String, Object>> items = new ArrayList<>();
+        int limit = Math.min(conversations.size(), 5);
+        for (int i = 0; i < limit; i++) {
+            Conversation conv = conversations.get(i);
+            User other = conv.getOtherParticipant(user);
+            ChatMessage lastMsg = chatService.getLastMessage(conv);
+
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", conv.getId());
+            item.put("username", other != null ? other.getUsername() : "Unknown");
+            item.put("initial", other != null && !other.getUsername().isEmpty()
+                    ? other.getUsername().substring(0, 1).toUpperCase() : "?");
+            item.put("lastMessage", lastMsg != null ? lastMsg.getContent() : "No messages yet");
+            item.put("time", lastMsg != null
+                    ? formatTimeAgo(lastMsg.getCreatedAt())
+                    : formatTimeAgo(conv.getCreatedAt()));
+            item.put("isDirect", conv.isDirectMessage());
+            items.add(item);
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("conversations", items);
+        result.put("total", conversations.size());
+        return ResponseEntity.ok(result);
+    }
+
+    private String formatTimeAgo(java.time.LocalDateTime dateTime) {
+        if (dateTime == null) return "";
+        java.time.Duration d = java.time.Duration.between(dateTime, java.time.LocalDateTime.now());
+        if (d.toMinutes() < 1) return "just now";
+        if (d.toMinutes() < 60) return d.toMinutes() + "m";
+        if (d.toHours() < 24) return d.toHours() + "h";
+        if (d.toDays() < 7) return d.toDays() + "d";
+        return dateTime.format(java.time.format.DateTimeFormatter.ofPattern("MMM d"));
+    }
 }
