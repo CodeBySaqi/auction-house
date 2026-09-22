@@ -94,13 +94,13 @@
 
         <!-- Filter Tabs -->
         <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
-            <a href="/admin/payments" th:class="${currentFilter == 'all'} ? 'px-4 py-2 bg-g-blue text-white rounded-full text-sm font-medium whitespace-nowrap' : 'px-4 py-2 bg-white border border-g-border text-g-text rounded-full text-sm font-medium hover:bg-g-hover whitespace-nowrap transition-colors'">
+            <a th:href="@{/admin/payments}" th:class="${currentFilter == 'all'} ? 'px-4 py-2 bg-g-blue text-white rounded-full text-sm font-medium whitespace-nowrap' : 'px-4 py-2 bg-white border border-g-border text-g-text rounded-full text-sm font-medium hover:bg-g-hover whitespace-nowrap transition-colors'">
                 All Cases
             </a>
-            <a href="/admin/payments?filter=pending" th:class="${currentFilter == 'pending'} ? 'px-4 py-2 bg-g-blue text-white rounded-full text-sm font-medium whitespace-nowrap' : 'px-4 py-2 bg-white border border-g-border text-g-text rounded-full text-sm font-medium hover:bg-g-hover whitespace-nowrap transition-colors'">
+            <a th:href="@{/admin/payments?filter=pending}" th:class="${currentFilter == 'pending'} ? 'px-4 py-2 bg-g-blue text-white rounded-full text-sm font-medium whitespace-nowrap' : 'px-4 py-2 bg-white border border-g-border text-g-text rounded-full text-sm font-medium hover:bg-g-hover whitespace-nowrap transition-colors'">
                 Pending Review
             </a>
-            <a href="/admin/payments?filter=released" th:class="${currentFilter == 'released'} ? 'px-4 py-2 bg-g-blue text-white rounded-full text-sm font-medium whitespace-nowrap' : 'px-4 py-2 bg-white border border-g-border text-g-text rounded-full text-sm font-medium hover:bg-g-hover whitespace-nowrap transition-colors'">
+            <a th:href="@{/admin/payments?filter=released}" th:class="${currentFilter == 'released'} ? 'px-4 py-2 bg-g-blue text-white rounded-full text-sm font-medium whitespace-nowrap' : 'px-4 py-2 bg-white border border-g-border text-g-text rounded-full text-sm font-medium hover:bg-g-hover whitespace-nowrap transition-colors'">
                 Released
             </a>
         </div>

@@ -18,7 +18,7 @@
 
     <!-- Category pills -->
     <div class="flex gap-1.5 sm:gap-2 mb-6 sm:mb-8 overflow-x-auto pb-2 scrollbar-hide w-full">
-        <a href="/auctions" class="shrink-0 px-2.5 sm:px-4 py-1 sm:py-2 rounded-full text-[11px] sm:text-sm font-medium transition-all border whitespace-nowrap"
+        <a th:href="@{/auctions}" class="shrink-0 px-2.5 sm:px-4 py-1 sm:py-2 rounded-full text-[11px] sm:text-sm font-medium transition-all border whitespace-nowrap"
            th:classappend="${selectedCategory == null && searchQuery == null} ? 'bg-g-blue text-white border-g-blue' : 'bg-white text-g-text-secondary border-g-border hover:border-g-blue hover:text-g-blue'">
             All
         </a>
@@ -35,7 +35,7 @@
         </div>
         <h3 class="font-gsans text-xl font-medium text-g-text mb-2">No auctions found</h3>
         <p class="text-sm text-g-text-secondary mb-6">Try a different search term or browse all auctions.</p>
-        <a href="/auctions" class="inline-flex items-center gap-2 px-6 py-3 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover transition-colors text-sm">
+        <a th:href="@{/auctions}" class="inline-flex items-center gap-2 px-6 py-3 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover transition-colors text-sm">
             Browse all auctions
         </a>
     </div>

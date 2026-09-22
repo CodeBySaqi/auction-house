@@ -34,7 +34,7 @@
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center gap-2 text-sm text-g-text-secondary mb-2">
-            <a href="/admin/console" class="hover:text-g-blue transition-colors">Admin Console</a>
+            <a th:href="@{/admin/console}" class="hover:text-g-blue transition-colors">Admin Console</a>
             <span class="material-icons-outlined text-xs">chevron_right</span>
             <span>Chat History</span>
         </div>
@@ -43,7 +43,7 @@
                 <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">Chat History</h1>
                 <p class="text-sm text-g-text-secondary mt-1">Read-only view for dispute resolution</p>
             </div>
-            <a href="/admin/console" class="px-4 py-2 bg-g-bg border border-g-border rounded-xl text-sm font-medium text-g-text hover:bg-g-hover transition-colors flex items-center gap-2">
+            <a th:href="@{/admin/console}" class="px-4 py-2 bg-g-bg border border-g-border rounded-xl text-sm font-medium text-g-text hover:bg-g-hover transition-colors flex items-center gap-2">
                 <span class="material-icons-outlined text-lg">arrow_back</span>
                 Back
             </a>

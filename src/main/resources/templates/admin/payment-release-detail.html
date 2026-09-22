@@ -60,9 +60,9 @@
         <!-- Header -->
         <div class="mb-6">
             <div class="flex items-center gap-2 text-sm text-g-text-secondary mb-2">
-                <a href="/admin/console" class="hover:text-g-blue transition-colors">Dashboard</a>
+                <a th:href="@{/admin/console}" class="hover:text-g-blue transition-colors">Dashboard</a>
                 <span class="material-icons-outlined text-xs">chevron_right</span>
-                <a href="/admin/payments" class="hover:text-g-blue transition-colors">Payment Releases</a>
+                <a th:href="@{/admin/payments}" class="hover:text-g-blue transition-colors">Payment Releases</a>
                 <span class="material-icons-outlined text-xs">chevron_right</span>
                 <span>Case #<span th:text="${paymentRelease.id}">1</span></span>
             </div>

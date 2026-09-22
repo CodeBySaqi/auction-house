@@ -92,14 +92,14 @@
                 Discover rare cars, fine art, luxury watches, and exclusive collectibles. Place your bid and win when the timer hits zero.
             </p>
             <div class="flex flex-wrap gap-3">
-                <a href="/auctions" class="inline-flex items-center gap-2 px-7 py-3.5 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover shadow-g-sm hover:shadow-g-md transition-all">
+                <a th:href="@{/auctions}" class="inline-flex items-center gap-2 px-7 py-3.5 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover shadow-g-sm hover:shadow-g-md transition-all">
                     <span class="material-icons-outlined text-lg">storefront</span>
                     Browse Auctions
                 </a>
-                <a href="/register" th:if="${currentUser == null}" class="inline-flex items-center gap-2 px-7 py-3.5 bg-white text-g-text font-medium rounded-full border border-g-border hover:bg-g-hover hover:shadow-g-sm transition-all">
+                <a th:href="@{/register}" th:if="${currentUser == null}" class="inline-flex items-center gap-2 px-7 py-3.5 bg-white text-g-text font-medium rounded-full border border-g-border hover:bg-g-hover hover:shadow-g-sm transition-all">
                     Create Account
                 </a>
-                <a href="/dashboard" th:if="${currentUser != null}" class="inline-flex items-center gap-2 px-7 py-3.5 bg-white text-g-text font-medium rounded-full border border-g-border hover:bg-g-hover hover:shadow-g-sm transition-all">
+                <a th:href="@{/dashboard}" th:if="${currentUser != null}" class="inline-flex items-center gap-2 px-7 py-3.5 bg-white text-g-text font-medium rounded-full border border-g-border hover:bg-g-hover hover:shadow-g-sm transition-all">
                     My Dashboard
                 </a>
             </div>
@@ -117,7 +117,7 @@
                 <h2 class="font-gsans text-2xl font-medium text-g-text">Featured auctions</h2>
                 <p class="text-sm text-g-text-secondary mt-1">Ending soonest — don't miss out</p>
             </div>
-            <a href="/auctions" class="inline-flex items-center gap-1 px-5 py-2.5 text-sm font-medium text-g-blue bg-g-blue-light rounded-full hover:bg-blue-100 transition-colors">
+            <a th:href="@{/auctions}" class="inline-flex items-center gap-1 px-5 py-2.5 text-sm font-medium text-g-blue bg-g-blue-light rounded-full hover:bg-blue-100 transition-colors">
                 View all
                 <span class="material-icons-outlined text-lg">arrow_forward</span>
             </a>

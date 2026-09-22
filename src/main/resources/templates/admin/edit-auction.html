@@ -23,7 +23,7 @@
         <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center gap-3">
-                    <a href="/admin/auctions" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
+                    <a th:href="@{/admin/auctions}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors">
                         <span class="material-icons-outlined">arrow_back</span>
                     </a>
                     <div class="flex items-center gap-2">
@@ -222,7 +222,7 @@
                             <span class="material-icons-outlined text-lg">save</span>
                             Save Changes
                         </button>
-                        <a href="/admin/auctions" class="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-g-text font-medium rounded-full border border-g-border hover:bg-g-hover text-sm transition-colors no-underline">
+                        <a th:href="@{/admin/auctions}" class="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-g-text font-medium rounded-full border border-g-border hover:bg-g-hover text-sm transition-colors no-underline">
                             Cancel
                         </a>
                     </div>

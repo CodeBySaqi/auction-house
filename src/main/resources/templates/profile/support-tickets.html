@@ -12,7 +12,7 @@
             <h1 class="font-gsans text-2xl font-medium text-g-text">My Support Tickets</h1>
             <p class="text-sm text-g-text-secondary mt-1" th:text="${tickets.size()} + ' total tickets'">0 tickets</p>
         </div>
-        <a href="/support/create" class="inline-flex items-center gap-2 px-5 py-2.5 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover text-sm transition-colors shadow-g-sm no-underline">
+        <a th:href="@{/support/create}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover text-sm transition-colors shadow-g-sm no-underline">
             <span class="material-icons-outlined text-lg">add</span>
             New Ticket
         </a>
@@ -25,7 +25,7 @@
         </div>
         <h3 class="font-gsans text-xl font-medium text-g-text mb-2">No support tickets yet</h3>
         <p class="text-sm text-g-text-secondary mb-6">Need help with something? Create a support ticket and we'll get back to you.</p>
-        <a href="/support/create" class="inline-flex items-center gap-2 px-6 py-3 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover text-sm transition-colors shadow-g-sm no-underline">
+        <a th:href="@{/support/create}" class="inline-flex items-center gap-2 px-6 py-3 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover text-sm transition-colors shadow-g-sm no-underline">
             <span class="material-icons-outlined text-lg">add</span>
             Contact Support
         </a>

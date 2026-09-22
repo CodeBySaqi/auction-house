@@ -12,7 +12,7 @@
         </div>
         <h1 class="font-gsans text-3xl font-medium text-g-text mb-2">Something went wrong</h1>
         <p class="text-sm text-g-text-secondary mb-6" th:text="${error}">An unexpected error occurred.</p>
-        <a href="/" class="inline-flex items-center gap-2 px-6 py-3 bg-g-blue text-white font-medium rounded-full text-sm hover:bg-g-blue-hover transition-colors">
+        <a th:href="@{/}" class="inline-flex items-center gap-2 px-6 py-3 bg-g-blue text-white font-medium rounded-full text-sm hover:bg-g-blue-hover transition-colors">
             <span class="material-icons-outlined text-lg">home</span> Back to home
         </a>
     </div>

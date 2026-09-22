@@ -50,11 +50,11 @@
                         Get $50,000
                     </button>
                 </form>
-                <a href="/auctions/create" class="inline-flex items-center gap-2 px-5 py-2.5 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover text-sm transition-colors shadow-g-sm no-underline">
+                <a th:href="@{/auctions/create}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover text-sm transition-colors shadow-g-sm no-underline">
                     <span class="material-icons-outlined text-lg">add_circle</span>
                     Create Auction
                 </a>
-                <a href="/my-auctions" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-g-text font-medium rounded-full border border-g-border hover:bg-g-hover text-sm transition-colors no-underline">
+                <a th:href="@{/my-auctions}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-g-text font-medium rounded-full border border-g-border hover:bg-g-hover text-sm transition-colors no-underline">
                     <span class="material-icons-outlined text-lg">storefront</span>
                     My Auctions
                 </a>
@@ -165,22 +165,22 @@
                     <span class="material-icons-outlined text-g-text-secondary text-xl">bolt</span> Quick Actions
                 </h2>
                 <div class="space-y-2">
-                    <a href="/auctions" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
+                    <a th:href="@{/auctions}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
                         <span class="material-icons-outlined text-g-blue text-xl">storefront</span> Browse Auctions
                     </a>
-                    <a href="/my-bids" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
+                    <a th:href="@{/my-bids}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
                         <span class="material-icons-outlined text-purple-600 text-xl">payments</span> My Bids
                     </a>
-                    <a href="/my-wins" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
+                    <a th:href="@{/my-wins}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
                         <span class="material-icons-outlined text-amber-600 text-xl">emoji_events</span> My Wins
                     </a>
-                    <a href="/profile/edit" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
+                    <a th:href="@{/profile/edit}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
                         <span class="material-icons-outlined text-g-text-secondary text-xl">settings</span> Edit Profile
                     </a>
-                    <a href="/support" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
+                    <a th:href="@{/support}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
                         <span class="material-icons-outlined text-indigo-500 text-xl">confirmation_number</span> My Tickets
                     </a>
-                    <a href="/support/create" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
+                    <a th:href="@{/support/create}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-g-hover transition-colors text-sm text-g-text no-underline">
                         <span class="material-icons-outlined text-teal-500 text-xl">support_agent</span> Contact Support
                     </a>
                 </div>
@@ -204,7 +204,7 @@
                     </div>
                 </div>
                 <div th:if="${notifications.size() > 4}" class="px-5 py-3 border-t border-g-border text-center">
-                    <a href="/notifications" class="text-xs text-g-blue font-medium hover:underline">View all</a>
+                    <a th:href="@{/notifications}" class="text-xs text-g-blue font-medium hover:underline">View all</a>
                 </div>
             </div>
         </div>
@@ -223,7 +223,7 @@
                     </div>
                     <h3 class="font-gsans font-medium text-g-text mb-1">No wins yet</h3>
                     <p class="text-sm text-g-text-secondary mb-4">Start bidding to win amazing items!</p>
-                    <a href="/auctions" class="inline-flex items-center gap-2 px-5 py-2.5 bg-g-blue text-white font-medium rounded-full text-sm hover:bg-g-blue-hover transition-colors">
+                    <a th:href="@{/auctions}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-g-blue text-white font-medium rounded-full text-sm hover:bg-g-blue-hover transition-colors">
                         Browse Auctions
                     </a>
                 </div>

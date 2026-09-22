@@ -7,7 +7,7 @@
 
 <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
     <div class="mb-6">
-        <a href="/profile/edit" class="text-sm text-g-blue font-medium hover:underline inline-flex items-center gap-1 mb-4 no-underline">
+        <a th:href="@{/profile/edit}" class="text-sm text-g-blue font-medium hover:underline inline-flex items-center gap-1 mb-4 no-underline">
             <span class="material-icons-outlined text-lg">arrow_back</span> Back to settings
         </a>
         <h1 class="font-gsans text-3xl font-medium text-g-text">Create an auction</h1>
@@ -293,7 +293,7 @@
                     <span class="material-icons-outlined text-lg">gavel</span>
                     Launch Auction
                 </button>
-                <a href="/auctions" class="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-g-text font-medium rounded-full border border-g-border hover:bg-g-hover text-sm transition-colors no-underline">
+                <a th:href="@{/auctions}" class="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-g-text font-medium rounded-full border border-g-border hover:bg-g-hover text-sm transition-colors no-underline">
                     Cancel
                 </a>
             </div>

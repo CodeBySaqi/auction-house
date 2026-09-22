@@ -7,7 +7,7 @@
 
 <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
     <!-- Back link -->
-    <a href="/support" class="inline-flex items-center gap-1 text-sm text-g-text-secondary hover:text-g-blue transition-colors mb-6 no-underline">
+    <a th:href="@{/support}" class="inline-flex items-center gap-1 text-sm text-g-text-secondary hover:text-g-blue transition-colors mb-6 no-underline">
         <span class="material-icons-outlined text-lg">arrow_back</span>
         My Tickets
     </a>
@@ -26,7 +26,7 @@
             <span class="material-icons-outlined text-amber-600 text-xl mt-0.5">info</span>
             <div>
                 <p class="text-sm font-medium text-amber-800">You have <span th:text="${openTicketCount}">1</span> open ticket(s)</p>
-                <p class="text-xs text-amber-700 mt-0.5">Check <a href="/support" class="underline font-medium">your existing tickets</a> before creating a new one.</p>
+                <p class="text-xs text-amber-700 mt-0.5">Check <a th:href="@{/support}" class="underline font-medium">your existing tickets</a> before creating a new one.</p>
             </div>
         </div>
 

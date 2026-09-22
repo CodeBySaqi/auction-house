@@ -35,7 +35,7 @@
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center gap-2 text-sm text-g-text-secondary mb-2">
-            <a href="/dashboard" class="hover:text-g-blue transition-colors">Dashboard</a>
+            <a th:href="@{/dashboard}" class="hover:text-g-blue transition-colors">Dashboard</a>
             <span class="material-icons-outlined text-xs">chevron_right</span>
             <span>Submit Received Item Details</span>
         </div>
@@ -136,7 +136,7 @@
 
         <!-- Submit Button -->
         <div class="flex gap-3 pt-4 border-t border-g-border">
-            <a href="/dashboard" class="flex-1 px-6 py-3 bg-g-bg border border-g-border rounded-xl text-sm font-medium text-g-text hover:bg-g-hover text-center transition-colors">
+            <a th:href="@{/dashboard}" class="flex-1 px-6 py-3 bg-g-bg border border-g-border rounded-xl text-sm font-medium text-g-text hover:bg-g-hover text-center transition-colors">
                 Cancel
             </a>
             <button type="submit" class="flex-1 px-6 py-3 bg-g-blue text-white rounded-xl text-sm font-medium hover:bg-g-blue-hover shadow-g-sm hover:shadow-g-md transition-all flex items-center justify-center gap-2">

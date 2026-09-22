@@ -11,7 +11,7 @@
             <h1 class="font-gsans text-3xl font-medium text-g-text">My auctions</h1>
             <p class="text-sm text-g-text-secondary mt-1">Items you've listed for auction</p>
         </div>
-        <a href="/auctions/create" class="inline-flex items-center gap-2 px-5 py-2.5 bg-g-blue text-white font-medium rounded-full text-sm hover:bg-g-blue-hover transition-colors no-underline shadow-g-sm">
+        <a th:href="@{/auctions/create}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-g-blue text-white font-medium rounded-full text-sm hover:bg-g-blue-hover transition-colors no-underline shadow-g-sm">
             <span class="material-icons-outlined text-lg">add</span> New Auction
         </a>
     </div>
@@ -23,7 +23,7 @@
         </div>
         <h3 class="font-gsans text-xl font-medium text-g-text mb-2">No auctions listed yet</h3>
         <p class="text-sm text-g-text-secondary mb-6">Create your first auction and start receiving bids!</p>
-        <a href="/auctions/create" class="inline-flex items-center gap-2 px-6 py-3 bg-g-blue text-white font-medium rounded-full text-sm hover:bg-g-blue-hover transition-colors no-underline">
+        <a th:href="@{/auctions/create}" class="inline-flex items-center gap-2 px-6 py-3 bg-g-blue text-white font-medium rounded-full text-sm hover:bg-g-blue-hover transition-colors no-underline">
             <span class="material-icons-outlined text-lg">add_circle</span> Create Your First Auction
         </a>
     </div>

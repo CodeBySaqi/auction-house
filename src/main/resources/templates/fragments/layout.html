@@ -110,7 +110,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
             <!-- Logo -->
-            <a href="/" class="flex items-center gap-2 no-underline shrink-0">
+            <a th:href="@{/}" class="flex items-center gap-2 no-underline shrink-0">
                 <div class="w-8 h-8 sm:w-9 sm:h-9 bg-g-blue rounded-xl flex items-center justify-center">
                     <span class="material-icons-outlined text-white text-lg sm:text-xl">gavel</span>
                 </div>
@@ -130,11 +130,11 @@
 
             <!-- Right: Nav Links -->
             <div class="flex items-center gap-1">
-                <a href="/auctions" class="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium text-g-text-secondary hover:bg-g-hover transition-colors">
+                <a th:href="@{/auctions}" class="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium text-g-text-secondary hover:bg-g-hover transition-colors">
                     <span class="material-icons-outlined text-lg">storefront</span>
                     <span>Auctions</span>
                 </a>
-                <a href="/auctions/create" th:if="${currentUser != null}" class="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-g-blue text-white rounded-full text-sm font-medium hover:bg-g-blue-hover transition-colors no-underline shadow-g-sm">
+                <a th:href="@{/auctions/create}" th:if="${currentUser != null}" class="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-g-blue text-white rounded-full text-sm font-medium hover:bg-g-blue-hover transition-colors no-underline shadow-g-sm">
                     <span class="material-icons-outlined text-lg">sell</span>
                     <span>Sell</span>
                 </a>
@@ -147,7 +147,7 @@
                         <span class="material-icons-outlined hidden dark:inline">light_mode</span>
                     </button>
                     <!-- Messages -->
-                    <a href="/messages" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Messages">
+                    <a th:href="@{/messages}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Messages">
                         <span class="material-icons-outlined">chat_bubble</span>
                     </a>
                     <!-- Notification Bell + Popover -->
@@ -174,7 +174,7 @@
                             </div>
                             <!-- Footer -->
                             <div class="border-t border-g-border px-4 py-2.5">
-                                <a href="/notifications" class="flex items-center justify-center gap-1.5 text-sm font-medium text-g-blue hover:text-g-blue-hover transition-colors py-1">
+                                <a th:href="@{/notifications}" class="flex items-center justify-center gap-1.5 text-sm font-medium text-g-blue hover:text-g-blue-hover transition-colors py-1">
                                     View all notifications
                                     <span class="material-icons-outlined text-base">arrow_forward</span>
                                 </a>
@@ -199,25 +199,25 @@
                                 <p class="text-xs text-g-text-secondary mt-0.5" th:text="${currentUser != null ? currentUser.email : ''}">email</p>
                             </div>
                             <div class="py-1">
-                                <a href="/dashboard" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                <a th:href="@{/dashboard}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
                                     <span class="material-icons-outlined text-g-text-secondary text-xl">dashboard</span> Dashboard
                                 </a>
-                                <a href="/super-admin" sec:authorize="hasRole('SUPER_ADMIN')" class="flex items-center gap-3 px-4 py-2.5 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors">
+                                <a th:href="@{/super-admin}" sec:authorize="hasRole('SUPER_ADMIN')" class="flex items-center gap-3 px-4 py-2.5 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors">
                                     <span class="material-icons-outlined text-purple-600 text-xl">shield</span> Super Admin Panel
                                 </a>
-                                <a href="/admin/console" sec:authorize="hasAnyRole('ADMIN', 'SUPER_ADMIN')" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                <a th:href="@{/admin/console}" sec:authorize="hasAnyRole('ADMIN', 'SUPER_ADMIN')" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
                                     <span class="material-icons-outlined text-g-text-secondary text-xl">admin_panel_settings</span> Admin Console
                                 </a>
-                                <a href="/my-bids" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                <a th:href="@{/my-bids}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
                                     <span class="material-icons-outlined text-g-text-secondary text-xl">payments</span> My Bids
                                 </a>
-                                <a href="/my-wins" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                <a th:href="@{/my-wins}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
                                     <span class="material-icons-outlined text-g-text-secondary text-xl">emoji_events</span> My Wins
                                 </a>
-                                <a href="/messages" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                <a th:href="@{/messages}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
                                     <span class="material-icons-outlined text-g-text-secondary text-xl">chat</span> Messages
                                 </a>
-                                <a href="/profile/edit" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
+                                <a th:href="@{/profile/edit}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
                                     <span class="material-icons-outlined text-g-text-secondary text-xl">settings</span> Edit Profile
                                 </a>
                             </div>
@@ -239,8 +239,8 @@
                         <span class="material-icons-outlined dark:hidden">dark_mode</span>
                         <span class="material-icons-outlined hidden dark:inline">light_mode</span>
                     </button>
-                    <a href="/login" class="px-4 sm:px-4 py-2 sm:py-2 text-sm font-medium text-white sm:text-g-blue bg-g-blue sm:bg-transparent hover:bg-g-blue-hover sm:hover:bg-g-blue-light rounded-full transition-colors shadow-g-sm sm:shadow-none whitespace-nowrap">Sign in</a>
-                    <a href="/register" class="hidden sm:inline-flex px-5 py-2.5 text-sm font-medium text-white bg-g-blue hover:bg-g-blue-hover rounded-full transition-colors shadow-g-sm">Get started</a>
+                    <a th:href="@{/login}" class="px-4 sm:px-4 py-2 sm:py-2 text-sm font-medium text-white sm:text-g-blue bg-g-blue sm:bg-transparent hover:bg-g-blue-hover sm:hover:bg-g-blue-light rounded-full transition-colors shadow-g-sm sm:shadow-none whitespace-nowrap">Sign in</a>
+                    <a th:href="@{/register}" class="hidden sm:inline-flex px-5 py-2.5 text-sm font-medium text-white bg-g-blue hover:bg-g-blue-hover rounded-full transition-colors shadow-g-sm">Get started</a>
                 </div>
             </div>
         </div>
@@ -277,7 +277,7 @@
             <!-- Header -->
             <div class="px-4 py-3 border-b border-g-border flex items-center justify-between">
                 <h3 class="font-gsans font-medium text-sm text-g-text">Messages</h3>
-                <a href="/messages" class="text-[11px] font-semibold text-g-blue hover:text-g-blue-hover transition-colors">View all &rarr;</a>
+                <a th:href="@{/messages}" class="text-[11px] font-semibold text-g-blue hover:text-g-blue-hover transition-colors">View all &rarr;</a>
             </div>
             <!-- Conversation List -->
             <div id="chatPopList" class="max-h-80 overflow-y-auto divide-y divide-g-border scrollbar-hide">
@@ -288,7 +288,7 @@
             </div>
             <!-- Footer -->
             <div class="border-t border-g-border px-4 py-2.5">
-                <a href="/messages" class="flex items-center justify-center gap-1.5 text-sm font-medium text-g-blue hover:text-g-blue-hover transition-colors py-1">
+                <a th:href="@{/messages}" class="flex items-center justify-center gap-1.5 text-sm font-medium text-g-blue hover:text-g-blue-hover transition-colors py-1">
                     Open Inbox
                     <span class="material-icons-outlined text-base">arrow_forward</span>
                 </a>
@@ -481,7 +481,7 @@
 
             conversations.forEach(function(c) {
                 var icon = c.isDirect ? 'mail' : 'gavel';
-                var html = '<a href="/messages/' + c.id + '" class="chat-pop-item flex items-center gap-3 px-4 py-3 hover:bg-g-hover transition-colors no-underline">' +
+                var html = '<a th:href="@{/messages/' + c.id + '}" class="chat-pop-item flex items-center gap-3 px-4 py-3 hover:bg-g-hover transition-colors no-underline">' +
                     '<div class="w-10 h-10 rounded-full bg-g-blue flex items-center justify-center shrink-0">' +
                     '<span class="text-white font-gsans font-medium text-sm">' + escapeHtml(c.initial) + '</span></div>' +
                     '<div class="flex-1 min-w-0">' +
