@@ -342,16 +342,36 @@
                                 </div>
                             </div>
 
+                            <!-- Schedule Option -->
+                            <div>
+                                <button type="button" onclick="toggleScheduleBox()" id="scheduleToggleBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-g-bg border border-g-border rounded-lg text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
+                                    <span class="material-icons-outlined text-lg">schedule_send</span>
+                                    Schedule for later
+                                </button>
+                                <div id="scheduleBox" class="hidden mt-3 p-4 bg-purple-50/50 border border-purple-200 rounded-xl">
+                                    <label class="block text-sm font-medium text-purple-800 mb-2">Schedule date & time</label>
+                                    <input type="datetime-local" name="scheduledFor" id="scheduleInput"
+                                           class="w-full px-4 py-2.5 bg-white border border-purple-200 rounded-lg text-sm text-g-text focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all">
+                                    <p class="text-xs text-purple-600 mt-1.5">Leave empty to send immediately. Scheduled broadcasts are sent automatically.</p>
+                                </div>
+                            </div>
+
                             <!-- Action Buttons -->
                             <div class="flex items-center justify-between pt-4 border-t border-g-border">
                                 <div id="recipientInfo" class="flex items-center gap-2 text-sm text-g-text-secondary">
                                     <span class="material-icons-outlined text-lg">people</span>
                                     <span>Sending to <strong class="text-g-text">all <span th:text="${totalUsers}">100</span></strong> users</span>
                                 </div>
-                                <button type="submit" class="px-6 py-2.5 bg-amber-500 text-white rounded-full text-sm font-medium hover:bg-amber-600 transition-colors shadow-g-sm flex items-center gap-2">
-                                    <span class="material-icons-outlined text-lg">send</span>
-                                    Send Now
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    <button type="submit" id="sendNowBtn" class="px-6 py-2.5 bg-amber-500 text-white rounded-full text-sm font-medium hover:bg-amber-600 transition-colors shadow-g-sm flex items-center gap-2">
+                                        <span class="material-icons-outlined text-lg">send</span>
+                                        Send Now
+                                    </button>
+                                    <button type="submit" id="scheduleBtn" class="hidden px-6 py-2.5 bg-purple-600 text-white rounded-full text-sm font-medium hover:bg-purple-700 transition-colors shadow-g-sm flex items-center gap-2" onclick="return validateSchedule()">
+                                        <span class="material-icons-outlined text-lg">schedule_send</span>
+                                        Schedule
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -367,9 +387,16 @@
                         </div>
                         <div class="space-y-3" th:if="${scheduledBroadcasts != null and !scheduledBroadcasts.isEmpty()}">
                             <div th:each="scheduled : ${scheduledBroadcasts}" class="p-3 bg-g-bg rounded-xl border border-g-border">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="material-icons-outlined text-g-blue text-sm">schedule_send</span>
-                                    <span class="text-xs font-medium text-g-blue" th:text="${scheduled.formattedScheduledTime}">Sep 18, 2026 • 10:00 AM</span>
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-icons-outlined text-g-blue text-sm">schedule_send</span>
+                                        <span class="text-xs font-medium text-g-blue" th:text="${scheduled.formattedScheduledTime}">Sep 18, 2026 • 10:00 AM</span>
+                                    </div>
+                                    <form th:action="@{'/admin/broadcast/cancel/' + ${scheduled.id}}" method="post" class="m-0" onsubmit="return confirm('Cancel this scheduled broadcast?');">
+                                        <button type="submit" class="p-1 rounded-lg text-g-red hover:bg-red-50 transition-colors" title="Cancel scheduled broadcast">
+                                            <span class="material-icons-outlined text-sm">cancel_schedule</span>
+                                        </button>
+                                    </form>
                                 </div>
                                 <p class="text-sm font-medium text-g-text truncate" th:text="${scheduled.subject}">Weekend Auction Event</p>
                                 <p class="text-xs text-g-text-secondary mt-1" th:text="${scheduled.audienceLabel}">All Users (100)</p>
@@ -571,6 +598,50 @@
                 setTimeout(() => msg.remove(), 300);
             });
         }, 5000);
+
+        // ---- Schedule toggle ----
+        var scheduleVisible = false;
+
+        function toggleScheduleBox() {
+            scheduleVisible = !scheduleVisible;
+            var box = document.getElementById('scheduleBox');
+            var sendBtn = document.getElementById('sendNowBtn');
+            var schedBtn = document.getElementById('scheduleBtn');
+            var toggleBtn = document.getElementById('scheduleToggleBtn');
+
+            if (scheduleVisible) {
+                box.classList.remove('hidden');
+                sendBtn.classList.add('hidden');
+                schedBtn.classList.remove('hidden');
+                schedBtn.classList.add('flex');
+                toggleBtn.innerHTML = '<span class="material-icons-outlined text-lg">close</span> Cancel scheduling';
+                // Set min to now
+                var now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('scheduleInput').min = now.toISOString().slice(0, 16);
+            } else {
+                box.classList.add('hidden');
+                sendBtn.classList.remove('hidden');
+                schedBtn.classList.add('hidden');
+                schedBtn.classList.remove('flex');
+                toggleBtn.innerHTML = '<span class="material-icons-outlined text-lg">schedule_send</span> Schedule for later';
+                document.getElementById('scheduleInput').value = '';
+            }
+        }
+
+        function validateSchedule() {
+            var val = document.getElementById('scheduleInput').value;
+            if (!val) {
+                alert('Please select a date and time to schedule the broadcast.');
+                return false;
+            }
+            var selected = new Date(val);
+            if (selected <= new Date()) {
+                alert('Scheduled time must be in the future.');
+                return false;
+            }
+            return true;
+        }
     </script>
 
 </body>

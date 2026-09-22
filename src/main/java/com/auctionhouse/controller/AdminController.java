@@ -837,6 +837,7 @@ public class AdminController {
 
         // Stats
         List<User> allUsers = userService.findAllUsers();
+        model.addAttribute("totalUsers", allUsers.size());
         model.addAttribute("activeUsers", allUsers.stream().filter(User::isActive).count());
 
         // Count users who have bids (using repository query to avoid LazyInitException)
@@ -878,6 +879,7 @@ public class AdminController {
                                 @RequestParam String message,
                                 @RequestParam(defaultValue = "all") String audience,
                                 @RequestParam(required = false) List<Long> userIds,
+                                @RequestParam(required = false) String scheduledFor,
                                 Principal principal,
                                 RedirectAttributes ra) {
         requireAdmin(principal);
@@ -889,6 +891,20 @@ public class AdminController {
         if (message == null || message.trim().isEmpty()) {
             ra.addFlashAttribute("error", "Message is required.");
             return "redirect:/admin/broadcast";
+        }
+
+        // Parse scheduled time if provided
+        LocalDateTime scheduledTime = null;
+        boolean isScheduled = false;
+        if (scheduledFor != null && !scheduledFor.trim().isEmpty()) {
+            try {
+                scheduledTime = LocalDateTime.parse(scheduledFor);
+                if (scheduledTime.isAfter(LocalDateTime.now())) {
+                    isScheduled = true;
+                }
+            } catch (Exception e) {
+                // Invalid date format — ignore and send immediately
+            }
         }
 
         // Build the notification message with type prefix
@@ -944,12 +960,6 @@ public class AdminController {
                 break;
         }
 
-        int sent = 0;
-        for (User u : recipients) {
-            notificationService.createNotification(u, fullMessage, "ANNOUNCEMENT", null);
-            sent++;
-        }
-
         // Save broadcast record
         User adminUser = requireAdmin(principal);
         Broadcast broadcast = new Broadcast();
@@ -957,13 +967,45 @@ public class AdminController {
         broadcast.setMessage(message.trim());
         broadcast.setType(type);
         broadcast.setAudience(audience);
-        broadcast.setRecipientCount(sent);
         broadcast.setSentBy(adminUser);
+
+        if (isScheduled) {
+            // Schedule for later — don't send now
+            broadcast.setScheduled(true);
+            broadcast.setScheduledFor(scheduledTime);
+            broadcast.setRecipientCount(recipients.size());
+            broadcast.setSentAt(null);
+            broadcastRepository.save(broadcast);
+
+            ra.addFlashAttribute("success", "Broadcast scheduled for " + broadcast.getFormattedScheduledTime() + " (" + audienceLabel + ").");
+            return "redirect:/admin/broadcast";
+        }
+
+        // Send immediately
+        int sent = 0;
+        for (User u : recipients) {
+            notificationService.createNotification(u, fullMessage, "ANNOUNCEMENT", null);
+            sent++;
+        }
+
+        broadcast.setRecipientCount(sent);
         broadcast.setSentAt(LocalDateTime.now());
         broadcast.setScheduled(false);
         broadcastRepository.save(broadcast);
 
         ra.addFlashAttribute("success", "Announcement delivered to " + audienceLabel + "!");
+        return "redirect:/admin/broadcast";
+    }
+
+    @PostMapping("/broadcast/cancel/{id}")
+    public String cancelScheduledBroadcast(@PathVariable Long id, Principal principal, RedirectAttributes ra) {
+        requireAdmin(principal);
+        broadcastRepository.findById(id).ifPresent(b -> {
+            if (b.isScheduled()) {
+                broadcastRepository.delete(b);
+            }
+        });
+        ra.addFlashAttribute("success", "Scheduled broadcast cancelled.");
         return "redirect:/admin/broadcast";
     }
 
