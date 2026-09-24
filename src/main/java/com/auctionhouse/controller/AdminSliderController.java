@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.auctionhouse.service.AuditService;
 import java.security.Principal;
 import java.util.List;
 
@@ -29,16 +30,19 @@ public class AdminSliderController {
     private final UserService userService;
     private final NotificationService notificationService;
     private final FileStorageService fileStorageService;
+    private final AuditService auditService;
 
     @Autowired
     public AdminSliderController(SlideRepository slideRepository,
                                   UserService userService,
                                   NotificationService notificationService,
-                                  FileStorageService fileStorageService) {
+                                  FileStorageService fileStorageService,
+                                      AuditService auditService) {
         this.slideRepository = slideRepository;
         this.userService = userService;
         this.notificationService = notificationService;
         this.fileStorageService = fileStorageService;
+        this.auditService = auditService;
     }
 
     @GetMapping({"", "/"})
@@ -68,6 +72,7 @@ public class AdminSliderController {
                            @RequestParam(required = false, defaultValue = "rounded-[40%_60%_70%_30%/40%_50%_60%_50%]") String imageShape,
                            @RequestParam(required = false, defaultValue = "0") int sortOrder,
                            @RequestParam(required = false, defaultValue = "true") boolean active,
+                           Principal principal,
                            RedirectAttributes ra) {
         if (title == null || title.trim().isEmpty()) {
             ra.addFlashAttribute("error", "Title is required.");
@@ -101,6 +106,8 @@ public class AdminSliderController {
         slide.setSortOrder(sortOrder);
         slide.setActive(active);
         slideRepository.save(slide);
+        auditService.log(userService.findByUsername(principal.getName()).orElse(null), "SLIDE_CREATED", null, "Slide #" + slide.getId(),
+                "Created hero slide '" + slide.getTitle() + "' (sortOrder " + slide.getSortOrder() + ")");
 
         ra.addFlashAttribute("success", "Slide added successfully!");
         return "redirect:/admin/slides";
@@ -122,7 +129,8 @@ public class AdminSliderController {
                               @RequestParam(required = false, defaultValue = "rounded-[40%_60%_70%_30%/40%_50%_60%_50%]") String imageShape,
                               @RequestParam(required = false, defaultValue = "0") int sortOrder,
                               @RequestParam(required = false, defaultValue = "true") boolean active,
-                              RedirectAttributes ra) {
+                              Principal principal,
+                           RedirectAttributes ra) {
         Slide slide = slideRepository.findById(id).orElse(null);
         if (slide == null) {
             ra.addFlashAttribute("error", "Slide not found.");
@@ -157,24 +165,32 @@ public class AdminSliderController {
         // else: keep existing imageUrl unchanged
 
         slideRepository.save(slide);
+        auditService.log(userService.findByUsername(principal.getName()).orElse(null), "SLIDE_UPDATED", null, "Slide #" + slide.getId(),
+                "Edited hero slide '" + slide.getTitle() + "'");
 
         ra.addFlashAttribute("success", "Slide updated!");
         return "redirect:/admin/slides";
     }
 
     @PostMapping("/delete/{id}")
-    public String deleteSlide(@PathVariable Long id, RedirectAttributes ra) {
+    public String deleteSlide(@PathVariable Long id, Principal principal, RedirectAttributes ra) {
+        Slide slide = slideRepository.findById(id).orElse(null);
+        String slideTitle = slide != null ? slide.getTitle() : ("#" + id);
         slideRepository.deleteById(id);
+        auditService.log(userService.findByUsername(principal.getName()).orElse(null), "SLIDE_DELETED", null, "Slide #" + id,
+                "Deleted hero slide '" + slideTitle + "' from the homepage carousel");
         ra.addFlashAttribute("success", "Slide deleted.");
         return "redirect:/admin/slides";
     }
 
     @PostMapping("/toggle/{id}")
-    public String toggleSlide(@PathVariable Long id, RedirectAttributes ra) {
+    public String toggleSlide(@PathVariable Long id, Principal principal, RedirectAttributes ra) {
         Slide slide = slideRepository.findById(id).orElse(null);
         if (slide != null) {
             slide.setActive(!slide.isActive());
             slideRepository.save(slide);
+            auditService.log(userService.findByUsername(principal.getName()).orElse(null), slide.isActive() ? "SLIDE_ACTIVATED" : "SLIDE_DEACTIVATED",
+                    null, "Slide #" + id, (slide.isActive() ? "Activated" : "Deactivated") + " hero slide '" + slide.getTitle() + "'");
             ra.addFlashAttribute("success", "Slide " + (slide.isActive() ? "activated" : "deactivated") + ".");
         }
         return "redirect:/admin/slides";

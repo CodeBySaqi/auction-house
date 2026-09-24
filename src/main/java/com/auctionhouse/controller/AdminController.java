@@ -5,6 +5,7 @@ import com.auctionhouse.repository.BidRepository;
 import com.auctionhouse.repository.BroadcastRepository;
 import com.auctionhouse.repository.UserRepository;
 import com.auctionhouse.service.AuctionService;
+import com.auctionhouse.service.AuditService;
 import com.auctionhouse.service.ChatService;
 import com.auctionhouse.service.NotificationService;
 import com.auctionhouse.service.PaymentReleaseService;
@@ -57,6 +58,7 @@ public class AdminController {
     private final FileStorageService fileStorageService;
     private final ChatService chatService;
     private final BroadcastRepository broadcastRepository;
+    private final AuditService auditService;
 
     @Autowired
     public AdminController(UserService userService,
@@ -68,7 +70,8 @@ public class AdminController {
                            PaymentReleaseService paymentReleaseService,
                            FileStorageService fileStorageService,
                            ChatService chatService,
-                           BroadcastRepository broadcastRepository) {
+                           BroadcastRepository broadcastRepository,
+                           AuditService auditService) {
         this.userService = userService;
         this.auctionService = auctionService;
         this.bidRepository = bidRepository;
@@ -79,6 +82,7 @@ public class AdminController {
         this.fileStorageService = fileStorageService;
         this.chatService = chatService;
         this.broadcastRepository = broadcastRepository;
+        this.auditService = auditService;
     }
 
     /* ==================== NEW ADMIN CONSOLE ==================== */
@@ -346,11 +350,13 @@ public class AdminController {
     }
 
     @PostMapping("/auctions/toggle/{id}")
-    public String toggleAuctionStatus(@PathVariable Long id, RedirectAttributes ra) {
+    public String toggleAuctionStatus(@PathVariable Long id, Principal principal, RedirectAttributes ra) {
         try {
             Auction auction = auctionService.findById(id).orElseThrow(() -> new IllegalArgumentException("Auction not found"));
             if (auction.getStatus() == AuctionStatus.ACTIVE) {
                 auctionService.closeAuctionManually(auction);
+                auditService.log(requireAdmin(principal), "AUCTION_CLOSED", null, "Auction #" + id,
+                        "Manually closed \"" + auction.getTitle() + "\" from admin console");
                 ra.addFlashAttribute("successMessage", "Closed \"" + auction.getTitle() + "\".");
             } else {
                 // BUG 7: Check for existing PaymentRelease before reopening
@@ -369,6 +375,8 @@ public class AdminController {
                 auction.setStatus(AuctionStatus.ACTIVE);
                 auction.setEndTime(LocalDateTime.now().plusDays(7));
                 auctionService.save(auction);
+                auditService.log(requireAdmin(principal), "AUCTION_REOPENED", null, "Auction #" + id,
+                        "Reopened \"" + auction.getTitle() + "\" with a fresh 7-day timer (previous bids refunded & cleared)");
                 ra.addFlashAttribute("successMessage", "Reopened \"" + auction.getTitle() + "\" and set it to run for 7 days.");
             }
         } catch (Exception e) {
@@ -380,6 +388,7 @@ public class AdminController {
     @PostMapping("/auctions/extend/{id}")
     public String extendAuction(@PathVariable Long id,
                                 @RequestParam(defaultValue = "1") int hours,
+                                Principal principal,
                                 RedirectAttributes ra) {
         try {
             Auction auction = auctionService.findById(id).orElseThrow(() -> new IllegalArgumentException("Auction not found"));
@@ -388,6 +397,8 @@ public class AdminController {
             auction.setEndTime(base.plusHours(hours));
             auction.setStatus(AuctionStatus.ACTIVE);
             auctionService.save(auction);
+            auditService.log(requireAdmin(principal), "AUCTION_EXTENDED", null, "Auction #" + id,
+                    "Extended \"" + auction.getTitle() + "\" by " + hours + "h; new end time " + auction.getEndTime());
             ra.addFlashAttribute("successMessage", "Extended \"" + auction.getTitle() + "\" by " + hours + "h.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Could not extend the auction: " + e.getMessage());
@@ -396,10 +407,12 @@ public class AdminController {
     }
 
     @PostMapping("/auctions/cancel/{id}")
-    public String cancelAuction(@PathVariable Long id, RedirectAttributes ra) {
+    public String cancelAuction(@PathVariable Long id, Principal principal, RedirectAttributes ra) {
         try {
             Auction auction = auctionService.findById(id).orElseThrow(() -> new IllegalArgumentException("Auction not found"));
             auctionService.cancelAuction(auction);
+            auditService.log(requireAdmin(principal), "AUCTION_CANCELLED", null, "Auction #" + id,
+                    "Cancelled \"" + auction.getTitle() + "\"; highest bidder refunded and auction withdrawn from sale");
             ra.addFlashAttribute("successMessage", "Cancelled \"" + auction.getTitle() + "\" and refunded the highest bidder.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Could not cancel the auction: " + e.getMessage());
@@ -408,9 +421,10 @@ public class AdminController {
     }
 
     @PostMapping("/auctions/delete/{id}")
-    public String deleteAuction(@PathVariable Long id, RedirectAttributes ra) {
+    public String deleteAuction(@PathVariable Long id, Principal principal, RedirectAttributes ra) {
         try {
-            auctionService.deleteById(id);
+            auditService.log(requireAdmin(principal), "AUCTION_DELETED", null, "Auction #" + id,
+                    "Permanently deleted auction (id " + id + ") and all its bids from admin console");
             ra.addFlashAttribute("successMessage", "Auction deleted.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Failed to delete auction: " + e.getMessage());
@@ -422,6 +436,7 @@ public class AdminController {
     @PostMapping("/auctions/bulk")
     public String bulkAuctions(@RequestParam(defaultValue = "close") String action,
                                @RequestParam(name = "ids", required = false) List<Long> ids,
+                               Principal principal,
                                RedirectAttributes ra) {
         if (ids == null || ids.isEmpty()) {
             ra.addFlashAttribute("errorMessage", "Select at least one auction first.");
@@ -472,6 +487,8 @@ public class AdminController {
                 }
                 done++;
             }
+            auditService.log(requireAdmin(principal), "AUCTION_BULK_ACTION", null, null,
+                    "Bulk '" + action + "' applied to " + done + " auction(s): " + ids);
             ra.addFlashAttribute("successMessage", done + " auction" + (done == 1 ? "" : "s") + " updated (" + action + ").");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Bulk action failed after " + done + " items: " + e.getMessage());
@@ -529,6 +546,7 @@ public class AdminController {
                              @RequestParam String email,
                              @RequestParam String password,
                              @RequestParam String role,
+                             Principal principal,
                              RedirectAttributes ra) {
         try {
             if (userService.findByUsername(username).isPresent()) {
@@ -551,6 +569,8 @@ public class AdminController {
             u.setRole(role);
             u.setWalletBalance(100000.0);
             userService.updateProfile(u);
+            auditService.log(requireAdmin(principal), "USER_CREATED", u,
+                    "Created account via admin console with role " + role + ", starting balance $100,000.00");
             ra.addFlashAttribute("successMessage", "Created " + role.replace("ROLE_", "").toLowerCase() + " \"" + username + "\".");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Failed to create user: " + e.getMessage());
@@ -578,8 +598,11 @@ public class AdminController {
                 return "redirect:/admin/users";
             }
             String oldRole = user.getRole().replace("ROLE_", "");
+            String oldRoleFull = user.getRole();
             user.setRole(role);
             userService.updateProfile(user);
+            auditService.log(requireAdmin(principal), "ROLE_CHANGED", user,
+                    "Role changed from " + oldRoleFull + " to " + role + " via admin console");
             ra.addFlashAttribute("successMessage", user.getUsername() + " moved from " + oldRole + " to " + role.replace("ROLE_", "") + ".");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Failed to change role: " + e.getMessage());
@@ -588,7 +611,7 @@ public class AdminController {
     }
 
     @PostMapping("/users/toggle/{id}")
-    public String toggleUserStatus(@PathVariable Long id, RedirectAttributes ra) {
+    public String toggleUserStatus(@PathVariable Long id, Principal principal, RedirectAttributes ra) {
         try {
             User user = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
             // SECURITY: Cannot deactivate SUPER_ADMIN accounts
@@ -600,14 +623,18 @@ public class AdminController {
                 ra.addFlashAttribute("errorMessage", "Administrators cannot be deactivated from here.");
                 return "redirect:/admin/users";
             }
+            String toggleAction; String toggleWhy;
             if (!user.isActive()) {
                 user.setActive(true);
+                toggleAction = "USER_ACTIVATED"; toggleWhy = "Account reactivated via admin console";
                 ra.addFlashAttribute("successMessage", "Reactivated \"" + user.getUsername() + "\".");
             } else {
                 user.setActive(false);
+                toggleAction = "USER_DEACTIVATED"; toggleWhy = "Account deactivated (banned) via admin console";
                 ra.addFlashAttribute("successMessage", "Deactivated \"" + user.getUsername() + "\".");
             }
             userService.updateProfile(user);
+            auditService.log(requireAdmin(principal), toggleAction, user, toggleWhy);
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Failed to update user: " + e.getMessage());
         }
@@ -615,7 +642,7 @@ public class AdminController {
     }
 
     @PostMapping("/users/balance/{id}")
-    public String adjustBalance(@PathVariable Long id, @RequestParam double amount, RedirectAttributes ra) {
+    public String adjustBalance(@PathVariable Long id, @RequestParam double amount, Principal principal, RedirectAttributes ra) {
         try {
             User user = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
             double newBalance = user.getWalletBalance() + amount;
@@ -627,6 +654,8 @@ public class AdminController {
             }
             user.setWalletBalance(newBalance);
             userService.updateProfile(user);
+            auditService.log(requireAdmin(principal), "BALANCE_ADJUSTED", user,
+                    String.format("Wallet %s $%,.2f; new balance $%,.2f", (amount >= 0 ? "credited" : "debited"), amount, newBalance));
             ra.addFlashAttribute("successMessage", "Adjusted " + user.getUsername() + " by "
                     + String.format("%,.2f", amount) + ". New balance $" + String.format("%,.2f", user.getWalletBalance()) + ".");
         } catch (Exception e) {
@@ -644,6 +673,8 @@ public class AdminController {
                 return "redirect:/admin/users";
             }
             userService.deleteById(id);
+            auditService.log(requireAdmin(principal), "USER_DELETED", id, user.getUsername(),
+                    "Account permanently deleted via admin console");
             ra.addFlashAttribute("successMessage", "Deleted \"" + user.getUsername() + "\".");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Failed to delete user: " + e.getMessage());
@@ -692,6 +723,8 @@ public class AdminController {
                 }
                 done++;
             }
+            auditService.log(requireAdmin(principal), "USER_BULK_ACTION", null, null,
+                    "Bulk '" + action + "' applied to " + done + " account(s): " + ids);
             ra.addFlashAttribute("successMessage", done + " account" + (done == 1 ? "" : "s") + " updated (" + action + ").");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Bulk action failed after " + done + " items: " + e.getMessage());
@@ -817,7 +850,10 @@ public class AdminController {
                                @RequestParam String adminEmail,
                                @RequestParam double defaultBalance,
                                @RequestParam int defaultDuration,
+                               Principal principal,
                                RedirectAttributes ra) {
+        auditService.log(requireAdmin(principal), "SETTINGS_UPDATED", null, null,
+                "Site settings saved: name='" + siteName + "', email=" + adminEmail + ", defaultBalance=$" + defaultBalance + ", defaultDuration=" + defaultDuration + "min (informational — values are not persisted yet)");
         // Pass submitted values back so the form reflects what was saved
         ra.addFlashAttribute("savedSiteName", siteName);
         ra.addFlashAttribute("savedAdminEmail", adminEmail);
@@ -986,6 +1022,8 @@ public class AdminController {
             }
             broadcastRepository.save(broadcast);
 
+            auditService.log(requireAdmin(principal), "BROADCAST_SCHEDULED", null, null,
+                    "Scheduled '" + subject.trim() + "' (" + type + ") for " + scheduledTime + " to " + audienceLabel);
             ra.addFlashAttribute("success", "Broadcast scheduled for " + broadcast.getFormattedScheduledTime() + " (" + audienceLabel + ").");
             return "redirect:/admin/broadcast";
         }
@@ -1002,6 +1040,8 @@ public class AdminController {
         broadcast.setScheduled(false);
         broadcastRepository.save(broadcast);
 
+        auditService.log(requireAdmin(principal), "BROADCAST_SENT", null, null,
+                "Sent '" + subject.trim() + "' (" + type + ") to " + audienceLabel);
         ra.addFlashAttribute("success", "Announcement delivered to " + audienceLabel + "!");
         return "redirect:/admin/broadcast";
     }
@@ -1013,6 +1053,8 @@ public class AdminController {
         Broadcast b = broadcastRepository.findById(id).orElse(null);
         if (b != null && b.isScheduled()) {
             broadcastRepository.delete(b);
+            auditService.log(requireAdmin(principal), "BROADCAST_CANCELLED", null, null,
+                    "Cancelled scheduled broadcast '" + b.getSubject() + "' (was due " + b.getScheduledFor() + ")");
             ra.addFlashAttribute("success", "Scheduled broadcast cancelled.");
         } else {
             ra.addFlashAttribute("error", "Broadcast not found or already sent.");
@@ -1041,6 +1083,8 @@ public class AdminController {
             }
             b.setScheduledFor(newTime);
             broadcastRepository.save(b);
+            auditService.log(requireAdmin(principal), "BROADCAST_RESCHEDULED", null, null,
+                    "Moved '" + b.getSubject() + "' to " + newTime);
             ra.addFlashAttribute("success", "Broadcast rescheduled to " + b.getFormattedScheduledTime() + ".");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Invalid date format.");
@@ -1361,6 +1405,7 @@ public class AdminController {
                                @RequestParam(required = false) String colCondition,
                                @RequestParam(required = false) String colRarity,
                                @RequestParam(required = false) String colProvenance,
+                               Principal principal,
                                RedirectAttributes ra) {
         try {
             Auction auction = auctionService.findById(id)
@@ -1436,6 +1481,8 @@ public class AdminController {
             }
 
             auctionService.save(auction);
+            auditService.log(requireAdmin(principal), "AUCTION_EDITED", null, "Auction #" + id,
+                    "Edited \"" + title + "\" (title/description/price/image) from admin console");
             ra.addFlashAttribute("successMessage", "Auction updated successfully!");
             return "redirect:/admin/auctions";
         } catch (Exception e) {

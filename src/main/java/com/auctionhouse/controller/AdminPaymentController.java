@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.auctionhouse.service.AuditService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -31,12 +32,14 @@ public class AdminPaymentController {
     private final PaymentReleaseService paymentReleaseService;
     private final UserService userService;
     private final AuctionService auctionService;
+    private final AuditService auditService;
 
     @Autowired
-    public AdminPaymentController(PaymentReleaseService paymentReleaseService, UserService userService, AuctionService auctionService) {
+    public AdminPaymentController(PaymentReleaseService paymentReleaseService, UserService userService, AuctionService auctionService, AuditService auditService) {
         this.paymentReleaseService = paymentReleaseService;
         this.userService = userService;
         this.auctionService = auctionService;
+        this.auditService = auditService;
     }
 
     /**
@@ -115,6 +118,8 @@ public class AdminPaymentController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
             paymentReleaseService.verifyPaymentRelease(id, admin);
+            auditService.log(admin, "PAYMENT_VERIFIED", null, "Payment #" + id,
+                "Verified payment release #" + id + " (approved for payout)");
 
             redirectAttributes.addFlashAttribute("success", "Payment release verified and approved successfully!");
             return "redirect:/admin/payments/" + id;
@@ -139,6 +144,8 @@ public class AdminPaymentController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
             paymentReleaseService.releasePayment(id, admin);
+            auditService.log(admin, "PAYMENT_RELEASED", null, "Payment #" + id,
+                "Released payment release #" + id + " to the seller");
 
             redirectAttributes.addFlashAttribute("success", "Payment released to seller successfully!");
             return "redirect:/admin/payments/" + id;
@@ -167,6 +174,8 @@ public class AdminPaymentController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
             paymentReleaseService.rejectPaymentRelease(id, admin, reason);
+            auditService.log(admin, "PAYMENT_REJECTED", null, "Payment #" + id,
+                "Rejected payment release #" + id + " — reason: " + reason);
 
             redirectAttributes.addFlashAttribute("success", "Payment release rejected. Both parties notified to resubmit.");
             return "redirect:/admin/payments/" + id;

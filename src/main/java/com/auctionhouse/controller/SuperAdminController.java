@@ -2,6 +2,7 @@ package com.auctionhouse.controller;
 
 import com.auctionhouse.model.AdminAuditLog;
 import com.auctionhouse.model.User;
+import com.auctionhouse.service.AuditService;
 import com.auctionhouse.service.SuperAdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,10 +25,12 @@ import java.util.List;
 public class SuperAdminController {
 
     private final SuperAdminService superAdminService;
+    private final AuditService auditService;
 
     @Autowired
-    public SuperAdminController(SuperAdminService superAdminService) {
+    public SuperAdminController(SuperAdminService superAdminService, AuditService auditService) {
         this.superAdminService = superAdminService;
+        this.auditService = auditService;
     }
 
     /**
@@ -232,8 +235,81 @@ public class SuperAdminController {
     // ==================== AUDIT LOGS ====================
 
     @GetMapping("/audit-logs")
-    public String auditLogs(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        model.addAttribute("auditLogs", superAdminService.getAuditLogs());
+    public String auditLogs(@RequestParam(required = false) Long adminId,
+                            @RequestParam(required = false) String action,
+                            @RequestParam(required = false) String from,
+                            @RequestParam(required = false) String to,
+                            @RequestParam(defaultValue = "0") int page,
+                            @AuthenticationPrincipal UserDetails userDetails,
+                            Model model) {
+        // Parse optional date range (HTML date inputs give yyyy-MM-dd)
+        java.time.LocalDateTime fromTime = null;
+        java.time.LocalDateTime toTime = null;
+        try {
+            if (from != null && !from.isBlank()) {
+                fromTime = java.time.LocalDate.parse(from).atStartOfDay();
+            }
+            if (to != null && !to.isBlank()) {
+                toTime = java.time.LocalDate.parse(to).atTime(23, 59, 59);
+            }
+        } catch (Exception e) {
+            model.addAttribute("error", "Invalid date filter — showing unfiltered logs.");
+        }
+
+        int pageSize = 50;
+        org.springframework.data.domain.Page<AdminAuditLog> logPage = auditService.getFilteredLogs(
+                adminId, action, fromTime, toTime, org.springframework.data.domain.PageRequest.of(page, pageSize));
+
+        model.addAttribute("auditLogs", logPage.getContent());
+        model.addAttribute("totalLogs", logPage.getTotalElements());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", logPage.getTotalPages());
+
+        // Filter dropdown data + selected values (to restore form state)
+        model.addAttribute("admins", auditService.getDistinctPerformers());
+        model.addAttribute("actions", auditService.getDistinctActions());
+        model.addAttribute("selectedAdminId", adminId);
+        model.addAttribute("selectedAction", action);
+        model.addAttribute("selectedFrom", from);
+        model.addAttribute("selectedTo", to);
+
+        // Pretty labels for each action type
+        java.util.Map<String, String> labels = new java.util.LinkedHashMap<>();
+        labels.put("USER_CREATED", "User Created");
+        labels.put("USER_DELETED", "User Deleted");
+        labels.put("USER_ACTIVATED", "User Activated");
+        labels.put("USER_DEACTIVATED", "User Deactivated");
+        labels.put("USER_BULK_ACTION", "User Bulk Action");
+        labels.put("ROLE_CHANGED", "Role Changed");
+        labels.put("ADMIN_CREATED", "Admin Promoted");
+        labels.put("ADMIN_DEMOTED", "Admin Demoted");
+        labels.put("BALANCE_ADJUSTED", "Balance Adjusted");
+        labels.put("AUCTION_APPROVED", "Auction Approved");
+        labels.put("AUCTION_REJECTED", "Auction Rejected");
+        labels.put("AUCTION_CLOSED", "Auction Closed");
+        labels.put("AUCTION_REOPENED", "Auction Reopened");
+        labels.put("AUCTION_EXTENDED", "Auction Extended");
+        labels.put("AUCTION_CANCELLED", "Auction Cancelled");
+        labels.put("AUCTION_DELETED", "Auction Deleted");
+        labels.put("AUCTION_EDITED", "Auction Edited");
+        labels.put("AUCTION_BULK_ACTION", "Auction Bulk Action");
+        labels.put("BROADCAST_SENT", "Broadcast Sent");
+        labels.put("BROADCAST_SCHEDULED", "Broadcast Scheduled");
+        labels.put("BROADCAST_CANCELLED", "Broadcast Cancelled");
+        labels.put("BROADCAST_RESCHEDULED", "Broadcast Rescheduled");
+        labels.put("SLIDE_CREATED", "Slide Created");
+        labels.put("SLIDE_UPDATED", "Slide Updated");
+        labels.put("SLIDE_DELETED", "Slide Deleted");
+        labels.put("SLIDE_ACTIVATED", "Slide Activated");
+        labels.put("SLIDE_DEACTIVATED", "Slide Deactivated");
+        labels.put("PAYMENT_VERIFIED", "Payment Verified");
+        labels.put("PAYMENT_RELEASED", "Payment Released");
+        labels.put("PAYMENT_REJECTED", "Payment Rejected");
+        labels.put("TICKET_REPLIED", "Ticket Replied");
+        labels.put("TICKET_STATUS_CHANGED", "Ticket Status Changed");
+        labels.put("SETTINGS_UPDATED", "Settings Updated");
+        model.addAttribute("actionLabels", labels);
+
         model.addAttribute("currentSuperAdmin", superAdminService.findUserByUsername(userDetails.getUsername()).orElse(null));
         addSidebarCounts(model);
         return "super-admin/audit-logs";

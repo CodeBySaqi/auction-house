@@ -29,14 +29,17 @@ public class SuperAdminService {
     private final UserRepository userRepository;
     private final AdminAuditLogRepository auditLogRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditService auditService;
 
     @Autowired
     public SuperAdminService(UserRepository userRepository,
                               AdminAuditLogRepository auditLogRepository,
-                              PasswordEncoder passwordEncoder) {
+                              PasswordEncoder passwordEncoder,
+                              AuditService auditService) {
         this.userRepository = userRepository;
         this.auditLogRepository = auditLogRepository;
         this.passwordEncoder = passwordEncoder;
+        this.auditService = auditService;
     }
 
     // ==================== QUERIES ====================
@@ -326,14 +329,7 @@ public class SuperAdminService {
     }
 
     private void audit(String action, User target, User performedBy, String details) {
-        AdminAuditLog log = new AdminAuditLog(
-                action,
-                target.getId(),
-                target.getUsername(),
-                performedBy,
-                details
-        );
-        auditLogRepository.save(log);
+        auditService.log(performedBy, action, target, details);
     }
 
     /**

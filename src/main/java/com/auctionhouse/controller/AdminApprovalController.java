@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.auctionhouse.service.AuditService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -28,12 +29,14 @@ public class AdminApprovalController {
     private final AuctionService auctionService;
     private final UserService userService;
     private final PaymentReleaseService paymentReleaseService;
+    private final AuditService auditService;
 
     @Autowired
-    public AdminApprovalController(AuctionService auctionService, UserService userService, PaymentReleaseService paymentReleaseService) {
+    public AdminApprovalController(AuctionService auctionService, UserService userService, PaymentReleaseService paymentReleaseService, AuditService auditService) {
         this.auctionService = auctionService;
         this.userService = userService;
         this.paymentReleaseService = paymentReleaseService;
+        this.auditService = auditService;
     }
 
     /**
@@ -89,6 +92,8 @@ public class AdminApprovalController {
             }
             
             auctionService.approveAuction(auction, admin);
+            auditService.log(admin, "AUCTION_APPROVED", null, "Auction #" + id,
+                    "Approved \"" + auction.getTitle() + "\" — listing is now live for bidding");
             redirectAttributes.addFlashAttribute("success", "Auction \"" + auction.getTitle() + "\" has been approved and is now live!");
             return "redirect:/admin/approvals";
         } catch (Exception e) {
@@ -124,6 +129,8 @@ public class AdminApprovalController {
             }
             
             auctionService.rejectAuction(auction, admin, reason.trim());
+            auditService.log(admin, "AUCTION_REJECTED", null, "Auction #" + id,
+                    "Rejected \"" + auction.getTitle() + "\" — reason: " + reason.trim());
             redirectAttributes.addFlashAttribute("success", "Auction \"" + auction.getTitle() + "\" has been rejected.");
             return "redirect:/admin/approvals";
         } catch (Exception e) {

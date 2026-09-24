@@ -55,17 +55,57 @@
             </div>
         </div>
 
+        <!-- Filters -->
+        <div class="bg-white rounded-2xl border border-g-border p-4 sm:p-5 mb-5">
+            <form th:action="@{/super-admin/audit-logs}" method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+                <div>
+                    <label class="block text-xs font-medium text-g-text-secondary mb-1.5">Admin</label>
+                    <select name="adminId" class="w-full px-3 py-2 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-purple-500 transition-all">
+                        <option value="">All admins</option>
+                        <option th:each="a : ${admins}" th:value="${a.id}" th:selected="${selectedAdminId != null and selectedAdminId == a.id}"
+                                th:text="${a.username} + (${a.role == 'ROLE_SUPER_ADMIN'} ? ' ★' : '')">admin</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-g-text-secondary mb-1.5">Action</label>
+                    <select name="action" class="w-full px-3 py-2 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-purple-500 transition-all">
+                        <option value="">All actions</option>
+                        <option th:each="act : ${actions}" th:value="${act}" th:selected="${selectedAction != null and selectedAction == act}"
+                                th:text="${actionLabels[act] != null} ? ${actionLabels[act]} : ${act}">action</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-g-text-secondary mb-1.5">From</label>
+                    <input type="date" name="from" th:value="${selectedFrom}"
+                           class="w-full px-3 py-2 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-purple-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-g-text-secondary mb-1.5">To</label>
+                    <input type="date" name="to" th:value="${selectedTo}"
+                           class="w-full px-3 py-2 bg-g-bg border border-g-border rounded-lg text-sm text-g-text focus:outline-none focus:border-purple-500 transition-all">
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors">
+                        <span class="material-icons-outlined text-lg">filter_list</span> Apply
+                    </button>
+                    <a th:href="@{/super-admin/audit-logs}" class="inline-flex items-center justify-center px-3 py-2 bg-g-bg border border-g-border rounded-lg text-sm font-medium text-g-text-secondary hover:bg-g-hover transition-colors" title="Clear filters">
+                        <span class="material-icons-outlined text-lg">close</span>
+                    </a>
+                </div>
+            </form>
+        </div>
+
         <!-- Audit Logs Table -->
         <div class="bg-white rounded-2xl border border-g-border overflow-hidden">
             <div class="px-6 py-4 border-b border-g-border flex items-center justify-between">
                 <h2 class="font-gsans text-base font-medium text-g-text flex items-center gap-2">
                     <span class="material-icons-outlined text-g-text-secondary text-xl">history</span> All Actions
                 </h2>
-                <span class="px-3 py-1 bg-g-bg text-g-text-secondary text-xs font-medium rounded-full" th:text="${#lists.size(auditLogs)} + ' records'">0</span>
+                <span class="px-3 py-1 bg-g-bg text-g-text-secondary text-xs font-medium rounded-full" th:text="${totalLogs} + ' records'">0</span>
             </div>
             <div th:if="${#lists.isEmpty(auditLogs)}" class="p-12 text-center">
                 <span class="material-icons-outlined text-4xl text-g-text-secondary mb-2">history</span>
-                <p class="text-sm text-g-text-secondary">No audit logs yet. Actions will appear here as they occur.</p>
+                <p class="text-sm text-g-text-secondary">No audit logs match these filters.</p>
             </div>
             <div class="overflow-x-auto">
                 <table th:if="${!#lists.isEmpty(auditLogs)}" class="w-full">
@@ -81,9 +121,9 @@
                     <tbody class="divide-y divide-g-border">
                         <tr th:each="log : ${auditLogs}" class="hover:bg-g-bg/50 transition-colors">
                             <td class="px-6 py-4">
-                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full"
-                                      th:classappend="${log.action.contains('DEACTIVATED') || log.action.contains('DEMOTED')} ? 'bg-red-50 text-g-red' : 'bg-green-50 text-g-green'"
-                                      th:text="${log.action == 'USER_ACTIVATED'} ? 'User Activated' : (${log.action == 'USER_DEACTIVATED'} ? 'User Deactivated' : (${log.action == 'ROLE_CHANGED'} ? 'Role Changed' : (${log.action == 'ADMIN_CREATED'} ? 'Admin Promoted' : (${log.action == 'ADMIN_DEMOTED'} ? 'Admin Demoted' : ${log.action}))))">ACTION</span>
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full whitespace-nowrap"
+                                      th:classappend="${log.action.contains('DELETED') or log.action.contains('DEACTIVATED') or log.action.contains('REJECTED') or log.action.contains('CANCELLED') or log.action.contains('DEMOTED')} ? 'bg-red-50 text-g-red' : (${log.action.contains('BULK') or log.action.contains('BALANCE') or log.action.contains('EXTENDED') or log.action.contains('RESCHEDULED')} ? 'bg-amber-50 text-amber-700' : (${log.action.contains('CREATED') or log.action.contains('ACTIVATED') or log.action.contains('APPROVED') or log.action.contains('RELEASED')} ? 'bg-green-50 text-g-green' : 'bg-blue-50 text-g-blue'))"
+                                      th:text="${actionLabels[log.action] != null} ? ${actionLabels[log.action]} : ${log.action}">ACTION</span>
                             </td>
                             <td class="px-6 py-4">
                                 <a th:if="${log.targetUserId != null}" th:href="@{/super-admin/users/{id}(id=${log.targetUserId})}" class="text-sm text-g-blue hover:underline" th:text="${log.targetUsername}">user</a>
@@ -101,6 +141,19 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Pagination (preserves active filters) -->
+            <div th:if="${totalPages > 1}" class="px-6 py-4 border-t border-g-border flex items-center justify-between">
+                <span class="text-xs text-g-text-secondary" th:text="'Page ' + (${currentPage} + 1) + ' of ' + ${totalPages}">Page 1 of 1</span>
+                <div class="flex items-center gap-2">
+                    <a th:if="${currentPage > 0}"
+                       th:href="@{/super-admin/audit-logs(adminId=${selectedAdminId}, action=${selectedAction}, from=${selectedFrom}, to=${selectedTo}, page=${currentPage - 1})}"
+                       class="px-3 py-1.5 bg-g-bg border border-g-border rounded-lg text-xs font-medium text-g-text hover:bg-g-hover transition-colors">Previous</a>
+                    <a th:if="${currentPage < totalPages - 1}"
+                       th:href="@{/super-admin/audit-logs(adminId=${selectedAdminId}, action=${selectedAction}, from=${selectedFrom}, to=${selectedTo}, page=${currentPage + 1})}"
+                       class="px-3 py-1.5 bg-g-bg border border-g-border rounded-lg text-xs font-medium text-g-text hover:bg-g-hover transition-colors">Next</a>
+                </div>
             </div>
         </div>
     </main>

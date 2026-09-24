@@ -8,6 +8,7 @@ import com.auctionhouse.service.AuctionService;
 import com.auctionhouse.service.PaymentReleaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import com.auctionhouse.service.AuditService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -29,18 +30,21 @@ public class AdminSupportController {
     private final NotificationService notificationService;
     private final AuctionService auctionService;
     private final PaymentReleaseService paymentReleaseService;
+    private final AuditService auditService;
 
     @Autowired
     public AdminSupportController(SupportTicketService ticketService,
                                    UserService userService,
                                    NotificationService notificationService,
                                    AuctionService auctionService,
-                                   PaymentReleaseService paymentReleaseService) {
+                                   PaymentReleaseService paymentReleaseService,
+                                   AuditService auditService) {
         this.ticketService = ticketService;
         this.userService = userService;
         this.notificationService = notificationService;
         this.auctionService = auctionService;
         this.paymentReleaseService = paymentReleaseService;
+        this.auditService = auditService;
     }
 
     /**
@@ -116,6 +120,8 @@ public class AdminSupportController {
 
         try {
             ticketService.sendMessage(id, admin, content);
+            auditService.log(admin, "TICKET_REPLIED", null, "Ticket #" + id,
+                    "Replied to support ticket #" + id);
             return "redirect:/admin/support/" + id;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -136,6 +142,8 @@ public class AdminSupportController {
         try {
             TicketStatus newStatus = TicketStatus.valueOf(status);
             ticketService.changeStatus(id, admin, newStatus);
+            auditService.log(admin, "TICKET_STATUS_CHANGED", null, "Ticket #" + id,
+                    "Ticket #" + id + " status set to " + newStatus);
             redirectAttributes.addFlashAttribute("success", "Ticket status updated to " + newStatus.getDisplayName());
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
