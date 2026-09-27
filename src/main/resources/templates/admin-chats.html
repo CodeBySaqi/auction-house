@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Monitor - AuctionHouse Admin</title>
+    <!-- Theme initialization (must be before Tailwind to prevent FOUC) -->
+    <script>
+        (function() {
+            var theme = localStorage.getItem('theme') || 'light';
+            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script th:replace="~{fragments/layout :: tailwindConfig}"></script>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', system-ui, sans-serif; }
+        .font-gsans { font-family: 'Google Sans', 'Roboto', system-ui, sans-serif; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-g-bg font-roboto text-g-text h-screen overflow-hidden flex flex-col">
+
+    <!-- App Bar -->
+    <nav th:replace="~{fragments/admin-header :: adminHeader}"></nav>
+
+    <!-- Main Layout -->
+    <div class="max-w-[1680px] mx-auto flex flex-1 overflow-hidden w-full">
+
+        <!-- Sidebar -->
+        <aside th:replace="~{fragments/admin-sidebar :: sidebar('chats')}"></aside>
+        <div th:replace="~{fragments/admin-sidebar :: mobile-nav('chats')}"></div>
+
+        <!-- Main Content -->
+        <main class="flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+
+            <!-- Page Header -->
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">Chat Monitor</h1>
+                    <p class="text-sm text-g-text-secondary mt-1">Read-only view of all conversations — for dispute resolution.</p>
+                </div>
+                <form th:action="@{/admin/chat}" method="get" class="flex items-center gap-2">
+                    <input type="text" name="q" th:value="${q}" placeholder="Search buyer, seller or auction…"
+                           class="px-4 py-2.5 bg-white border border-g-border rounded-full text-sm w-56 sm:w-72 focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+                    <button type="submit" class="px-4 py-2.5 bg-g-blue text-white rounded-full text-sm font-medium hover:bg-g-blue-hover transition-colors flex items-center gap-2">
+                        <span class="material-icons-outlined text-lg">search</span> Search
+                    </button>
+                </form>
+            </div>
+
+            <!-- Empty State -->
+            <div th:if="${#lists.isEmpty(conversations)}" class="bg-white rounded-2xl border border-g-border p-12 text-center">
+                <span class="material-icons-outlined text-5xl text-g-text-secondary/30 mb-3">forum</span>
+                <p class="text-sm text-g-text-secondary">No conversations found.</p>
+            </div>
+
+            <!-- Conversation List -->
+            <div class="space-y-3" th:unless="${#lists.isEmpty(conversations)}">
+                <div th:each="c : ${conversations}" class="bg-white rounded-2xl border border-g-border p-5 flex flex-col sm:flex-row sm:items-center gap-4 hover:shadow-g-sm transition-shadow">
+                    <!-- Participants -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap mb-1">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-g-blue-light rounded-full text-xs font-medium text-g-blue">
+                                <span class="material-icons-outlined text-sm">shopping_bag</span>
+                                <span th:text="${c.buyer != null} ? ${c.buyer.username} : '—'">buyer</span>
+                            </span>
+                            <span class="text-g-text-secondary text-xs">↔</span>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 rounded-full text-xs font-medium text-green-700">
+                                <span class="material-icons-outlined text-sm">store</span>
+                                <span th:text="${c.seller != null} ? ${c.seller.username} : '—'">seller</span>
+                            </span>
+                            <span th:if="${c.directMessage or c.auction == null}" class="px-2.5 py-1 bg-g-bg rounded-full text-xs font-medium text-g-text-secondary">Direct message</span>
+                        </div>
+                        <p class="text-sm text-g-text font-medium truncate" th:if="${c.auction != null}">
+                            <span class="material-icons-outlined text-sm align-middle text-g-text-secondary">gavel</span>
+                            <span th:text="${c.auction.title}">Auction title</span>
+                        </p>
+                        <p class="text-xs text-g-text-secondary mt-0.5">
+                            <span th:text="${msgCounts[c.id]}">0</span> messages
+                            <span th:if="${c.createdAt != null}" th:text="' · opened ' + ${#temporals.format(c.createdAt, 'MMM dd, yyyy')}"></span>
+                        </p>
+                    </div>
+                    <!-- Open -->
+                    <div class="flex-shrink-0">
+                        <a th:href="@{'/admin/chat/' + ${c.id}}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-g-blue text-white rounded-full text-sm font-medium hover:bg-g-blue-hover transition-colors">
+                            <span class="material-icons-outlined text-lg">visibility</span>
+                            View chat
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

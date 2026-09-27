@@ -34,6 +34,8 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
     @Query("SELECT c FROM Conversation c WHERE (c.buyer.id = :userId OR c.seller.id = :userId) ORDER BY COALESCE(c.lastMessageAt, c.createdAt) DESC")
     List<Conversation> findAllByUserId(@Param("userId") Long userId);
 
+    List<Conversation> findAllByOrderByIdDesc();
+
     /**
      * Find an existing DM conversation between two specific users.
      */

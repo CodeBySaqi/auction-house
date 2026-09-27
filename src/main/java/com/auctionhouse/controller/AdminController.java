@@ -1227,6 +1227,42 @@ public class AdminController {
     /* ==================== CHAT MONITORING ==================== */
 
     /**
+     * GET /admin/chat
+     * List of all conversations (admin chat monitor) — entry point from the
+     * admin sidebar. Each row links to the read-only chat view.
+     */
+    @GetMapping("/chat")
+    public String chatMonitorList(Model model, Principal principal,
+                                   @RequestParam(required = false) String q) {
+        User admin = requireAdmin(principal);
+        model.addAttribute("admin", admin);
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
+        model.addAttribute("activePage", "chats");
+
+        var conversations = chatService.getAllConversations();
+        if (q != null && !q.trim().isEmpty()) {
+            String needle = q.trim().toLowerCase();
+            conversations = conversations.stream()
+                    .filter(c -> (c.getBuyer() != null && c.getBuyer().getUsername().toLowerCase().contains(needle))
+                            || (c.getSeller() != null && c.getSeller().getUsername().toLowerCase().contains(needle))
+                            || (c.getAuction() != null && c.getAuction().getTitle() != null
+                                    && c.getAuction().getTitle().toLowerCase().contains(needle)))
+                    .toList();
+        }
+        model.addAttribute("conversations", conversations);
+        model.addAttribute("q", q);
+
+        // Per-row display data
+        java.util.Map<Long, Long> msgCounts = new java.util.HashMap<>();
+        for (var c : conversations) {
+            msgCounts.put(c.getId(), chatService.getMessageCount(c.getId()));
+        }
+        model.addAttribute("msgCounts", msgCounts);
+        addCounts(model, auctionService.getAllAuctions());
+        return "admin-chats";
+    }
+
+    /**
      * GET /admin/chat/{conversationId}
      * Admin read-only view of chat conversation (for dispute resolution).
      */

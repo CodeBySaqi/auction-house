@@ -147,6 +147,20 @@ public class ChatService {
     }
 
     /**
+     * All conversations, newest first (admin chat monitor list).
+     */
+    public List<Conversation> getAllConversations() {
+        return conversationRepository.findAllByOrderByIdDesc();
+    }
+
+    /**
+     * Number of messages in a conversation (admin list display).
+     */
+    public long getMessageCount(Long conversationId) {
+        return chatMessageRepository.countByConversationId(conversationId);
+    }
+
+    /**
      * Get the last message in a conversation (for preview in inbox).
      */
     public ChatMessage getLastMessage(Conversation conversation) {

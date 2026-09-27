@@ -276,6 +276,158 @@ public class DemoDataSeeder implements CommandLineRunner {
                     collectible.setImageUrl(collectibleImages[random.nextInt(collectibleImages.length)]);
                     auction = collectible;
                     break;
+
+                case REAL_ESTATE: {
+                    String[] reTypes = {"House", "Plot / Land", "Apartment / Flat", "Farmhouse", "Commercial / Shop"};
+                    String[] reCities = {"Gulgasht Colony, Multan", "DHA, Lahore", "Clifton, Karachi", "F-10, Islamabad", "Cantt, Multan"};
+                    RealEstateAuction re = new RealEstateAuction();
+                    String reType = reTypes[random.nextInt(reTypes.length)];
+                    re.setPropertyType(reType);
+                    re.setBedrooms(2 + random.nextInt(5));
+                    re.setBathrooms(1 + random.nextInt(4));
+                    re.setAreaSqft(500 + random.nextInt(4500));
+                    re.setLocation(reCities[random.nextInt(reCities.length)]);
+                    re.setYearBuilt(1995 + random.nextInt(30));
+                    re.setTitle(reType + " in " + re.getLocation().split(",")[0]);
+                    re.setStartingPrice(20000 + random.nextInt(180000));
+                    re.setImageUrl("https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop");
+                    auction = re;
+                    break;
+                }
+
+                case ELECTRONICS: {
+                    String[] elBrands = {"Samsung", "Apple", "Sony", "Dell", "LG", "Inverex"};
+                    ElectronicsAuction el = new ElectronicsAuction();
+                    String elBrand = elBrands[random.nextInt(elBrands.length)];
+                    el.setBrand(elBrand);
+                    el.setModel("Model " + (1000 + random.nextInt(9000)));
+                    el.setCondition(conditions[random.nextInt(conditions.length)]);
+                    el.setWarrantyMonths(random.nextInt(25));
+                    el.setIncludedItems("Box, charger, invoice");
+                    el.setTitle(elBrand + " Electronics Bundle");
+                    el.setStartingPrice(100 + random.nextInt(2900));
+                    el.setImageUrl("https://images.unsplash.com/photo-1498049794561-7780e7231661?w=800&h=600&fit=crop");
+                    auction = el;
+                    break;
+                }
+
+                case FURNITURE: {
+                    String[] fuMaterials = {"Sheesham wood", "Oak", "Walnut", "Engineered wood"};
+                    String[] fuStyles = {"Modern", "Classic", "Carved", "Minimalist"};
+                    FurnitureAuction fu = new FurnitureAuction();
+                    fu.setMaterial(fuMaterials[random.nextInt(fuMaterials.length)]);
+                    fu.setDimensions((80 + random.nextInt(200)) + " x " + (40 + random.nextInt(100)) + " x " + (40 + random.nextInt(80)) + " cm");
+                    fu.setCondition(conditions[random.nextInt(conditions.length)]);
+                    fu.setStyle(fuStyles[random.nextInt(fuStyles.length)]);
+                    fu.setColor(colors[random.nextInt(colors.length)]);
+                    fu.setTitle(fuStyles[random.nextInt(fuStyles.length)] + " " + fuMaterials[random.nextInt(fuMaterials.length)] + " Furniture Set");
+                    fu.setStartingPrice(50 + random.nextInt(4950));
+                    fu.setImageUrl("https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=600&fit=crop");
+                    auction = fu;
+                    break;
+                }
+
+                case INSTRUMENTS: {
+                    String[] inTypes = {"Guitar", "Piano", "Tabla", "Sitar", "Violin", "Harmonium"};
+                    String[] inBrands = {"Yamaha", "Fender", "Casio", "Roland"};
+                    InstrumentAuction in = new InstrumentAuction();
+                    String inType = inTypes[random.nextInt(inTypes.length)];
+                    in.setInstrumentType(inType);
+                    in.setBrand(inBrands[random.nextInt(inBrands.length)]);
+                    in.setModel("Series " + (100 + random.nextInt(900)));
+                    in.setYearMade(1990 + random.nextInt(36));
+                    in.setCondition(conditions[random.nextInt(conditions.length)]);
+                    in.setTitle(inType + " - Performance Grade");
+                    in.setStartingPrice(100 + random.nextInt(7900));
+                    in.setImageUrl("https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&h=600&fit=crop");
+                    auction = in;
+                    break;
+                }
+
+                case SPORTS: {
+                    String[] spTypes = {"Treadmill", "Cricket Kit", "Dumbbell Set", "Mountain Bicycle", "Football Kit"};
+                    SportsAuction sp = new SportsAuction();
+                    String spType = spTypes[random.nextInt(spTypes.length)];
+                    sp.setEquipmentType(spType);
+                    sp.setBrand("ProGear");
+                    sp.setCondition(conditions[random.nextInt(conditions.length)]);
+                    sp.setSizeSpec("Standard");
+                    sp.setIncludedItems("Carrying bag");
+                    sp.setTitle(spType + " - Competition Grade");
+                    sp.setStartingPrice(30 + random.nextInt(1970));
+                    sp.setImageUrl("https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&h=600&fit=crop");
+                    auction = sp;
+                    break;
+                }
+
+                case INDUSTRIAL: {
+                    String[] idTypes = {"Lathe Machine", "CNC Machine", "Diesel Generator", "Air Compressor", "Milling Machine"};
+                    IndustrialAuction ind = new IndustrialAuction();
+                    String idType = idTypes[random.nextInt(idTypes.length)];
+                    ind.setMachineType(idType);
+                    ind.setManufacturer("Siemens");
+                    ind.setModel("IND-" + (100 + random.nextInt(900)));
+                    ind.setYearMade(2000 + random.nextInt(26));
+                    ind.setHoursUsed(100 + random.nextInt(19900));
+                    ind.setPowerSource(random.nextBoolean() ? "Electric (3-phase)" : "Diesel");
+                    ind.setTitle(idType + " - Industrial Grade");
+                    ind.setStartingPrice(5000 + random.nextInt(75000));
+                    ind.setImageUrl("https://images.unsplash.com/photo-1565043666747-69f6646db940?w=800&h=600&fit=crop");
+                    auction = ind;
+                    break;
+                }
+
+                case AGRICULTURE: {
+                    String[] agTypes = {"Tractor", "Harvester", "Farm Trolley", "Rotavator", "Seed Drill"};
+                    String[] agBrands = {"Massey Ferguson", "New Holland", "FIAT"};
+                    AgricultureAuction ag = new AgricultureAuction();
+                    String agType = agTypes[random.nextInt(agTypes.length)];
+                    ag.setEquipmentType(agType);
+                    ag.setBrand(agBrands[random.nextInt(agBrands.length)]);
+                    ag.setModel("MF " + (240 + random.nextInt(560)));
+                    ag.setYearMade(1998 + random.nextInt(28));
+                    ag.setHoursUsed(500 + random.nextInt(29500));
+                    ag.setTitle(agType + " " + ag.getBrand());
+                    ag.setStartingPrice(8000 + random.nextInt(52000));
+                    ag.setImageUrl("https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&h=600&fit=crop");
+                    auction = ag;
+                    break;
+                }
+
+                case LIVESTOCK: {
+                    String[] lvTypes = {"Cattle", "Buffalo", "Goat", "Sheep", "Camel"};
+                    String[] lvBreeds = {"Cholistani", "Sahiwal", "Beetal", "Dajjal"};
+                    LivestockAuction lv = new LivestockAuction();
+                    String lvType = lvTypes[random.nextInt(lvTypes.length)];
+                    lv.setAnimalType(lvType);
+                    lv.setBreed(lvBreeds[random.nextInt(lvBreeds.length)]);
+                    lv.setAgeMonths(12 + random.nextInt(48));
+                    lv.setWeightKg(80 + random.nextInt(420));
+                    lv.setHealthStatus("Vet-checked, vaccinated");
+                    lv.setVaccinated(random.nextBoolean());
+                    lv.setTitle(lvType + " - " + lv.getWeightKg() + "kg");
+                    lv.setStartingPrice(200 + random.nextInt(4800));
+                    lv.setImageUrl("https://images.unsplash.com/photo-1546445317-29f4545e9d53?w=800&h=600&fit=crop");
+                    auction = lv;
+                    break;
+                }
+
+                case SOLAR_POWER: {
+                    String[] slTypes = {"Solar Panel", "Solar Inverter", "Generator", "UPS", "Battery", "Complete Solar System"};
+                    SolarPowerAuction sl = new SolarPowerAuction();
+                    String slType = slTypes[random.nextInt(slTypes.length)];
+                    sl.setItemType(slType);
+                    int watts = (1 + random.nextInt(100)) * 100;
+                    sl.setCapacityWatts(watts);
+                    sl.setBrand(random.nextBoolean() ? "Longi" : "Inverex");
+                    sl.setCondition(conditions[random.nextInt(conditions.length)]);
+                    sl.setIncludedItems("Mounting frame, cables");
+                    sl.setTitle(slType + " " + watts + "W");
+                    sl.setStartingPrice(80 + random.nextInt(8920));
+                    sl.setImageUrl("https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&h=600&fit=crop");
+                    auction = sl;
+                    break;
+                }
             }
 
             // Set common properties

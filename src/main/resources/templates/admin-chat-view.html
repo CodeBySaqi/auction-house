@@ -36,6 +36,8 @@
         <div class="flex items-center gap-2 text-sm text-g-text-secondary mb-2">
             <a th:href="@{/admin/console}" class="hover:text-g-blue transition-colors">Admin Console</a>
             <span class="material-icons-outlined text-xs">chevron_right</span>
+            <a th:href="@{/admin/chat}" class="hover:text-g-blue transition-colors">Chats</a>
+            <span class="material-icons-outlined text-xs">chevron_right</span>
             <span>Chat History</span>
         </div>
         <div class="flex items-center justify-between">
@@ -43,9 +45,9 @@
                 <h1 class="font-gsans text-2xl sm:text-3xl font-medium text-g-text">Chat History</h1>
                 <p class="text-sm text-g-text-secondary mt-1">Read-only view for dispute resolution</p>
             </div>
-            <a th:href="@{/admin/console}" class="px-4 py-2 bg-g-bg border border-g-border rounded-xl text-sm font-medium text-g-text hover:bg-g-hover transition-colors flex items-center gap-2">
+            <a th:href="@{/admin/chat}" class="px-4 py-2 bg-g-bg border border-g-border rounded-xl text-sm font-medium text-g-text hover:bg-g-hover transition-colors flex items-center gap-2">
                 <span class="material-icons-outlined text-lg">arrow_back</span>
-                Back
+                All chats
             </a>
         </div>
     </div>
@@ -64,12 +66,12 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <p class="text-xs text-g-text-secondary mb-1">Auction</p>
-                    <p class="text-sm font-medium text-g-text" th:text="${conversation.auction.title}">Auction Title</p>
+                    <p class="text-sm font-medium text-g-text" th:text="${conversation.auction != null} ? ${conversation.auction.title} : 'Direct message'">Auction Title</p>
                 </div>
                 <div>
                     <p class="text-xs text-g-text-secondary mb-1">Status</p>
-                    <p class="text-sm font-medium" th:class="${conversation.paymentRelease.paymentReleased} ? 'text-g-green' : 'text-g-blue'"
-                       th:text="${conversation.paymentRelease.paymentReleased} ? 'Payment Released' : 'In Progress'">Status</p>
+                    <p class="text-sm font-medium" th:class="${conversation.paymentRelease != null and conversation.paymentRelease.paymentReleased} ? 'text-g-green' : 'text-g-blue'"
+                       th:text="${conversation.paymentRelease == null} ? 'Direct message' : (${conversation.paymentRelease.paymentReleased} ? 'Payment Released' : 'In Progress')">Status</p>
                 </div>
                 <div>
                     <p class="text-xs text-g-text-secondary mb-1">Buyer</p>
