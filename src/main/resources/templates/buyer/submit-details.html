@@ -72,13 +72,32 @@
         </div>
     </div>
 
-    <!-- Status Alert -->
-    <div th:if="${paymentRelease.buyerDetailsSubmitted}" class="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
+    <!-- Correction Needed Alert -->
+    <div th:if="${paymentRelease.status.name() == 'BUYER_CORRECTION_NEEDED' or paymentRelease.status.name() == 'NEEDS_CORRECTION' or paymentRelease.status.name() == 'REJECTED'}" class="bg-orange-50 border border-orange-200 rounded-2xl p-4 mb-6">
+        <div class="flex items-start gap-3">
+            <span class="material-icons-outlined text-orange-600 text-xl">report_problem</span>
+            <div class="flex-1">
+                <p class="text-sm font-medium text-orange-900">Correction Requested by Admin</p>
+                <p class="text-xs text-orange-800 mt-1">Admin has requested you to correct or provide additional received-item details. Please resubmit below.</p>
+                <div th:if="${paymentRelease.buyerRejectionReason}" class="mt-3 p-3 bg-white border border-orange-200 rounded-xl">
+                    <p class="text-xs font-medium text-orange-900 mb-1">Admin's Note:</p>
+                    <p class="text-sm text-g-text" th:text="${paymentRelease.buyerRejectionReason}">Reason</p>
+                </div>
+                <div th:if="${paymentRelease.buyerRejectionReason == null and paymentRelease.rejectionReason != null}" class="mt-3 p-3 bg-white border border-orange-200 rounded-xl">
+                    <p class="text-xs font-medium text-orange-900 mb-1">Admin's Note:</p>
+                    <p class="text-sm text-g-text" th:text="${paymentRelease.rejectionReason}">Reason</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Alert - Already Submitted -->
+    <div th:if="${paymentRelease.buyerDetailsSubmitted and paymentRelease.status.name() != 'BUYER_CORRECTION_NEEDED' and paymentRelease.status.name() != 'NEEDS_CORRECTION' and paymentRelease.status.name() != 'REJECTED'}" class="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
         <div class="flex items-center gap-3">
             <span class="material-icons-outlined text-g-green">check_circle</span>
             <div>
                 <p class="text-sm font-medium text-green-900">Details Already Submitted</p>
-                <p class="text-xs text-green-700 mt-1">You have already confirmed receipt of this item. You cannot modify your submission.</p>
+                <p class="text-xs text-green-700 mt-1">You have already confirmed receipt of this item. You cannot modify your submission unless admin requests correction.</p>
             </div>
         </div>
     </div>

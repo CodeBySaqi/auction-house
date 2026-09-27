@@ -273,14 +273,22 @@ public class PaymentReleaseService {
     }
 
     /**
-     * Admin rejects the case and requests correction.
+     * Admin rejects the case and requests correction from BOTH parties (legacy behavior).
+     * Now delegates to requestBothCorrection.
      */
     @Transactional
     public void rejectPaymentRelease(Long paymentReleaseId, User admin, String reason) {
+        requestBothCorrection(paymentReleaseId, admin, reason);
+    }
+
+    /**
+     * Admin requests correction from BOTH buyer and seller.
+     */
+    @Transactional
+    public void requestBothCorrection(Long paymentReleaseId, User admin, String reason) {
         PaymentRelease pr = paymentReleaseRepository.findById(paymentReleaseId)
             .orElseThrow(() -> new RuntimeException("Payment release not found"));
 
-        // Security: Only admin can reject
         if (!isAdmin(admin)) {
             throw new SecurityException("Only administrators can reject payment releases.");
         }
@@ -289,22 +297,113 @@ public class PaymentReleaseService {
         pr.setReviewedAt(LocalDateTime.now());
         pr.setStatus(VerificationStatus.NEEDS_CORRECTION);
         pr.setRejectionReason(reason);
+        pr.setSellerRejectionReason(reason);
+        pr.setBuyerRejectionReason(reason);
 
-        // Clear submissions so they can resubmit
+        // Clear both submissions so they can resubmit
         pr.setSellerSubmittedAt(null);
         pr.setBuyerSubmittedAt(null);
         pr.setSellerProofPath(null);
         pr.setBuyerProofPath(null);
-        // Clear gallery images too so fresh uploads are allowed
         paymentProofImageRepository.deleteByPaymentRelease(pr);
 
         paymentReleaseRepository.save(pr);
 
-        // Notify both parties
         String message = "❌ Verification for \"" + pr.getAuction().getTitle() + "\" needs correction. Reason: " + reason;
-        
         notificationService.createNotification(pr.getSeller(), message, "PAYMENT_REJECTED", pr.getAuction().getId());
         notificationService.createNotification(pr.getBuyer(), message, "PAYMENT_REJECTED", pr.getAuction().getId());
+    }
+
+    /**
+     * Admin requests correction from SELLER only.
+     * Buyer submission is kept intact.
+     */
+    @Transactional
+    public void requestSellerCorrection(Long paymentReleaseId, User admin, String reason) {
+        PaymentRelease pr = paymentReleaseRepository.findById(paymentReleaseId)
+            .orElseThrow(() -> new RuntimeException("Payment release not found"));
+
+        if (!isAdmin(admin)) {
+            throw new SecurityException("Only administrators can request seller correction.");
+        }
+
+        pr.setReviewedBy(admin);
+        pr.setReviewedAt(LocalDateTime.now());
+        pr.setStatus(VerificationStatus.SELLER_CORRECTION_NEEDED);
+        pr.setRejectionReason(reason);
+        pr.setSellerRejectionReason(reason);
+        // Keep buyer rejection reason as is (or clear)
+
+        // Clear only seller submission
+        pr.setSellerSubmittedAt(null);
+        pr.setSellerProofPath(null);
+        paymentProofImageRepository.deleteByPaymentReleaseAndProofType(pr, ProofType.SELLER);
+
+        // If buyer had submitted, keep status as SELLER_CORRECTION_NEEDED so seller can resubmit
+        // If buyer hadn't submitted, status will still allow seller resubmit and buyer to submit later
+        // We keep buyerSubmittedAt intact
+
+        paymentReleaseRepository.save(pr);
+
+        String message = "⚠️ Admin requested correction for your delivery details in \"" + pr.getAuction().getTitle() + "\". Reason: " + reason + ". Please resubmit your details.";
+        notificationService.createNotification(pr.getSeller(), message, "SELLER_CORRECTION_REQUESTED", pr.getAuction().getId());
+
+        // Optional: notify buyer that seller correction was requested (so they know delay)
+        String buyerInfo = "ℹ️ Seller correction requested for \"" + pr.getAuction().getTitle() + "\". Awaiting seller to resubmit.";
+        notificationService.createNotification(pr.getBuyer(), buyerInfo, "SELLER_CORRECTION_REQUESTED", pr.getAuction().getId());
+    }
+
+    /**
+     * Admin requests correction from BUYER only.
+     * Seller submission is kept intact.
+     */
+    @Transactional
+    public void requestBuyerCorrection(Long paymentReleaseId, User admin, String reason) {
+        PaymentRelease pr = paymentReleaseRepository.findById(paymentReleaseId)
+            .orElseThrow(() -> new RuntimeException("Payment release not found"));
+
+        if (!isAdmin(admin)) {
+            throw new SecurityException("Only administrators can request buyer correction.");
+        }
+
+        pr.setReviewedBy(admin);
+        pr.setReviewedAt(LocalDateTime.now());
+        pr.setStatus(VerificationStatus.BUYER_CORRECTION_NEEDED);
+        pr.setRejectionReason(reason);
+        pr.setBuyerRejectionReason(reason);
+
+        // Clear only buyer submission
+        pr.setBuyerSubmittedAt(null);
+        pr.setBuyerProofPath(null);
+        paymentProofImageRepository.deleteByPaymentReleaseAndProofType(pr, ProofType.BUYER);
+
+        paymentReleaseRepository.save(pr);
+
+        String message = "⚠️ Admin requested correction for your received-item confirmation in \"" + pr.getAuction().getTitle() + "\". Reason: " + reason + ". Please resubmit your details.";
+        notificationService.createNotification(pr.getBuyer(), message, "BUYER_CORRECTION_REQUESTED", pr.getAuction().getId());
+
+        String sellerInfo = "ℹ️ Buyer correction requested for \"" + pr.getAuction().getTitle() + "\". Awaiting buyer to resubmit.";
+        notificationService.createNotification(pr.getSeller(), sellerInfo, "BUYER_CORRECTION_REQUESTED", pr.getAuction().getId());
+    }
+
+    /**
+     * Generic entry point: target = SELLER, BUYER, BOTH
+     */
+    @Transactional
+    public void requestCorrection(Long paymentReleaseId, User admin, String target, String reason) {
+        if (target == null) target = "BOTH";
+        switch (target.toUpperCase()) {
+            case "SELLER":
+                requestSellerCorrection(paymentReleaseId, admin, reason);
+                break;
+            case "BUYER":
+                requestBuyerCorrection(paymentReleaseId, admin, reason);
+                break;
+            case "BOTH":
+            default:
+                requestBothCorrection(paymentReleaseId, admin, reason);
+                break;
+        }
     }
 
     /**

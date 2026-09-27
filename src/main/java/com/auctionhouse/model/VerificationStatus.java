@@ -11,6 +11,8 @@ public enum VerificationStatus {
     READY_FOR_ADMIN_REVIEW,       // Both parties submitted, ready for admin
     VERIFIED,                     // Admin verified the case
     PAYMENT_RELEASED,             // Payment released to seller
-    REJECTED,                     // Admin rejected/needs correction
-    NEEDS_CORRECTION              // Admin requested corrections
+    REJECTED,                     // Admin rejected/needs correction (legacy, both)
+    NEEDS_CORRECTION,             // Admin requested corrections from both
+    SELLER_CORRECTION_NEEDED,     // Admin requested correction from seller only
+    BUYER_CORRECTION_NEEDED       // Admin requested correction from buyer only
 }

@@ -78,13 +78,47 @@
             </div>
         </div>
 
-        <!-- Status Banner -->
+        <!-- Status Banners -->
         <div th:if="${paymentRelease.status.name() == 'READY_FOR_ADMIN_REVIEW'}" class="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
             <div class="flex items-center gap-3">
                 <span class="material-icons-outlined text-amber-600 text-xl">pending_actions</span>
                 <div>
                     <p class="text-sm font-medium text-amber-900">Ready for Admin Review</p>
-                    <p class="text-xs text-amber-700 mt-1">Both seller and buyer have submitted their details. Please review and verify.</p>
+                    <p class="text-xs text-amber-700 mt-1">Both seller and buyer have submitted their details. Please review and verify or request correction.</p>
+                </div>
+            </div>
+        </div>
+        <div th:if="${paymentRelease.status.name() == 'SELLER_CORRECTION_NEEDED'}" class="bg-orange-50 border border-orange-200 rounded-2xl p-4 mb-6">
+            <div class="flex items-start gap-3">
+                <span class="material-icons-outlined text-orange-600 text-xl">report_problem</span>
+                <div>
+                    <p class="text-sm font-medium text-orange-900">Seller Correction Requested</p>
+                    <p class="text-xs text-orange-800 mt-1">Seller needs to resubmit delivery details. Buyer submission kept intact.</p>
+                    <p th:if="${paymentRelease.sellerRejectionReason}" class="text-xs text-orange-900 mt-2 bg-white/70 p-2 rounded-lg border border-orange-200"><strong>Reason:</strong> <span th:text="${paymentRelease.sellerRejectionReason}">Reason</span></p>
+                </div>
+            </div>
+        </div>
+        <div th:if="${paymentRelease.status.name() == 'BUYER_CORRECTION_NEEDED'}" class="bg-orange-50 border border-orange-200 rounded-2xl p-4 mb-6">
+            <div class="flex items-start gap-3">
+                <span class="material-icons-outlined text-orange-600 text-xl">report_problem</span>
+                <div>
+                    <p class="text-sm font-medium text-orange-900">Buyer Correction Requested</p>
+                    <p class="text-xs text-orange-800 mt-1">Buyer needs to resubmit received-item details. Seller submission kept intact.</p>
+                    <p th:if="${paymentRelease.buyerRejectionReason}" class="text-xs text-orange-900 mt-2 bg-white/70 p-2 rounded-lg border border-orange-200"><strong>Reason:</strong> <span th:text="${paymentRelease.buyerRejectionReason}">Reason</span></p>
+                </div>
+            </div>
+        </div>
+        <div th:if="${paymentRelease.status.name() == 'NEEDS_CORRECTION' or paymentRelease.status.name() == 'REJECTED'}" class="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
+            <div class="flex items-start gap-3">
+                <span class="material-icons-outlined text-g-red text-xl">error</span>
+                <div>
+                    <p class="text-sm font-medium text-red-900">Correction Requested - Both Parties</p>
+                    <p class="text-xs text-red-800 mt-1">Both seller and buyer need to resubmit their details.</p>
+                    <p th:if="${paymentRelease.rejectionReason}" class="text-xs text-red-900 mt-2 bg-white/70 p-2 rounded-lg border border-red-200"><strong>Reason:</strong> <span th:text="${paymentRelease.rejectionReason}">Reason</span></p>
+                    <div th:if="${paymentRelease.sellerRejectionReason != null or paymentRelease.buyerRejectionReason != null}" class="mt-2 space-y-1">
+                        <p th:if="${paymentRelease.sellerRejectionReason}" class="text-xs text-red-800"><strong>Seller:</strong> <span th:text="${paymentRelease.sellerRejectionReason}"></span></p>
+                        <p th:if="${paymentRelease.buyerRejectionReason}" class="text-xs text-red-800"><strong>Buyer:</strong> <span th:text="${paymentRelease.buyerRejectionReason}"></span></p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -343,20 +377,37 @@
         <!-- Admin Actions -->
         <div th:if="${paymentRelease.status.name() == 'READY_FOR_ADMIN_REVIEW'}" class="bg-white rounded-2xl border border-g-border p-6 mb-6">
             <h2 class="font-gsans text-lg font-medium text-g-text mb-4">Admin Actions</h2>
-            <div class="grid md:grid-cols-2 gap-4">
+            <div class="space-y-4">
                 <!-- Verify -->
                 <form th:action="@{/admin/payments/{id}/verify(id=${paymentRelease.id})}" method="post" onsubmit="return confirm('Are you sure you want to verify this case? This will allow payment release.')">
                     <button type="submit" class="w-full px-6 py-4 bg-g-green text-white rounded-xl text-sm font-medium hover:bg-green-600 shadow-g-sm hover:shadow-g-md transition-all flex items-center justify-center gap-2">
                         <span class="material-icons-outlined text-lg">verified</span>
-                        Verify & Approve
+                        Verify & Approve - Release payment flow can continue
                     </button>
                 </form>
                 
-                <!-- Reject -->
-                <button onclick="document.getElementById('rejectModal').classList.remove('hidden')" class="w-full px-6 py-4 bg-g-red text-white rounded-xl text-sm font-medium hover:bg-red-600 shadow-g-sm hover:shadow-g-md transition-all flex items-center justify-center gap-2">
-                    <span class="material-icons-outlined text-lg">cancel</span>
-                    Request Correction
-                </button>
+                <!-- Correction Request Options -->
+                <div class="border-t border-g-border pt-4">
+                    <p class="text-sm font-medium text-g-text mb-3 flex items-center gap-2">
+                        <span class="material-icons-outlined text-orange-600 text-lg">report_problem</span>
+                        Request Correction (per party)
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <button onclick="openCorrectionModal('SELLER')" class="px-4 py-3 bg-orange-50 border border-orange-200 text-orange-800 rounded-xl text-sm font-medium hover:bg-orange-100 transition-colors flex items-center justify-center gap-2">
+                            <span class="material-icons-outlined text-lg">storefront</span>
+                            Seller Only
+                        </button>
+                        <button onclick="openCorrectionModal('BUYER')" class="px-4 py-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl text-sm font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2">
+                            <span class="material-icons-outlined text-lg">person</span>
+                            Buyer Only
+                        </button>
+                        <button onclick="openCorrectionModal('BOTH')" class="px-4 py-3 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
+                            <span class="material-icons-outlined text-lg">group</span>
+                            Both Parties
+                        </button>
+                    </div>
+                    <p class="text-xs text-g-text-secondary mt-2">Seller correction keeps buyer submission intact, and vice versa. Both clears everything.</p>
+                </div>
             </div>
         </div>
 
@@ -413,19 +464,31 @@
         <!-- Review History -->
         <div th:if="${paymentRelease.reviewedAt != null}" class="bg-white rounded-2xl border border-g-border p-6">
             <h2 class="font-gsans text-lg font-medium text-g-text mb-4">Review History</h2>
-            <div class="space-y-3">
+            <div class="space-y-4">
                 <div class="flex items-start gap-3">
                     <div class="w-8 h-8 bg-g-blue-light rounded-full flex items-center justify-center flex-shrink-0">
                         <span class="material-icons-outlined text-g-blue text-sm">person</span>
                     </div>
-                    <div>
+                    <div class="flex-1">
                         <p class="text-sm text-g-text">
                             Reviewed by <strong th:text="${paymentRelease.reviewedBy.username}">Admin</strong> on 
                             <span th:text="${#temporals.format(paymentRelease.reviewedAt, 'MMM dd, yyyy HH:mm')}">Date</span>
+                            <span class="ml-2 px-2 py-0.5 bg-g-bg border border-g-border rounded-full text-xs" th:text="${paymentRelease.status}">STATUS</span>
                         </p>
-                        <p th:if="${paymentRelease.rejectionReason}" class="text-xs text-g-red mt-1">
-                            Reason: <span th:text="${paymentRelease.rejectionReason}">Reason</span>
-                        </p>
+                        <div class="mt-3 space-y-2">
+                            <div th:if="${paymentRelease.rejectionReason}" class="p-3 bg-red-50 border border-red-200 rounded-xl">
+                                <p class="text-xs font-medium text-red-900">General Reason:</p>
+                                <p class="text-xs text-red-800 mt-1" th:text="${paymentRelease.rejectionReason}">Reason</p>
+                            </div>
+                            <div th:if="${paymentRelease.sellerRejectionReason}" class="p-3 bg-orange-50 border border-orange-200 rounded-xl">
+                                <p class="text-xs font-medium text-orange-900">Seller Correction Reason:</p>
+                                <p class="text-xs text-orange-800 mt-1" th:text="${paymentRelease.sellerRejectionReason}">Reason</p>
+                            </div>
+                            <div th:if="${paymentRelease.buyerRejectionReason}" class="p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                                <p class="text-xs font-medium text-blue-900">Buyer Correction Reason:</p>
+                                <p class="text-xs text-blue-800 mt-1" th:text="${paymentRelease.buyerRejectionReason}">Reason</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -433,28 +496,121 @@
 
     </main>
 
-    <!-- Reject Modal -->
-    <div id="rejectModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6">
-            <h3 class="font-gsans text-lg font-medium text-g-text mb-4">Request Correction</h3>
-            <form th:action="@{/admin/payments/{id}/reject(id=${paymentRelease.id})}" method="post">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-g-text mb-2">Reason for Rejection <span class="text-g-red">*</span></label>
-                    <textarea name="reason" rows="4" required placeholder="Explain what needs to be corrected..." class="w-full px-4 py-2.5 bg-g-bg border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all resize-none"></textarea>
+    <!-- Correction Modal - Per Party -->
+    <div id="correctionModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-g-xl">
+            <div class="flex items-start justify-between mb-4">
+                <div>
+                    <h3 class="font-gsans text-lg font-medium text-g-text">Request Correction</h3>
+                    <p id="correctionTargetLabel" class="text-sm text-g-text-secondary mt-1">Select who needs to correct</p>
                 </div>
+                <button onclick="closeCorrectionModal()" class="p-2 rounded-full hover:bg-g-hover transition-colors">
+                    <span class="material-icons-outlined text-g-text-secondary">close</span>
+                </button>
+            </div>
+            
+            <form id="correctionForm" th:action="@{/admin/payments/{id}/request-correction(id=${paymentRelease.id})}" method="post">
+                <input type="hidden" name="target" id="correctionTarget" value="BOTH">
+                
+                <!-- Target Selection -->
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-g-text mb-2">Correction Target <span class="text-g-red">*</span></label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="relative flex flex-col items-center p-3 border-2 rounded-xl cursor-pointer transition-all hover:bg-orange-50" id="label-SELLER">
+                            <input type="radio" name="targetRadio" value="SELLER" class="sr-only" onchange="selectTarget('SELLER')">
+                            <span class="material-icons-outlined text-orange-600 mb-1">storefront</span>
+                            <span class="text-xs font-medium">Seller Only</span>
+                            <span class="text-[10px] text-g-text-secondary text-center mt-1">Keeps buyer data</span>
+                        </label>
+                        <label class="relative flex flex-col items-center p-3 border-2 rounded-xl cursor-pointer transition-all hover:bg-blue-50" id="label-BUYER">
+                            <input type="radio" name="targetRadio" value="BUYER" class="sr-only" onchange="selectTarget('BUYER')">
+                            <span class="material-icons-outlined text-blue-600 mb-1">person</span>
+                            <span class="text-xs font-medium">Buyer Only</span>
+                            <span class="text-[10px] text-g-text-secondary text-center mt-1">Keeps seller data</span>
+                        </label>
+                        <label class="relative flex flex-col items-center p-3 border-2 rounded-xl cursor-pointer transition-all hover:bg-red-50 border-g-blue bg-g-blue-light" id="label-BOTH">
+                            <input type="radio" name="targetRadio" value="BOTH" checked class="sr-only" onchange="selectTarget('BOTH')">
+                            <span class="material-icons-outlined text-g-red mb-1">group</span>
+                            <span class="text-xs font-medium">Both Parties</span>
+                            <span class="text-[10px] text-g-text-secondary text-center mt-1">Clears both</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-g-text mb-2">Reason for Correction <span class="text-g-red">*</span></label>
+                    <textarea name="reason" id="correctionReason" rows="4" required placeholder="Explain what is missing or needs additional details... e.g. 'Seller: please add clearer tracking photos' or 'Buyer: please upload unboxing video'" class="w-full px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all resize-none"></textarea>
+                    <p class="text-xs text-g-text-secondary mt-2">This reason will be visible to the selected party and will notify them.</p>
+                </div>
+
+                <div id="correctionImpact" class="mb-5 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+                    <strong>Impact:</strong> <span id="correctionImpactText">Both seller and buyer will need to resubmit their details.</span>
+                </div>
+
                 <div class="flex gap-3">
-                    <button type="button" onclick="document.getElementById('rejectModal').classList.add('hidden')" class="flex-1 px-6 py-2.5 bg-g-bg border border-g-border rounded-xl text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
+                    <button type="button" onclick="closeCorrectionModal()" class="flex-1 px-6 py-3 bg-g-bg border border-g-border rounded-xl text-sm font-medium text-g-text hover:bg-g-hover transition-colors">
                         Cancel
                     </button>
-                    <button type="submit" class="flex-1 px-6 py-2.5 bg-g-red text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-colors">
-                        Reject
+                    <button type="submit" class="flex-1 px-6 py-3 bg-g-red text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-colors flex items-center justify-center gap-2">
+                        <span class="material-icons-outlined text-lg">send</span>
+                        <span id="correctionSubmitLabel">Request Correction</span>
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Legacy rejectModal kept for backward compat but hidden, redirects to new modal -->
+    <div id="rejectModal" class="hidden"></div>
+
     <script>
+        function openCorrectionModal(target) {
+            document.getElementById('correctionModal').classList.remove('hidden');
+            selectTarget(target);
+        }
+        function closeCorrectionModal() {
+            document.getElementById('correctionModal').classList.add('hidden');
+        }
+        function selectTarget(target) {
+            document.getElementById('correctionTarget').value = target;
+            document.getElementById('correctionTargetLabel').textContent = 
+                target === 'SELLER' ? 'Requesting correction from Seller only' :
+                target === 'BUYER' ? 'Requesting correction from Buyer only' :
+                'Requesting correction from Both parties';
+            
+            // Update visual selection
+            ['SELLER','BUYER','BOTH'].forEach(t => {
+                const label = document.getElementById('label-' + t);
+                if (t === target) {
+                    label.classList.add('border-g-blue','bg-g-blue-light');
+                    label.classList.remove('border-g-border');
+                    label.querySelector('input').checked = true;
+                } else {
+                    label.classList.remove('border-g-blue','bg-g-blue-light');
+                    label.classList.add('border-g-border');
+                }
+            });
+
+            // Update impact text
+            const impact = document.getElementById('correctionImpactText');
+            const submitLabel = document.getElementById('correctionSubmitLabel');
+            if (target === 'SELLER') {
+                impact.textContent = 'Only seller will need to resubmit. Buyer submission and photos will be kept intact.';
+                submitLabel.textContent = 'Request Seller Correction';
+            } else if (target === 'BUYER') {
+                impact.textContent = 'Only buyer will need to resubmit. Seller submission and photos will be kept intact.';
+                submitLabel.textContent = 'Request Buyer Correction';
+            } else {
+                impact.textContent = 'Both seller and buyer will need to resubmit their details. All proof photos will be cleared.';
+                submitLabel.textContent = 'Request Both Corrections';
+            }
+        }
+        // Close on outside click
+        document.getElementById('correctionModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeCorrectionModal();
+        });
+        // Init
+        selectTarget('BOTH');
     </script>
 
 </body>

@@ -167,28 +167,96 @@ public class AdminPaymentController {
     }
 
     /**
-     * Reject a payment release.
+     * Reject a payment release — legacy, both parties.
      */
     @PostMapping("/{id}/reject")
     public String rejectPaymentRelease(@PathVariable Long id,
                                         @AuthenticationPrincipal UserDetails userDetails,
                                         @RequestParam String reason,
+                                        @RequestParam(required = false) String target,
                                         RedirectAttributes redirectAttributes) {
         try {
             User admin = userService.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-            paymentReleaseService.rejectPaymentRelease(id, admin, reason);
-            auditService.log(admin, "PAYMENT_REJECTED", null, "Payment #" + id,
-                "Rejected payment release #" + id + " — reason: " + reason);
-
-            redirectAttributes.addFlashAttribute("success", "Payment release rejected. Both parties notified to resubmit.");
+            // New: target can be SELLER, BUYER, BOTH — defaults to BOTH for backward compat
+            if (target != null && !target.trim().isEmpty()) {
+                paymentReleaseService.requestCorrection(id, admin, target, reason);
+                String who = target.equalsIgnoreCase("SELLER") ? "Seller" : target.equalsIgnoreCase("BUYER") ? "Buyer" : "Both parties";
+                auditService.log(admin, "PAYMENT_CORRECTION_REQUESTED", null, "Payment #" + id,
+                    who + " correction requested for #" + id + " — reason: " + reason);
+                redirectAttributes.addFlashAttribute("success", who + " has been requested to provide correction.");
+            } else {
+                paymentReleaseService.rejectPaymentRelease(id, admin, reason);
+                auditService.log(admin, "PAYMENT_REJECTED", null, "Payment #" + id,
+                    "Rejected payment release #" + id + " — reason: " + reason);
+                redirectAttributes.addFlashAttribute("success", "Payment release rejected. Both parties notified to resubmit.");
+            }
             return "redirect:/admin/payments/" + id;
         } catch (SecurityException e) {
             redirectAttributes.addFlashAttribute("error", "You are not authorized to perform this action.");
             return "redirect:/admin/payments/" + id;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Failed to reject: " + e.getMessage());
+            return "redirect:/admin/payments/" + id;
+        }
+    }
+
+    @PostMapping("/{id}/request-seller-correction")
+    public String requestSellerCorrection(@PathVariable Long id,
+                                           @AuthenticationPrincipal UserDetails userDetails,
+                                           @RequestParam String reason,
+                                           RedirectAttributes redirectAttributes) {
+        try {
+            User admin = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            paymentReleaseService.requestSellerCorrection(id, admin, reason);
+            auditService.log(admin, "SELLER_CORRECTION_REQUESTED", null, "Payment #" + id,
+                "Seller correction requested for #" + id + " — reason: " + reason);
+            redirectAttributes.addFlashAttribute("success", "Seller has been requested to provide correction. Buyer submission kept intact.");
+            return "redirect:/admin/payments/" + id;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed: " + e.getMessage());
+            return "redirect:/admin/payments/" + id;
+        }
+    }
+
+    @PostMapping("/{id}/request-buyer-correction")
+    public String requestBuyerCorrection(@PathVariable Long id,
+                                          @AuthenticationPrincipal UserDetails userDetails,
+                                          @RequestParam String reason,
+                                          RedirectAttributes redirectAttributes) {
+        try {
+            User admin = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            paymentReleaseService.requestBuyerCorrection(id, admin, reason);
+            auditService.log(admin, "BUYER_CORRECTION_REQUESTED", null, "Payment #" + id,
+                "Buyer correction requested for #" + id + " — reason: " + reason);
+            redirectAttributes.addFlashAttribute("success", "Buyer has been requested to provide correction. Seller submission kept intact.");
+            return "redirect:/admin/payments/" + id;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed: " + e.getMessage());
+            return "redirect:/admin/payments/" + id;
+        }
+    }
+
+    @PostMapping("/{id}/request-correction")
+    public String requestCorrection(@PathVariable Long id,
+                                     @AuthenticationPrincipal UserDetails userDetails,
+                                     @RequestParam String target,
+                                     @RequestParam String reason,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            User admin = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            paymentReleaseService.requestCorrection(id, admin, target, reason);
+            String who = target.equalsIgnoreCase("SELLER") ? "Seller" : target.equalsIgnoreCase("BUYER") ? "Buyer" : "Both parties";
+            auditService.log(admin, "PAYMENT_CORRECTION_REQUESTED", null, "Payment #" + id,
+                who + " correction requested for #" + id + " — reason: " + reason);
+            redirectAttributes.addFlashAttribute("success", who + " has been requested to provide correction.");
+            return "redirect:/admin/payments/" + id;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed: " + e.getMessage());
             return "redirect:/admin/payments/" + id;
         }
     }

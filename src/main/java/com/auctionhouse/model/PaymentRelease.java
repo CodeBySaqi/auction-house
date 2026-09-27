@@ -90,6 +90,12 @@ public class PaymentRelease {
     @Column(name = "rejection_reason", length = 1000)
     private String rejectionReason;
 
+    @Column(name = "seller_rejection_reason", length = 1000)
+    private String sellerRejectionReason;
+
+    @Column(name = "buyer_rejection_reason", length = 1000)
+    private String buyerRejectionReason;
+
     // Payment Release
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "released_by")
@@ -142,6 +148,39 @@ public class PaymentRelease {
 
     public boolean isPaymentReleased() {
         return paymentReleased != null && paymentReleased;
+    }
+
+    public boolean isSellerCorrectionNeeded() {
+        return status == VerificationStatus.SELLER_CORRECTION_NEEDED;
+    }
+
+    public boolean isBuyerCorrectionNeeded() {
+        return status == VerificationStatus.BUYER_CORRECTION_NEEDED;
+    }
+
+    public boolean isCorrectionNeeded() {
+        return status == VerificationStatus.NEEDS_CORRECTION
+                || status == VerificationStatus.REJECTED
+                || status == VerificationStatus.SELLER_CORRECTION_NEEDED
+                || status == VerificationStatus.BUYER_CORRECTION_NEEDED;
+    }
+
+    public boolean isSellerNeedsResubmit() {
+        return !isSellerDetailsSubmitted() && (
+                status == VerificationStatus.WAITING_FOR_DETAILS
+                || status == VerificationStatus.BUYER_DETAILS_SUBMITTED
+                || status == VerificationStatus.NEEDS_CORRECTION
+                || status == VerificationStatus.REJECTED
+                || status == VerificationStatus.SELLER_CORRECTION_NEEDED);
+    }
+
+    public boolean isBuyerNeedsResubmit() {
+        return !isBuyerDetailsSubmitted() && (
+                status == VerificationStatus.WAITING_FOR_DETAILS
+                || status == VerificationStatus.SELLER_DETAILS_SUBMITTED
+                || status == VerificationStatus.NEEDS_CORRECTION
+                || status == VerificationStatus.REJECTED
+                || status == VerificationStatus.BUYER_CORRECTION_NEEDED);
     }
 
     // Getters and Setters
@@ -210,6 +249,12 @@ public class PaymentRelease {
 
     public String getRejectionReason() { return rejectionReason; }
     public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
+
+    public String getSellerRejectionReason() { return sellerRejectionReason; }
+    public void setSellerRejectionReason(String sellerRejectionReason) { this.sellerRejectionReason = sellerRejectionReason; }
+
+    public String getBuyerRejectionReason() { return buyerRejectionReason; }
+    public void setBuyerRejectionReason(String buyerRejectionReason) { this.buyerRejectionReason = buyerRejectionReason; }
 
     public User getReleasedBy() { return releasedBy; }
     public void setReleasedBy(User releasedBy) { this.releasedBy = releasedBy; }
