@@ -138,6 +138,7 @@ public class AuctionController {
                                 @RequestParam String category,
                                 @RequestParam(required = false) String imageUrl,
                                 @RequestParam(required = false) MultipartFile auctionImage,
+                                @RequestParam(required = false) java.util.List<MultipartFile> auctionImages,
                                 @RequestParam int durationMinutes,
                                 javax.servlet.http.HttpServletRequest request,
                                 // Car fields
@@ -191,17 +192,34 @@ public class AuctionController {
             User creator = userService.getCurrentUser(userDetails.getUsername());
             AuctionCategory cat = AuctionCategory.valueOf(category.toUpperCase());
 
-            // Determine image URL: uploaded file takes priority over URL
-            String finalImageUrl = imageUrl;
-            if (auctionImage != null && !auctionImage.isEmpty()) {
+            // Collect photos: uploaded files (multiple) first, then pasted URLs
+            // (comma/newline separated). First photo becomes the primary image.
+            java.util.List<String> photoUrls = new java.util.ArrayList<>();
+            if (auctionImages != null) {
+                for (MultipartFile f : auctionImages) {
+                    if (photoUrls.size() >= 8) break; // hard cap: 8 photos
+                    if (f == null || f.isEmpty()) continue;
+                    String filename = fileStorageService.storeAuctionImage(f);
+                    photoUrls.add("/uploads/auctions/" + filename);
+                }
+            }
+            // Legacy single-file input (kept for compatibility)
+            if (photoUrls.isEmpty() && auctionImage != null && !auctionImage.isEmpty()) {
                 String filename = fileStorageService.storeAuctionImage(auctionImage);
-                finalImageUrl = "/uploads/auctions/" + filename;
+                photoUrls.add("/uploads/auctions/" + filename);
+            }
+            if (photoUrls.size() < 8 && imageUrl != null && !imageUrl.trim().isEmpty()) {
+                for (String u : imageUrl.split("[,\\n]")) {
+                    if (photoUrls.size() >= 8) break;
+                    String trimmed = u.trim();
+                    if (!trimmed.isEmpty() && !photoUrls.contains(trimmed)) photoUrls.add(trimmed);
+                }
             }
 
-            // Fallback image if neither provided
-            if (finalImageUrl == null || finalImageUrl.trim().isEmpty()) {
-                finalImageUrl = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800";
-            }
+            // Primary image = first photo; fallback default if none provided
+            String finalImageUrl = photoUrls.isEmpty()
+                    ? "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800"
+                    : photoUrls.get(0);
 
             // Instantiate the correct subclass based on category
             Auction auction;
@@ -363,6 +381,10 @@ public class AuctionController {
             auction.setCreatedBy(creator);
             // Status is already PENDING_APPROVAL by default from Auction constructor
 
+            // Save all additional photos as gallery rows (first one is the primary)
+            for (String url : photoUrls) {
+                auction.addImage(new com.auctionhouse.model.AuctionImage(auction, url, auction.getImages().size()));
+            }
             auctionService.save(auction);
             redirectAttributes.addFlashAttribute("success", "Your auction has been submitted for review! You'll be notified once it's approved. 📋");
             return "redirect:/my-auctions";

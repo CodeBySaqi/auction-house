@@ -55,6 +55,10 @@ public abstract class Auction {
     @OrderBy("timestamp DESC")
     private List<Bid> bids = new ArrayList<>();
 
+    @OneToMany(mappedBy = "auction", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC, id ASC")
+    private List<AuctionImage> images = new ArrayList<>();
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -223,6 +227,15 @@ public abstract class Auction {
 
     public User getCreatedBy() { return createdBy; }
     public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
+
+    public List<AuctionImage> getImages() { return images; }
+
+    /** Add a photo to this auction (keeps both sides of the relation in sync). */
+    public void addImage(AuctionImage image) {
+        image.setAuction(this);
+        image.setSortOrder(images.size());
+        this.images.add(image);
+    }
 
     public String getRejectionReason() { return rejectionReason; }
     public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }

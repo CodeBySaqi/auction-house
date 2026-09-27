@@ -28,10 +28,17 @@
     <div class="grid lg:grid-cols-5 gap-6">
         <!-- Left Column: Image + Details -->
         <div class="lg:col-span-3 space-y-6">
-            <!-- Image -->
+            <!-- Image Gallery (multi-photo slider) -->
             <div class="bg-white rounded-3xl border border-g-border overflow-hidden">
-                <div class="relative h-64 sm:h-80 lg:h-96 bg-gray-100">
-                    <img th:src="${auction.imageUrl != null} ? @{${auction.imageUrl}} : @{/images/default-auction.png}" th:alt="${auction.title}" class="w-full h-full object-cover">
+                <div class="relative h-64 sm:h-80 lg:h-96 bg-gray-100 overflow-hidden" id="galleryFrame">
+                    <div id="galleryTrack" class="flex h-full transition-transform duration-500 ease-in-out">
+                        <div th:each="img : ${auction.images}" class="w-full h-full flex-shrink-0">
+                            <img th:src="@{${img.url}}" th:alt="${auction.title}" class="w-full h-full object-cover">
+                        </div>
+                        <div th:if="${#lists.isEmpty(auction.images)}" class="w-full h-full flex-shrink-0">
+                            <img th:src="${auction.imageUrl != null} ? @{${auction.imageUrl}} : @{/images/default-auction.png}" th:alt="${auction.title}" class="w-full h-full object-cover">
+                        </div>
+                    </div>
                     <div class="absolute top-4 left-4 flex gap-2">
                         <span th:if="${auction.status.name() == 'ACTIVE'}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/95 backdrop-blur-sm rounded-full text-sm font-medium text-g-green shadow-g-sm">
                             <span class="w-2 h-2 bg-g-green rounded-full animate-pulse"></span> Live Auction
@@ -39,6 +46,18 @@
                         <span th:if="${auction.status.name() == 'CLOSED'}" class="px-3 py-1.5 bg-red-500 rounded-full text-sm font-medium text-white shadow-g-sm">Auction Closed</span>
                         <span th:if="${auction.status.name() == 'PENDING_APPROVAL'}" class="px-3 py-1.5 bg-amber-500 rounded-full text-sm font-medium text-white shadow-g-sm">Pending Approval</span>
                         <span th:if="${auction.status.name() == 'REJECTED'}" class="px-3 py-1.5 bg-red-600 rounded-full text-sm font-medium text-white shadow-g-sm">Rejected</span>
+                    </div>
+
+                    <!-- Gallery controls (visible only when there are 2+ photos) -->
+                    <button id="galleryPrevBtn" class="absolute left-3 top-1/2 -translate-y-1/2 bg-white/85 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110" style="width:38px;height:38px;" aria-label="Previous photo">
+                        <span class="material-icons-outlined text-g-text">chevron_left</span>
+                    </button>
+                    <button id="galleryNextBtn" class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/85 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110" style="width:38px;height:38px;" aria-label="Next photo">
+                        <span class="material-icons-outlined text-g-text">chevron_right</span>
+                    </button>
+                    <div id="galleryDots" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5"></div>
+                    <div id="galleryCounter" class="absolute top-4 right-4 bg-black/55 text-white rounded-full font-medium text-xs" style="padding:3px 10px;">
+                        <span id="galleryCurrent">1</span> / <span id="galleryTotal">1</span>
                     </div>
                 </div>
             </div>
@@ -235,6 +254,82 @@ document.addEventListener('DOMContentLoaded', function() {
             bidBtn.innerHTML = '<span class="material-icons-outlined text-lg animate-spin">hourglass_top</span> Placing bid...';
         });
     }
+
+    // ===== Photo gallery slider =====
+    (function() {
+        var frame = document.getElementById('galleryFrame');
+        var track = document.getElementById('galleryTrack');
+        if (!frame || !track) return;
+
+        var slides = track.children.length;
+        var current = 0;
+
+        var prevBtn = document.getElementById('galleryPrevBtn');
+        var nextBtn = document.getElementById('galleryNextBtn');
+        var dotsBox = document.getElementById('galleryDots');
+        var counterCur = document.getElementById('galleryCurrent');
+        var counterTotal = document.getElementById('galleryTotal');
+
+        counterTotal.textContent = slides;
+
+        // Single photo -> hide all controls
+        if (slides <= 1) {
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+            dotsBox.style.display = 'none';
+            counterCur.parentElement.style.display = 'none';
+            return;
+        }
+
+        // Build dots
+        for (var i = 0; i < slides; i++) {
+            (function(idx) {
+                var d = document.createElement('button');
+                d.className = 'rounded-full transition-all';
+                d.style.width = '8px';
+                d.style.height = '8px';
+                d.style.background = 'rgba(255,255,255,.55)';
+                d.style.boxShadow = '0 0 0 1px rgba(0,0,0,.15)';
+                d.addEventListener('click', function() { go(idx); });
+                dotsBox.appendChild(d);
+            })(i);
+        }
+        var dots = dotsBox.children;
+
+        function render() {
+            track.style.transform = 'translateX(-' + (current * 100) + '%)';
+            counterCur.textContent = current + 1;
+            for (var i = 0; i < dots.length; i++) {
+                dots[i].style.width = (i === current) ? '22px' : '8px';
+                dots[i].style.background = (i === current) ? '#ffffff' : 'rgba(255,255,255,.55)';
+            }
+        }
+
+        function go(idx) {
+            current = (idx + slides) % slides;
+            render();
+        }
+
+        prevBtn.addEventListener('click', function() { go(current - 1); });
+        nextBtn.addEventListener('click', function() { go(current + 1); });
+
+        // Keyboard arrows
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') go(current - 1);
+            if (e.key === 'ArrowRight') go(current + 1);
+        });
+
+        // Touch swipe
+        var startX = 0, endX = 0;
+        frame.addEventListener('touchstart', function(e) { startX = e.changedTouches[0].screenX; }, { passive: true });
+        frame.addEventListener('touchend', function(e) {
+            endX = e.changedTouches[0].screenX;
+            if (endX < startX - 40) go(current + 1);
+            if (endX > startX + 40) go(current - 1);
+        }, { passive: true });
+
+        render();
+    })();
 });
 </script>
 </body>

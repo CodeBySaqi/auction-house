@@ -251,10 +251,10 @@
                     <!-- File Upload -->
                     <div>
                         <label class="block text-xs text-g-text-secondary mb-1">Upload from your device</label>
-                        <input type="file" name="auctionImage" accept="image/jpeg,image/png,image/gif,image/webp"
+                        <input type="file" name="auctionImages" accept="image/jpeg,image/png,image/gif,image/webp"
                                class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-g-blue-light file:text-g-blue hover:file:bg-blue-100 transition-all"
-                               id="imageFile">
-                        <p class="text-xs text-g-text-secondary mt-1">JPEG, PNG, GIF, or WebP. Max 5MB.</p>
+                               id="imageFile" multiple>
+                        <p class="text-xs text-g-text-secondary mt-1">JPEG, PNG, GIF, or WebP. Max 5MB each. <b>Select up to 8 photos</b> — the first one becomes the main photo.</p>
                     </div>
                     <!-- Divider -->
                     <div class="flex items-center gap-3">
@@ -264,10 +264,10 @@
                     </div>
                     <!-- URL -->
                     <div>
-                        <label class="block text-xs text-g-text-secondary mb-1">Paste an image URL</label>
-                        <input type="url" name="imageUrl" id="imageUrl"
+                        <label class="block text-xs text-g-text-secondary mb-1">Paste image URLs (separate multiple URLs with commas or new lines)</label>
+                        <input type="text" name="imageUrl" id="imageUrl"
                                class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all"
-                               placeholder="https://example.com/your-item-photo.jpg">
+                               placeholder="https://example.com/photo-1.jpg, https://example.com/photo-2.jpg">
                         <p class="text-xs text-g-text-secondary mt-1">Try <a href="https://unsplash.com" target="_blank" class="text-g-blue hover:underline">unsplash.com</a> for free photos</p>
                     </div>
                 </div>
