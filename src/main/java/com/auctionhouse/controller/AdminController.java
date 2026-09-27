@@ -423,6 +423,11 @@ public class AdminController {
     @PostMapping("/auctions/delete/{id}")
     public String deleteAuction(@PathVariable Long id, Principal principal, RedirectAttributes ra) {
         try {
+            // BUGFIX: this endpoint previously only wrote an audit log entry
+            // claiming deletion and flashed success — the auction itself was
+            // never deleted. Actually delete it (service also refunds the
+            // highest bidder and cleans up bids/chat/payments/gallery images).
+            auctionService.deleteById(id);
             auditService.log(requireAdmin(principal), "AUCTION_DELETED", null, "Auction #" + id,
                     "Permanently deleted auction (id " + id + ") and all its bids from admin console");
             ra.addFlashAttribute("successMessage", "Auction deleted.");

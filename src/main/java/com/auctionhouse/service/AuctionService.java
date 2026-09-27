@@ -36,6 +36,7 @@ public class AuctionService {
     private final NotificationService notificationService;
     private final PaymentReleaseService paymentReleaseService;
     private final BidRepository bidRepository;
+    private final com.auctionhouse.repository.AuctionImageRepository auctionImageRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ConversationRepository conversationRepository;
     private final PaymentReleaseRepository paymentReleaseRepository;
@@ -47,6 +48,7 @@ public class AuctionService {
                          NotificationService notificationService,
                          @Lazy PaymentReleaseService paymentReleaseService,
                          BidRepository bidRepository,
+                                  com.auctionhouse.repository.AuctionImageRepository auctionImageRepository,
                          ChatMessageRepository chatMessageRepository,
                          ConversationRepository conversationRepository,
                          PaymentReleaseRepository paymentReleaseRepository,
@@ -56,6 +58,7 @@ public class AuctionService {
         this.notificationService = notificationService;
         this.paymentReleaseService = paymentReleaseService;
         this.bidRepository = bidRepository;
+        this.auctionImageRepository = auctionImageRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.conversationRepository = conversationRepository;
         this.paymentReleaseRepository = paymentReleaseRepository;
@@ -286,6 +289,9 @@ public class AuctionService {
             
             // 5. Delete bids
             bidRepository.deleteByAuctionId(id);
+
+            // 6. Delete gallery images
+            auctionImageRepository.deleteByAuctionId(id);
         }
         auctionRepository.deleteById(id);
     }
