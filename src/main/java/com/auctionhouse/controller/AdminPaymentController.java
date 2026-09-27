@@ -89,6 +89,11 @@ public class AdminPaymentController {
             model.addAttribute("buyer", pr.getBuyer());
             model.addAttribute("seller", pr.getSeller());
 
+            // Proof galleries (multiple photos)
+            model.addAttribute("sellerProofImages", paymentReleaseService.getSellerProofImages(pr));
+            model.addAttribute("buyerProofImages", paymentReleaseService.getBuyerProofImages(pr));
+            model.addAttribute("allProofImages", paymentReleaseService.getProofImages(pr));
+
             // Commission breakdown (calculated server-side, never from frontend)
             BigDecimal[] breakdown = PlatformCommission.calculate(pr.getWinningAmount());
             model.addAttribute("commissionAmount", breakdown[0]);

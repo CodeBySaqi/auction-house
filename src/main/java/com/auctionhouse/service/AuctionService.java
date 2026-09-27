@@ -9,6 +9,7 @@ import com.auctionhouse.repository.AuctionRepository;
 import com.auctionhouse.repository.BidRepository;
 import com.auctionhouse.repository.ChatMessageRepository;
 import com.auctionhouse.repository.ConversationRepository;
+import com.auctionhouse.repository.PaymentProofImageRepository;
 import com.auctionhouse.repository.PaymentReleaseRepository;
 import com.auctionhouse.repository.PlatformCommissionRepository;
 import com.auctionhouse.repository.UserRepository;
@@ -41,6 +42,7 @@ public class AuctionService {
     private final ConversationRepository conversationRepository;
     private final PaymentReleaseRepository paymentReleaseRepository;
     private final PlatformCommissionRepository platformCommissionRepository;
+    private final PaymentProofImageRepository paymentProofImageRepository;
 
     @Autowired
     public AuctionService(AuctionRepository auctionRepository,
@@ -52,7 +54,8 @@ public class AuctionService {
                          ChatMessageRepository chatMessageRepository,
                          ConversationRepository conversationRepository,
                          PaymentReleaseRepository paymentReleaseRepository,
-                         PlatformCommissionRepository platformCommissionRepository) {
+                         PlatformCommissionRepository platformCommissionRepository,
+                         PaymentProofImageRepository paymentProofImageRepository) {
         this.auctionRepository = auctionRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
@@ -63,6 +66,7 @@ public class AuctionService {
         this.conversationRepository = conversationRepository;
         this.paymentReleaseRepository = paymentReleaseRepository;
         this.platformCommissionRepository = platformCommissionRepository;
+        this.paymentProofImageRepository = paymentProofImageRepository;
     }
 
     /**
@@ -280,6 +284,9 @@ public class AuctionService {
             
             // 2. Delete conversations
             conversationRepository.deleteByAuctionId(id);
+
+            // 2b. Delete proof images (multi-photo) before payment releases
+            paymentProofImageRepository.deleteByAuctionId(id);
             
             // 3. Delete platform commissions
             platformCommissionRepository.deleteByAuctionId(id);

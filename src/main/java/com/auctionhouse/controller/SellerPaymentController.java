@@ -19,6 +19,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * SellerPaymentController - handles seller delivery details submission.
@@ -64,6 +66,7 @@ public class SellerPaymentController {
 
             model.addAttribute("paymentRelease", pr);
             model.addAttribute("auction", pr.getAuction());
+            model.addAttribute("sellerProofImages", paymentReleaseService.getSellerProofImages(pr));
 
             // Commission breakdown (server-side)
             BigDecimal[] breakdown = PlatformCommission.calculate(pr.getWinningAmount());
@@ -82,7 +85,7 @@ public class SellerPaymentController {
     }
 
     /**
-     * Submit seller delivery details.
+     * Submit seller delivery details - MULTIPLE PHOTOS supported.
      */
     @PostMapping("/submit/{paymentReleaseId}")
     public String submitDetails(@PathVariable Long paymentReleaseId,
@@ -91,6 +94,7 @@ public class SellerPaymentController {
                                  @RequestParam(required = false) String trackingNumber,
                                  @RequestParam(required = false) String courierName,
                                  @RequestParam(required = false) String shipmentDate,
+                                 @RequestParam(required = false) List<MultipartFile> proofFiles,
                                  @RequestParam(required = false) MultipartFile proofFile,
                                  @RequestParam(required = false) String note,
                                  RedirectAttributes redirectAttributes) {
@@ -98,11 +102,21 @@ public class SellerPaymentController {
             User seller = userService.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-            // Handle file upload
-            String proofPath = null;
-            if (proofFile != null && !proofFile.isEmpty()) {
-                String filename = fileStorageService.storeProofFile(proofFile, "seller_" + paymentReleaseId);
-                proofPath = "/uploads/proof/" + filename;
+            // Handle multiple file uploads (new) + backward compat single file
+            List<String> proofPaths = new ArrayList<>();
+            List<MultipartFile> allFiles = new ArrayList<>();
+            if (proofFiles != null) allFiles.addAll(proofFiles);
+            if (proofFile != null && !proofFile.isEmpty()) allFiles.add(proofFile); // legacy param
+
+            // Limit to 10 photos max to avoid abuse
+            int maxPhotos = 10;
+            int count = 0;
+            for (MultipartFile f : allFiles) {
+                if (f == null || f.isEmpty()) continue;
+                if (count >= maxPhotos) break;
+                String filename = fileStorageService.storeProofFile(f, "seller_" + paymentReleaseId);
+                proofPaths.add("/uploads/proof/" + filename);
+                count++;
             }
 
             // Parse shipment date
@@ -113,7 +127,7 @@ public class SellerPaymentController {
 
             paymentReleaseService.submitSellerDetails(
                 paymentReleaseId, seller, shippingMethod, trackingNumber,
-                courierName, shipmentDateTime, proofPath, note
+                courierName, shipmentDateTime, proofPaths, note
             );
 
             redirectAttributes.addFlashAttribute("success", "Delivery details submitted successfully!");

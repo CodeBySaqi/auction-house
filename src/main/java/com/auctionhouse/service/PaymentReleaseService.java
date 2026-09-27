@@ -2,6 +2,7 @@ package com.auctionhouse.service;
 
 import com.auctionhouse.model.*;
 import com.auctionhouse.repository.AuctionRepository;
+import com.auctionhouse.repository.PaymentProofImageRepository;
 import com.auctionhouse.repository.PaymentReleaseRepository;
 import com.auctionhouse.repository.PlatformCommissionRepository;
 import com.auctionhouse.repository.UserRepository;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +30,7 @@ public class PaymentReleaseService {
     private final FileStorageService fileStorageService;
     private final PlatformCommissionRepository platformCommissionRepository;
     private final ChatService chatService;
+    private final PaymentProofImageRepository paymentProofImageRepository;
 
     @Autowired
     public PaymentReleaseService(PaymentReleaseRepository paymentReleaseRepository,
@@ -36,7 +39,8 @@ public class PaymentReleaseService {
                                   NotificationService notificationService,
                                   FileStorageService fileStorageService,
                                   PlatformCommissionRepository platformCommissionRepository,
-                                  ChatService chatService) {
+                                  ChatService chatService,
+                                  PaymentProofImageRepository paymentProofImageRepository) {
         this.paymentReleaseRepository = paymentReleaseRepository;
         this.auctionRepository = auctionRepository;
         this.userRepository = userRepository;
@@ -44,6 +48,7 @@ public class PaymentReleaseService {
         this.fileStorageService = fileStorageService;
         this.platformCommissionRepository = platformCommissionRepository;
         this.chatService = chatService;
+        this.paymentProofImageRepository = paymentProofImageRepository;
     }
 
     /**
@@ -90,13 +95,14 @@ public class PaymentReleaseService {
     }
 
     /**
-     * Seller submits delivery/shipping details.
+     * Seller submits delivery/shipping details - MULTIPLE PHOTOS supported.
+     * proofPaths is a list of /uploads/proof/xxx URLs (can be empty).
      */
     @Transactional
-    public void submitSellerDetails(Long paymentReleaseId, User seller, 
+    public void submitSellerDetails(Long paymentReleaseId, User seller,
                                      String shippingMethod, String trackingNumber,
                                      String courierName, LocalDateTime shipmentDate,
-                                     String proofPath, String note) {
+                                     List<String> proofPaths, String note) {
         PaymentRelease pr = paymentReleaseRepository.findById(paymentReleaseId)
             .orElseThrow(() -> new RuntimeException("Payment release not found"));
 
@@ -115,7 +121,10 @@ public class PaymentReleaseService {
         pr.setSellerTrackingNumber(trackingNumber);
         pr.setSellerCourierName(courierName);
         pr.setSellerShipmentDate(shipmentDate);
-        pr.setSellerProofPath(proofPath);
+        // Backward compat: keep first image in legacy column
+        if (proofPaths != null && !proofPaths.isEmpty()) {
+            pr.setSellerProofPath(proofPaths.get(0));
+        }
         pr.setSellerNote(note);
         pr.setSellerSubmittedAt(LocalDateTime.now());
 
@@ -124,10 +133,20 @@ public class PaymentReleaseService {
 
         paymentReleaseRepository.save(pr);
 
+        // Save multi-photo gallery
+        if (proofPaths != null && !proofPaths.isEmpty()) {
+            int order = 0;
+            for (String path : proofPaths) {
+                if (path == null || path.trim().isEmpty()) continue;
+                PaymentProofImage img = new PaymentProofImage(pr, ProofType.SELLER, path, order++);
+                paymentProofImageRepository.save(img);
+            }
+        }
+
         // Notify buyer
         notificationService.createNotification(
             pr.getBuyer(),
-            "📮 Seller has submitted delivery details for \"" + pr.getAuction().getTitle() + "\". Tracking: " + 
+            "📮 Seller has submitted delivery details for \"" + pr.getAuction().getTitle() + "\". Tracking: " +
             (trackingNumber != null ? trackingNumber : "N/A"),
             "SELLER_DETAILS_SUBMITTED",
             pr.getAuction().getId()
@@ -135,12 +154,25 @@ public class PaymentReleaseService {
     }
 
     /**
-     * Buyer submits received-item details.
+     * Backward-compatible overload - single proof path (kept for any old callers).
+     */
+    @Transactional
+    public void submitSellerDetails(Long paymentReleaseId, User seller,
+                                     String shippingMethod, String trackingNumber,
+                                     String courierName, LocalDateTime shipmentDate,
+                                     String proofPath, String note) {
+        List<String> list = new ArrayList<>();
+        if (proofPath != null && !proofPath.trim().isEmpty()) list.add(proofPath);
+        submitSellerDetails(paymentReleaseId, seller, shippingMethod, trackingNumber, courierName, shipmentDate, list, note);
+    }
+
+    /**
+     * Buyer submits received-item details - MULTIPLE PHOTOS supported.
      */
     @Transactional
     public void submitBuyerDetails(Long paymentReleaseId, User buyer,
                                     Boolean receivedConfirmation, LocalDateTime receivedDate,
-                                    String proofPath, String note) {
+                                    List<String> proofPaths, String note) {
         PaymentRelease pr = paymentReleaseRepository.findById(paymentReleaseId)
             .orElseThrow(() -> new RuntimeException("Payment release not found"));
 
@@ -157,7 +189,9 @@ public class PaymentReleaseService {
         // Update buyer details
         pr.setBuyerReceivedConfirmation(receivedConfirmation);
         pr.setBuyerReceivedDate(receivedDate);
-        pr.setBuyerProofPath(proofPath);
+        if (proofPaths != null && !proofPaths.isEmpty()) {
+            pr.setBuyerProofPath(proofPaths.get(0));
+        }
         pr.setBuyerNote(note);
         pr.setBuyerSubmittedAt(LocalDateTime.now());
 
@@ -166,6 +200,16 @@ public class PaymentReleaseService {
 
         paymentReleaseRepository.save(pr);
 
+        // Save multi-photo gallery
+        if (proofPaths != null && !proofPaths.isEmpty()) {
+            int order = 0;
+            for (String path : proofPaths) {
+                if (path == null || path.trim().isEmpty()) continue;
+                PaymentProofImage img = new PaymentProofImage(pr, ProofType.BUYER, path, order++);
+                paymentProofImageRepository.save(img);
+            }
+        }
+
         // Notify seller
         notificationService.createNotification(
             pr.getSeller(),
@@ -173,6 +217,18 @@ public class PaymentReleaseService {
             "BUYER_DETAILS_SUBMITTED",
             pr.getAuction().getId()
         );
+    }
+
+    /**
+     * Backward-compatible overload - single proof path.
+     */
+    @Transactional
+    public void submitBuyerDetails(Long paymentReleaseId, User buyer,
+                                    Boolean receivedConfirmation, LocalDateTime receivedDate,
+                                    String proofPath, String note) {
+        List<String> list = new ArrayList<>();
+        if (proofPath != null && !proofPath.trim().isEmpty()) list.add(proofPath);
+        submitBuyerDetails(paymentReleaseId, buyer, receivedConfirmation, receivedDate, list, note);
     }
 
     /**
@@ -237,6 +293,10 @@ public class PaymentReleaseService {
         // Clear submissions so they can resubmit
         pr.setSellerSubmittedAt(null);
         pr.setBuyerSubmittedAt(null);
+        pr.setSellerProofPath(null);
+        pr.setBuyerProofPath(null);
+        // Clear gallery images too so fresh uploads are allowed
+        paymentProofImageRepository.deleteByPaymentRelease(pr);
 
         paymentReleaseRepository.save(pr);
 
@@ -461,5 +521,23 @@ public class PaymentReleaseService {
      */
     public long getCommissionCount() {
         return platformCommissionRepository.count();
+    }
+
+    // ---- PROOF IMAGE QUERY METHODS ----
+
+    public List<PaymentProofImage> getProofImages(PaymentRelease pr) {
+        return paymentProofImageRepository.findByPaymentReleaseOrderBySortOrderAsc(pr);
+    }
+
+    public List<PaymentProofImage> getProofImagesByType(PaymentRelease pr, ProofType type) {
+        return paymentProofImageRepository.findByPaymentReleaseAndProofTypeOrderBySortOrderAsc(pr, type);
+    }
+
+    public List<PaymentProofImage> getSellerProofImages(PaymentRelease pr) {
+        return getProofImagesByType(pr, ProofType.SELLER);
+    }
+
+    public List<PaymentProofImage> getBuyerProofImages(PaymentRelease pr) {
+        return getProofImagesByType(pr, ProofType.BUYER);
     }
 }

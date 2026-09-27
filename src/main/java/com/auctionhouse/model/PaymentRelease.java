@@ -3,6 +3,8 @@ package com.auctionhouse.model;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * PaymentRelease entity - tracks buyer/seller verification and admin payment release.
@@ -105,6 +107,11 @@ public class PaymentRelease {
 
     @Column(name = "seller_payout_amount", precision = 12, scale = 2)
     private BigDecimal sellerPayoutAmount;
+
+    // Multi-photo support (new) — one-to-many gallery for proof images
+    @OneToMany(mappedBy = "paymentRelease", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
+    private List<PaymentProofImage> proofImages = new ArrayList<>();
 
     public PaymentRelease() {
         this.createdAt = LocalDateTime.now();
@@ -218,4 +225,7 @@ public class PaymentRelease {
 
     public BigDecimal getSellerPayoutAmount() { return sellerPayoutAmount; }
     public void setSellerPayoutAmount(BigDecimal sellerPayoutAmount) { this.sellerPayoutAmount = sellerPayoutAmount; }
+
+    public List<PaymentProofImage> getProofImages() { return proofImages; }
+    public void setProofImages(List<PaymentProofImage> proofImages) { this.proofImages = proofImages; }
 }

@@ -114,17 +114,20 @@
             <p class="text-xs text-g-text-secondary mt-1">Leave blank if not yet received</p>
         </div>
 
-        <!-- Proof Upload -->
+        <!-- Proof Upload - MULTIPLE PHOTOS -->
         <div>
-            <label class="block text-sm font-medium text-g-text mb-2">Item Photo / Receipt (Optional)</label>
-            <div class="border-2 border-dashed border-g-border rounded-xl p-6 text-center hover:border-g-blue transition-colors">
-                <input type="file" name="proofFile" accept="image/*,.pdf" id="proofFile" class="hidden" onchange="updateFileName(this)">
-                <label for="proofFile" class="cursor-pointer">
-                    <span class="material-icons-outlined text-4xl text-g-text-secondary mb-2">cloud_upload</span>
-                    <p class="text-sm text-g-text-secondary mb-1">Upload photo of received item or delivery receipt</p>
-                    <p class="text-xs text-g-text-secondary">PNG, JPG, PDF up to 5MB</p>
-                    <p id="fileName" class="text-xs text-g-blue mt-2 hidden"></p>
+            <label class="block text-sm font-medium text-g-text mb-2">Item Photos / Receipts (Optional) - Select multiple</label>
+            <div id="dropZone" class="border-2 border-dashed border-g-border rounded-xl p-6 text-center hover:border-g-blue hover:bg-blue-50/50 transition-all cursor-pointer group">
+                <input type="file" name="proofFiles" accept="image/*" id="proofFiles" multiple class="hidden" onchange="handleFiles(this)">
+                <label for="proofFiles" class="cursor-pointer block">
+                    <span class="material-icons-outlined text-4xl text-g-text-secondary mb-2 group-hover:text-g-blue transition-colors">cloud_upload</span>
+                    <p class="text-sm font-medium text-g-text mb-1">Click to upload or drag & drop multiple photos</p>
+                    <p class="text-xs text-g-text-secondary">PNG, JPG, GIF, WebP up to 10MB each (max 10 photos)</p>
+                    <p class="text-xs text-g-blue mt-2 font-medium">You can select several at once — hold Ctrl/Cmd or Shift</p>
                 </label>
+                <div id="previewGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-4 hidden"></div>
+                <p id="fileCount" class="text-xs text-g-blue mt-3 hidden font-medium"></p>
+                <button type="button" id="clearBtn" class="hidden mt-3 px-3 py-1.5 text-xs bg-g-bg border border-g-border rounded-full hover:bg-g-hover transition-colors" onclick="clearFiles(event)">Clear all</button>
             </div>
         </div>
 
@@ -163,9 +166,27 @@
                 <span class="text-sm text-g-text-secondary">Notes</span>
                 <span class="text-sm font-medium text-g-text text-right max-w-xs" th:text="${paymentRelease.buyerNote}">Notes</span>
             </div>
-            <div class="flex justify-between py-2">
+            <div class="flex justify-between py-2 border-b border-g-border">
                 <span class="text-sm text-g-text-secondary">Submitted</span>
                 <span class="text-sm font-medium text-g-text" th:text="${#temporals.format(paymentRelease.buyerSubmittedAt, 'MMM dd, yyyy HH:mm')}">Date</span>
+            </div>
+            <!-- Multi-photo gallery (already submitted) -->
+            <div th:if="${buyerProofImages != null and !buyerProofImages.isEmpty()}" class="pt-3">
+                <p class="text-xs font-medium text-g-text-secondary mb-2">Your Proof Photos (<span th:text="${buyerProofImages.size()}">0</span>)</p>
+                <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                    <a th:each="img : ${buyerProofImages}" th:href="@{${img.url}}" target="_blank" class="group relative aspect-square rounded-xl overflow-hidden border border-g-border hover:border-g-blue transition-colors">
+                        <img th:src="@{${img.url}}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" alt="Proof">
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                            <span class="material-icons-outlined text-white opacity-0 group-hover:opacity-100 transition-opacity">zoom_in</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div th:if="${(buyerProofImages == null or buyerProofImages.isEmpty()) and paymentRelease.buyerProofPath != null}" class="pt-3 border-t border-g-border">
+                <p class="text-xs text-g-text-secondary mb-2">Proof Attachment</p>
+                <a th:href="@{${paymentRelease.buyerProofPath}}" target="_blank" class="inline-flex items-center gap-2 px-3 py-2 bg-g-bg border border-g-border rounded-lg text-sm text-g-blue hover:bg-g-hover transition-colors">
+                    <span class="material-icons-outlined text-sm">attach_file</span> View Proof
+                </a>
             </div>
         </div>
     </div>
@@ -179,13 +200,67 @@
 <div th:replace="~{fragments/layout :: scripts}"></div>
 
 <script>
-    function updateFileName(input) {
-        const fileName = document.getElementById('fileName');
-        if (input.files && input.files[0]) {
-            fileName.textContent = 'Selected: ' + input.files[0].name;
-            fileName.classList.remove('hidden');
+    function handleFiles(input) {
+        const grid = document.getElementById('previewGrid');
+        const countEl = document.getElementById('fileCount');
+        const clearBtn = document.getElementById('clearBtn');
+        grid.innerHTML = '';
+        if (!input.files || input.files.length === 0) {
+            grid.classList.add('hidden');
+            countEl.classList.add('hidden');
+            clearBtn.classList.add('hidden');
+            return;
         }
+        const files = Array.from(input.files).slice(0, 10);
+        if (input.files.length > 10) alert('Maximum 10 photos allowed. Only first 10 will be uploaded.');
+        grid.classList.remove('hidden');
+        countEl.classList.remove('hidden');
+        clearBtn.classList.remove('hidden');
+        countEl.textContent = files.length + ' photo' + (files.length > 1 ? 's' : '') + ' selected';
+        files.forEach((file, idx) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'relative aspect-square rounded-xl overflow-hidden border border-g-border bg-g-bg group';
+            const img = document.createElement('img');
+            img.className = 'w-full h-full object-cover';
+            const reader = new FileReader();
+            reader.onload = e => img.src = e.target.result;
+            reader.readAsDataURL(file);
+            const badge = document.createElement('div');
+            badge.className = 'absolute top-1 left-1 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded-full';
+            badge.textContent = idx + 1;
+            const name = document.createElement('div');
+            name.className = 'absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-1.5 py-1 truncate';
+            name.textContent = file.name;
+            wrapper.appendChild(img);
+            wrapper.appendChild(badge);
+            wrapper.appendChild(name);
+            grid.appendChild(wrapper);
+        });
     }
+    function clearFiles(e) {
+        e.preventDefault(); e.stopPropagation();
+        const input = document.getElementById('proofFiles');
+        input.value = '';
+        document.getElementById('previewGrid').classList.add('hidden');
+        document.getElementById('previewGrid').innerHTML = '';
+        document.getElementById('fileCount').classList.add('hidden');
+        document.getElementById('clearBtn').classList.add('hidden');
+    }
+    (function() {
+        const zone = document.getElementById('dropZone');
+        if (!zone) return;
+        ['dragenter','dragover'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add('border-g-blue','bg-blue-50'); }));
+        ['dragleave','drop'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove('border-g-blue','bg-blue-50'); }));
+        zone.addEventListener('drop', e => {
+            const dt = e.dataTransfer;
+            if (!dt || !dt.files) return;
+            const input = document.getElementById('proofFiles');
+            const transfer = new DataTransfer();
+            Array.from(dt.files).filter(f => f.type.startsWith('image/')).slice(0,10).forEach(f => transfer.items.add(f));
+            input.files = transfer.files;
+            handleFiles(input);
+        });
+    })();
 </script>
 
 </body>

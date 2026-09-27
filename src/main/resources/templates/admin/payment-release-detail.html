@@ -254,7 +254,20 @@
                 <div class="pt-3 border-t border-g-border">
                     <p class="text-xs text-g-text-secondary">Submitted on <span th:text="${#temporals.format(paymentRelease.sellerSubmittedAt, 'MMM dd, yyyy HH:mm')}">Date</span></p>
                 </div>
-                <div th:if="${paymentRelease.sellerProofPath}" class="pt-3 border-t border-g-border">
+                <!-- Multi-photo gallery -->
+                <div th:if="${sellerProofImages != null and !sellerProofImages.isEmpty()}" class="pt-3 border-t border-g-border">
+                    <p class="text-xs text-g-text-secondary mb-2">Proof Photos (<span th:text="${sellerProofImages.size()}">0</span>)</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        <a th:each="img : ${sellerProofImages}" th:href="@{${img.url}}" target="_blank" class="group relative aspect-square rounded-xl overflow-hidden border border-g-border hover:border-g-blue transition-colors">
+                            <img th:src="@{${img.url}}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" alt="Proof">
+                            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                <span class="material-icons-outlined text-white opacity-0 group-hover:opacity-100 transition-opacity">zoom_in</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <!-- Legacy fallback single path -->
+                <div th:if="${(sellerProofImages == null or sellerProofImages.isEmpty()) and paymentRelease.sellerProofPath != null}" class="pt-3 border-t border-g-border">
                     <p class="text-xs text-g-text-secondary mb-2">Proof Attachment</p>
                     <a th:href="@{${paymentRelease.sellerProofPath}}" target="_blank" class="inline-flex items-center gap-2 px-3 py-2 bg-g-bg border border-g-border rounded-lg text-sm text-g-blue hover:bg-g-hover transition-colors">
                         <span class="material-icons-outlined text-sm">attach_file</span>
@@ -300,7 +313,19 @@
                 <div class="pt-3 border-t border-g-border">
                     <p class="text-xs text-g-text-secondary">Submitted on <span th:text="${#temporals.format(paymentRelease.buyerSubmittedAt, 'MMM dd, yyyy HH:mm')}">Date</span></p>
                 </div>
-                <div th:if="${paymentRelease.buyerProofPath}" class="pt-3 border-t border-g-border">
+                <!-- Multi-photo gallery -->
+                <div th:if="${buyerProofImages != null and !buyerProofImages.isEmpty()}" class="pt-3 border-t border-g-border">
+                    <p class="text-xs text-g-text-secondary mb-2">Proof Photos (<span th:text="${buyerProofImages.size()}">0</span>)</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        <a th:each="img : ${buyerProofImages}" th:href="@{${img.url}}" target="_blank" class="group relative aspect-square rounded-xl overflow-hidden border border-g-border hover:border-g-blue transition-colors">
+                            <img th:src="@{${img.url}}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" alt="Proof">
+                            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                <span class="material-icons-outlined text-white opacity-0 group-hover:opacity-100 transition-opacity">zoom_in</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div th:if="${(buyerProofImages == null or buyerProofImages.isEmpty()) and paymentRelease.buyerProofPath != null}" class="pt-3 border-t border-g-border">
                     <p class="text-xs text-g-text-secondary mb-2">Proof Attachment</p>
                     <a th:href="@{${paymentRelease.buyerProofPath}}" target="_blank" class="inline-flex items-center gap-2 px-3 py-2 bg-g-bg border border-g-border rounded-lg text-sm text-g-blue hover:bg-g-hover transition-colors">
                         <span class="material-icons-outlined text-sm">attach_file</span>

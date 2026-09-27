@@ -17,6 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * BuyerPaymentController - handles buyer received-item details submission.
@@ -62,6 +64,7 @@ public class BuyerPaymentController {
 
             model.addAttribute("paymentRelease", pr);
             model.addAttribute("auction", pr.getAuction());
+            model.addAttribute("buyerProofImages", paymentReleaseService.getBuyerProofImages(pr));
 
             // Fetch conversation for chat panel
             Conversation conversation = chatService.getConversationByPaymentRelease(pr);
@@ -75,13 +78,14 @@ public class BuyerPaymentController {
     }
 
     /**
-     * Submit buyer received-item details.
+     * Submit buyer received-item details - MULTIPLE PHOTOS supported.
      */
     @PostMapping("/submit/{paymentReleaseId}")
     public String submitDetails(@PathVariable Long paymentReleaseId,
                                  @AuthenticationPrincipal UserDetails userDetails,
                                  @RequestParam Boolean receivedConfirmation,
                                  @RequestParam(required = false) String receivedDate,
+                                 @RequestParam(required = false) List<MultipartFile> proofFiles,
                                  @RequestParam(required = false) MultipartFile proofFile,
                                  @RequestParam(required = false) String note,
                                  RedirectAttributes redirectAttributes) {
@@ -89,11 +93,20 @@ public class BuyerPaymentController {
             User buyer = userService.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-            // Handle file upload
-            String proofPath = null;
-            if (proofFile != null && !proofFile.isEmpty()) {
-                String filename = fileStorageService.storeProofFile(proofFile, "buyer_" + paymentReleaseId);
-                proofPath = "/uploads/proof/" + filename;
+            // Handle multiple file uploads (new) + backward compat single file
+            List<String> proofPaths = new ArrayList<>();
+            List<MultipartFile> allFiles = new ArrayList<>();
+            if (proofFiles != null) allFiles.addAll(proofFiles);
+            if (proofFile != null && !proofFile.isEmpty()) allFiles.add(proofFile);
+
+            int maxPhotos = 10;
+            int count = 0;
+            for (MultipartFile f : allFiles) {
+                if (f == null || f.isEmpty()) continue;
+                if (count >= maxPhotos) break;
+                String filename = fileStorageService.storeProofFile(f, "buyer_" + paymentReleaseId);
+                proofPaths.add("/uploads/proof/" + filename);
+                count++;
             }
 
             // Parse received date
@@ -103,7 +116,7 @@ public class BuyerPaymentController {
             }
 
             paymentReleaseService.submitBuyerDetails(
-                paymentReleaseId, buyer, receivedConfirmation, receivedDateTime, proofPath, note
+                paymentReleaseId, buyer, receivedConfirmation, receivedDateTime, proofPaths, note
             );
 
             redirectAttributes.addFlashAttribute("success", "Received-item details submitted successfully!");
