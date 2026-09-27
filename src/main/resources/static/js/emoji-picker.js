@@ -39,7 +39,11 @@
     function createPicker(inputEl) {
         var wrapper = document.createElement('div');
         wrapper.className = 'emoji-picker-popup';
-        wrapper.style.cssText = 'position:absolute;z-index:9999;background:white;border:1px solid #dadce0;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.15);padding:8px;width:280px;max-height:220px;overflow-y:auto;display:grid;grid-template-columns:repeat(8,1fr);gap:2px;';
+        // position:fixed — getBoundingClientRect() returns viewport coords, so the
+        // popup anchors correctly at ANY scroll position (absolute positioning
+        // breaks once the page is scrolled, e.g. the chat below the long
+        // delivery-details forms, which made the picker appear off-screen).
+        wrapper.style.cssText = 'position:fixed;z-index:9999;background:white;border:1px solid #dadce0;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.15);padding:8px;width:280px;max-height:220px;overflow-y:auto;display:grid;grid-template-columns:repeat(8,1fr);gap:2px;';
 
         EMOJIS.forEach(function(emoji) {
             var btn = document.createElement('button');
@@ -94,6 +98,10 @@
         picker.style.left = Math.max(8, rect.left - 120) + 'px';
         picker.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
         picker.style.top = 'auto';
+
+        // Close picker on scroll/resize so it never drifts away from its anchor
+        window.addEventListener('scroll', closePicker, { once: true, passive: true });
+        window.addEventListener('resize', closePicker, { once: true, passive: true });
 
         activePicker = picker;
     }
