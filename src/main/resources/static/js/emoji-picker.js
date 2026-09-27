@@ -37,13 +37,13 @@
     var activePicker = null;
 
     function createPicker(inputEl) {
-        var wrapper = document.createElement('div');
-        wrapper.className = 'emoji-picker-popup';
-        // position:absolute INSIDE the emoji button's .emoji-anchor wrapper:
-        // the popup is structurally anchored to the button (bottom:calc(100% + 8px)
-        // = 8px above the button), so it can never detach onto the page/body and
-        // it follows the button through any scroll position with zero coordinate math.
-        wrapper.style.cssText = 'position:absolute;z-index:9999;background:white;border:1px solid #dadce0;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.15);padding:8px;width:280px;max-height:220px;overflow-y:auto;display:grid;grid-template-columns:repeat(8,1fr);gap:2px;';
+        var box = document.createElement('div');
+        box.className = 'emoji-picker-box';
+        // SEPARATE BOX in the normal page flow: it is inserted INSIDE the chat
+        // component (directly above the message input row). display:none when
+        // closed, grid when open. No position:fixed/absolute, no coordinates,
+        // no <body> attachment — it physically cannot appear anywhere else.
+        box.style.cssText = 'display:none;background:white;border:1px solid #dadce0;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.12);padding:8px;width:100%;max-width:360px;max-height:220px;overflow-y:auto;margin:0 auto 10px;grid-template-columns:repeat(8,1fr);gap:2px;';
 
         EMOJIS.forEach(function(emoji) {
             var btn = document.createElement('button');
@@ -58,10 +58,10 @@
                 insertEmoji(inputEl, emoji);
                 closePicker();
             };
-            wrapper.appendChild(btn);
+            box.appendChild(btn);
         });
 
-        return wrapper;
+        return box;
     }
 
     function insertEmoji(inputEl, emoji) {
@@ -79,55 +79,19 @@
 
     function closePicker() {
         if (activePicker) {
-            activePicker.remove();
+            activePicker.style.display = 'none';
             activePicker = null;
         }
     }
 
-    var PICKER_W = 280;  // popup width (see .emoji-picker-popup cssText)
-    var PICKER_H = 250;  // max-height 220 + padding/border/8px gap estimate
-
-    function togglePicker(inputEl, anchorEl) {
+    function togglePicker(inputEl) {
         if (activePicker) {
             closePicker();
             return;
         }
-
-        var picker = createPicker(inputEl);
-
-        // Append INSIDE the button's relative wrapper -> the popup shares the
-        // button's positioning context. bottom:calc(100% + 8px) puts it 8px
-        // above the button; right:0 aligns their right edges. Because it lives
-        // in the wrapper, it stays anchored through scrolling automatically.
-        var anchorWrap = anchorEl.closest('.emoji-anchor');
-        anchorWrap.appendChild(picker);
-
-        // getBoundingClientRect() is used ONLY to pick the open direction/side
-        // (never for coordinates), so the popup respects the viewport edges:
-        var rect = anchorEl.getBoundingClientRect();
-        var fitsAbove = rect.top >= PICKER_H;
-        var fitsBelow = (rect.bottom + PICKER_H) <= window.innerHeight;
-        var fitsLeft  = rect.right >= (PICKER_W + 8);   // room to extend leftwards
-        var fitsRight = (rect.left + PICKER_W + 8) <= window.innerWidth;
-
-        if (!fitsAbove && fitsBelow) {
-            // Not enough room above the button -> open below it instead
-            picker.style.bottom = 'auto';
-            picker.style.top = 'calc(100% + 8px)';
-        } else {
-            picker.style.bottom = 'calc(100% + 8px)';
-            picker.style.top = 'auto';
-        }
-
-        if (fitsLeft || !fitsRight) {
-            picker.style.right = '0px';
-            picker.style.left = 'auto';
-        } else {
-            // Button is too close to the left viewport edge: extend rightwards
-            picker.style.right = 'auto';
-            picker.style.left = '0px';
-        }
-
+        var picker = pickers.get(inputEl);
+        if (!picker) return;
+        picker.style.display = 'grid'; // open the box (in flow, above the input)
         activePicker = picker;
     }
 
@@ -149,11 +113,22 @@
         btn.onclick = function(e) {
             e.preventDefault();
             e.stopPropagation();
-            togglePicker(inputEl, btn);
+            togglePicker(inputEl);
         };
 
         wrap.appendChild(btn);
         return wrap;
+    }
+
+    // One picker box per input, created lazily
+    var pickers = new Map();
+
+    function getOrCreatePicker(inputEl) {
+        var picker = pickers.get(inputEl);
+        if (picker) return picker;
+        picker = createPicker(inputEl);
+        pickers.set(inputEl, picker);
+        return picker;
     }
 
     // Public API
@@ -162,7 +137,7 @@
             if (!inputEl || inputEl.dataset.emojiAttached) return;
             inputEl.dataset.emojiAttached = 'true';
 
-            // Insert emoji button before the input's parent form submit button
+            // Emoji button in the input row, before the Send button (unchanged)
             var form = inputEl.closest('form');
             if (form) {
                 var submitBtn = form.querySelector('button[type="submit"]');
@@ -174,6 +149,18 @@
             } else {
                 inputEl.parentNode.appendChild(createEmojiButton(inputEl));
             }
+
+            // The SEPARATE BOX: a normal in-flow block inserted INSIDE the chat
+            // component, directly ABOVE the message input row (before the form).
+            // It is part of the page layout, so it can only ever appear here —
+            // never at the top/right of the page, regardless of scroll,
+            // transforms, or ancestor positioning/overflow.
+            var box = getOrCreatePicker(inputEl);
+            if (form) {
+                form.parentNode.insertBefore(box, form);
+            } else {
+                inputEl.parentNode.insertBefore(box, inputEl);
+            }
         }
     };
 
@@ -184,12 +171,11 @@
         });
     }
 
-    // Close picker on outside click (clicks on the button/picker/wrapper are ignored)
+    // Close the box on outside click (clicks on the emoji button/box are ignored)
     document.addEventListener('click', function(e) {
         if (activePicker
                 && !activePicker.contains(e.target)
-                && !e.target.closest('.emoji-trigger-btn')
-                && !e.target.closest('.emoji-anchor')) {
+                && !e.target.closest('.emoji-trigger-btn')) {
             closePicker();
         }
     });
