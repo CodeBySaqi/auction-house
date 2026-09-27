@@ -11,6 +11,7 @@ import com.auctionhouse.repository.ChatMessageRepository;
 import com.auctionhouse.repository.ConversationRepository;
 import com.auctionhouse.repository.PaymentProofImageRepository;
 import com.auctionhouse.repository.PaymentReleaseRepository;
+import com.auctionhouse.repository.PaymentSubmissionHistoryRepository;
 import com.auctionhouse.repository.PlatformCommissionRepository;
 import com.auctionhouse.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,7 @@ public class AuctionService {
     private final PaymentReleaseRepository paymentReleaseRepository;
     private final PlatformCommissionRepository platformCommissionRepository;
     private final PaymentProofImageRepository paymentProofImageRepository;
+    private final PaymentSubmissionHistoryRepository paymentSubmissionHistoryRepository;
 
     @Autowired
     public AuctionService(AuctionRepository auctionRepository,
@@ -55,7 +57,8 @@ public class AuctionService {
                          ConversationRepository conversationRepository,
                          PaymentReleaseRepository paymentReleaseRepository,
                          PlatformCommissionRepository platformCommissionRepository,
-                         PaymentProofImageRepository paymentProofImageRepository) {
+                         PaymentProofImageRepository paymentProofImageRepository,
+                         PaymentSubmissionHistoryRepository paymentSubmissionHistoryRepository) {
         this.auctionRepository = auctionRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
@@ -67,6 +70,7 @@ public class AuctionService {
         this.paymentReleaseRepository = paymentReleaseRepository;
         this.platformCommissionRepository = platformCommissionRepository;
         this.paymentProofImageRepository = paymentProofImageRepository;
+        this.paymentSubmissionHistoryRepository = paymentSubmissionHistoryRepository;
     }
 
     /**
@@ -285,7 +289,10 @@ public class AuctionService {
             // 2. Delete conversations
             conversationRepository.deleteByAuctionId(id);
 
-            // 2b. Delete proof images (multi-photo) before payment releases
+            // 2b. Delete submission history (must be before payment releases)
+            paymentSubmissionHistoryRepository.deleteByAuctionId(id);
+
+            // 2c. Delete proof images (multi-photo) before payment releases
             paymentProofImageRepository.deleteByAuctionId(id);
             
             // 3. Delete platform commissions

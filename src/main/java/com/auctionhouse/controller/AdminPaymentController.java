@@ -94,6 +94,11 @@ public class AdminPaymentController {
             model.addAttribute("buyerProofImages", paymentReleaseService.getBuyerProofImages(pr));
             model.addAttribute("allProofImages", paymentReleaseService.getProofImages(pr));
 
+            // Submission history (old details for tracking)
+            model.addAttribute("submissionHistory", paymentReleaseService.getSubmissionHistory(pr));
+            model.addAttribute("sellerHistory", paymentReleaseService.getSellerHistory(pr));
+            model.addAttribute("buyerHistory", paymentReleaseService.getBuyerHistory(pr));
+
             // Commission breakdown (calculated server-side, never from frontend)
             BigDecimal[] breakdown = PlatformCommission.calculate(pr.getWinningAmount());
             model.addAttribute("commissionAmount", breakdown[0]);

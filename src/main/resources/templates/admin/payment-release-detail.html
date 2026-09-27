@@ -377,38 +377,22 @@
         <!-- Admin Actions -->
         <div th:if="${paymentRelease.status.name() == 'READY_FOR_ADMIN_REVIEW'}" class="bg-white rounded-2xl border border-g-border p-6 mb-6">
             <h2 class="font-gsans text-lg font-medium text-g-text mb-4">Admin Actions</h2>
-            <div class="space-y-4">
+            <div class="grid md:grid-cols-2 gap-4">
                 <!-- Verify -->
                 <form th:action="@{/admin/payments/{id}/verify(id=${paymentRelease.id})}" method="post" onsubmit="return confirm('Are you sure you want to verify this case? This will allow payment release.')">
                     <button type="submit" class="w-full px-6 py-4 bg-g-green text-white rounded-xl text-sm font-medium hover:bg-green-600 shadow-g-sm hover:shadow-g-md transition-all flex items-center justify-center gap-2">
                         <span class="material-icons-outlined text-lg">verified</span>
-                        Verify & Approve - Release payment flow can continue
+                        Verify & Approve
                     </button>
                 </form>
                 
-                <!-- Correction Request Options -->
-                <div class="border-t border-g-border pt-4">
-                    <p class="text-sm font-medium text-g-text mb-3 flex items-center gap-2">
-                        <span class="material-icons-outlined text-orange-600 text-lg">report_problem</span>
-                        Request Correction (per party)
-                    </p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <button onclick="openCorrectionModal('SELLER')" class="px-4 py-3 bg-orange-50 border border-orange-200 text-orange-800 rounded-xl text-sm font-medium hover:bg-orange-100 transition-colors flex items-center justify-center gap-2">
-                            <span class="material-icons-outlined text-lg">storefront</span>
-                            Seller Only
-                        </button>
-                        <button onclick="openCorrectionModal('BUYER')" class="px-4 py-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl text-sm font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2">
-                            <span class="material-icons-outlined text-lg">person</span>
-                            Buyer Only
-                        </button>
-                        <button onclick="openCorrectionModal('BOTH')" class="px-4 py-3 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
-                            <span class="material-icons-outlined text-lg">group</span>
-                            Both Parties
-                        </button>
-                    </div>
-                    <p class="text-xs text-g-text-secondary mt-2">Seller correction keeps buyer submission intact, and vice versa. Both clears everything.</p>
-                </div>
+                <!-- Single Rejection Button - opens modal with target options -->
+                <button onclick="document.getElementById('correctionModal').classList.remove('hidden'); selectTarget('BOTH');" class="w-full px-6 py-4 bg-g-red text-white rounded-xl text-sm font-medium hover:bg-red-600 shadow-g-sm hover:shadow-g-md transition-all flex items-center justify-center gap-2">
+                    <span class="material-icons-outlined text-lg">cancel</span>
+                    Request Correction
+                </button>
             </div>
+            <p class="text-xs text-g-text-secondary mt-3 text-center">Correction modal lets you choose Seller only, Buyer only, or Both — old submissions are kept in history below.</p>
         </div>
 
         <!-- Release Payment -->
@@ -462,7 +446,7 @@
         </div>
 
         <!-- Review History -->
-        <div th:if="${paymentRelease.reviewedAt != null}" class="bg-white rounded-2xl border border-g-border p-6">
+        <div th:if="${paymentRelease.reviewedAt != null}" class="bg-white rounded-2xl border border-g-border p-6 mb-6">
             <h2 class="font-gsans text-lg font-medium text-g-text mb-4">Review History</h2>
             <div class="space-y-4">
                 <div class="flex items-start gap-3">
@@ -492,6 +476,113 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Submission History - Old Details Tracking -->
+        <div th:if="${submissionHistory != null and !submissionHistory.isEmpty()}" class="bg-white rounded-2xl border border-g-border p-6 mb-6">
+            <h2 class="font-gsans text-lg font-medium text-g-text mb-4 flex items-center gap-2">
+                <span class="material-icons-outlined text-g-text-secondary text-xl">history</span>
+                Previous Submissions History
+                <span class="px-2.5 py-1 bg-g-bg border border-g-border rounded-full text-xs font-medium" th:text="${submissionHistory.size()} + ' versions'">0 versions</span>
+            </h2>
+            <p class="text-xs text-g-text-secondary mb-4">Old submitted details are preserved here when admin requests correction. Track what was submitted before.</p>
+            
+            <div class="space-y-6">
+                <div th:each="hist, iterStat : ${submissionHistory}" class="border border-g-border rounded-xl overflow-hidden">
+                    <div class="px-4 py-3 bg-g-bg border-b border-g-border flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                                 th:classappend="${hist.proofType.name() == 'SELLER' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}">
+                                <span th:text="${hist.proofType.name() == 'SELLER' ? 'S' : 'B'}">S</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-g-text">
+                                    <span th:text="${hist.proofType.name() == 'SELLER' ? 'Seller' : 'Buyer'}">Seller</span> Submission
+                                    <span class="text-xs text-g-text-secondary">#<span th:text="${submissionHistory.size() - iterStat.index}">1</span></span>
+                                </p>
+                                <p class="text-xs text-g-text-secondary">
+                                    Submitted <span th:text="${hist.submittedAt != null ? #temporals.format(hist.submittedAt, 'MMM dd, yyyy HH:mm') : 'N/A'}">Date</span>
+                                    • Correction requested <span th:text="${#temporals.format(hist.correctionRequestedAt, 'MMM dd, yyyy HH:mm')}">Date</span>
+                                </p>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 bg-white border border-g-border rounded-full text-xs" th:text="${hist.reviewedBy != null ? hist.reviewedBy.username : 'Admin'}">Admin</span>
+                    </div>
+                    
+                    <div class="p-4 space-y-3">
+                        <!-- Rejection Reason -->
+                        <div th:if="${hist.rejectionReason}" class="p-3 bg-red-50 border border-red-200 rounded-xl">
+                            <p class="text-xs font-medium text-red-900 mb-1">Correction Reason:</p>
+                            <p class="text-sm text-red-800" th:text="${hist.rejectionReason}">Reason</p>
+                        </div>
+
+                        <!-- Seller Details Snapshot -->
+                        <div th:if="${hist.proofType.name() == 'SELLER'}" class="grid grid-cols-2 gap-3 text-sm">
+                            <div th:if="${hist.sellerShippingMethod}">
+                                <p class="text-xs text-g-text-secondary">Shipping Method</p>
+                                <p class="font-medium text-g-text" th:text="${hist.sellerShippingMethod}">Method</p>
+                            </div>
+                            <div th:if="${hist.sellerCourierName}">
+                                <p class="text-xs text-g-text-secondary">Courier</p>
+                                <p class="font-medium text-g-text" th:text="${hist.sellerCourierName}">Courier</p>
+                            </div>
+                            <div th:if="${hist.sellerTrackingNumber}">
+                                <p class="text-xs text-g-text-secondary">Tracking Number</p>
+                                <p class="font-medium text-g-text" th:text="${hist.sellerTrackingNumber}">Tracking</p>
+                            </div>
+                            <div th:if="${hist.sellerShipmentDate}">
+                                <p class="text-xs text-g-text-secondary">Shipment Date</p>
+                                <p class="font-medium text-g-text" th:text="${#temporals.format(hist.sellerShipmentDate, 'MMM dd, yyyy')}">Date</p>
+                            </div>
+                            <div th:if="${hist.sellerNote}" class="col-span-2">
+                                <p class="text-xs text-g-text-secondary">Note</p>
+                                <p class="text-g-text" th:text="${hist.sellerNote}">Note</p>
+                            </div>
+                        </div>
+
+                        <!-- Buyer Details Snapshot -->
+                        <div th:if="${hist.proofType.name() == 'BUYER'}" class="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <p class="text-xs text-g-text-secondary">Item Received</p>
+                                <p class="font-medium" th:class="${hist.buyerReceivedConfirmation} ? 'text-g-green' : 'text-g-red'" th:text="${hist.buyerReceivedConfirmation} ? 'Yes' : 'No'">Yes</p>
+                            </div>
+                            <div th:if="${hist.buyerReceivedDate}">
+                                <p class="text-xs text-g-text-secondary">Received Date</p>
+                                <p class="font-medium text-g-text" th:text="${#temporals.format(hist.buyerReceivedDate, 'MMM dd, yyyy')}">Date</p>
+                            </div>
+                            <div th:if="${hist.buyerNote}" class="col-span-2">
+                                <p class="text-xs text-g-text-secondary">Note</p>
+                                <p class="text-g-text" th:text="${hist.buyerNote}">Note</p>
+                            </div>
+                        </div>
+
+                        <!-- Historical Images -->
+                        <div th:if="${hist.images != null and !hist.images.isEmpty()}" class="pt-3 border-t border-g-border">
+                            <p class="text-xs font-medium text-g-text-secondary mb-2">Photos from this submission (<span th:text="${hist.images.size()}">0</span>)</p>
+                            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                                <a th:each="img : ${hist.images}" th:href="@{${img.url}}" target="_blank" class="group relative aspect-square rounded-lg overflow-hidden border border-g-border hover:border-g-blue transition-colors">
+                                    <img th:src="@{${img.url}}" class="w-full h-full object-cover group-hover:scale-105 transition-transform" alt="Historical proof">
+                                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                        <span class="material-icons-outlined text-white opacity-0 group-hover:opacity-100 text-sm">zoom_in</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        <div th:if="${(hist.images == null or hist.images.isEmpty()) and hist.sellerProofPath != null}" class="pt-3 border-t border-g-border">
+                            <a th:href="@{${hist.sellerProofPath}}" target="_blank" class="text-xs text-g-blue hover:underline">View legacy proof</a>
+                        </div>
+                        <div th:if="${(hist.images == null or hist.images.isEmpty()) and hist.buyerProofPath != null}" class="pt-3 border-t border-g-border">
+                            <a th:href="@{${hist.buyerProofPath}}" target="_blank" class="text-xs text-g-blue hover:underline">View legacy proof</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${submissionHistory == null or submissionHistory.isEmpty()}" class="bg-white rounded-2xl border border-dashed border-g-border p-6 mb-6 text-center">
+            <span class="material-icons-outlined text-g-text-secondary text-3xl mb-2">history</span>
+            <p class="text-sm font-medium text-g-text">No previous submissions</p>
+            <p class="text-xs text-g-text-secondary mt-1">When admin requests correction, old details will appear here for tracking.</p>
         </div>
 
     </main>

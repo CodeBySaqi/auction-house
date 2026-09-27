@@ -4,6 +4,7 @@ import com.auctionhouse.model.*;
 import com.auctionhouse.repository.AuctionRepository;
 import com.auctionhouse.repository.PaymentProofImageRepository;
 import com.auctionhouse.repository.PaymentReleaseRepository;
+import com.auctionhouse.repository.PaymentSubmissionHistoryRepository;
 import com.auctionhouse.repository.PlatformCommissionRepository;
 import com.auctionhouse.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ public class PaymentReleaseService {
     private final PlatformCommissionRepository platformCommissionRepository;
     private final ChatService chatService;
     private final PaymentProofImageRepository paymentProofImageRepository;
+    private final PaymentSubmissionHistoryRepository paymentSubmissionHistoryRepository;
 
     @Autowired
     public PaymentReleaseService(PaymentReleaseRepository paymentReleaseRepository,
@@ -40,7 +42,8 @@ public class PaymentReleaseService {
                                   FileStorageService fileStorageService,
                                   PlatformCommissionRepository platformCommissionRepository,
                                   ChatService chatService,
-                                  PaymentProofImageRepository paymentProofImageRepository) {
+                                  PaymentProofImageRepository paymentProofImageRepository,
+                                  PaymentSubmissionHistoryRepository paymentSubmissionHistoryRepository) {
         this.paymentReleaseRepository = paymentReleaseRepository;
         this.auctionRepository = auctionRepository;
         this.userRepository = userRepository;
@@ -49,6 +52,7 @@ public class PaymentReleaseService {
         this.platformCommissionRepository = platformCommissionRepository;
         this.chatService = chatService;
         this.paymentProofImageRepository = paymentProofImageRepository;
+        this.paymentSubmissionHistoryRepository = paymentSubmissionHistoryRepository;
     }
 
     /**
@@ -283,6 +287,7 @@ public class PaymentReleaseService {
 
     /**
      * Admin requests correction from BOTH buyer and seller.
+     * Saves history of old submissions before clearing.
      */
     @Transactional
     public void requestBothCorrection(Long paymentReleaseId, User admin, String reason) {
@@ -291,6 +296,14 @@ public class PaymentReleaseService {
 
         if (!isAdmin(admin)) {
             throw new SecurityException("Only administrators can reject payment releases.");
+        }
+
+        // Save history for both sides before clearing
+        if (pr.isSellerDetailsSubmitted()) {
+            saveSellerHistory(pr, reason, admin);
+        }
+        if (pr.isBuyerDetailsSubmitted()) {
+            saveBuyerHistory(pr, reason, admin);
         }
 
         pr.setReviewedBy(admin);
@@ -316,7 +329,7 @@ public class PaymentReleaseService {
 
     /**
      * Admin requests correction from SELLER only.
-     * Buyer submission is kept intact.
+     * Buyer submission is kept intact. Saves seller history.
      */
     @Transactional
     public void requestSellerCorrection(Long paymentReleaseId, User admin, String reason) {
@@ -327,35 +340,34 @@ public class PaymentReleaseService {
             throw new SecurityException("Only administrators can request seller correction.");
         }
 
+        // Save seller history before clearing
+        if (pr.isSellerDetailsSubmitted()) {
+            saveSellerHistory(pr, reason, admin);
+        }
+
         pr.setReviewedBy(admin);
         pr.setReviewedAt(LocalDateTime.now());
         pr.setStatus(VerificationStatus.SELLER_CORRECTION_NEEDED);
         pr.setRejectionReason(reason);
         pr.setSellerRejectionReason(reason);
-        // Keep buyer rejection reason as is (or clear)
 
         // Clear only seller submission
         pr.setSellerSubmittedAt(null);
         pr.setSellerProofPath(null);
         paymentProofImageRepository.deleteByPaymentReleaseAndProofType(pr, ProofType.SELLER);
 
-        // If buyer had submitted, keep status as SELLER_CORRECTION_NEEDED so seller can resubmit
-        // If buyer hadn't submitted, status will still allow seller resubmit and buyer to submit later
-        // We keep buyerSubmittedAt intact
-
         paymentReleaseRepository.save(pr);
 
         String message = "⚠️ Admin requested correction for your delivery details in \"" + pr.getAuction().getTitle() + "\". Reason: " + reason + ". Please resubmit your details.";
         notificationService.createNotification(pr.getSeller(), message, "SELLER_CORRECTION_REQUESTED", pr.getAuction().getId());
 
-        // Optional: notify buyer that seller correction was requested (so they know delay)
         String buyerInfo = "ℹ️ Seller correction requested for \"" + pr.getAuction().getTitle() + "\". Awaiting seller to resubmit.";
         notificationService.createNotification(pr.getBuyer(), buyerInfo, "SELLER_CORRECTION_REQUESTED", pr.getAuction().getId());
     }
 
     /**
      * Admin requests correction from BUYER only.
-     * Seller submission is kept intact.
+     * Seller submission is kept intact. Saves buyer history.
      */
     @Transactional
     public void requestBuyerCorrection(Long paymentReleaseId, User admin, String reason) {
@@ -364,6 +376,11 @@ public class PaymentReleaseService {
 
         if (!isAdmin(admin)) {
             throw new SecurityException("Only administrators can request buyer correction.");
+        }
+
+        // Save buyer history before clearing
+        if (pr.isBuyerDetailsSubmitted()) {
+            saveBuyerHistory(pr, reason, admin);
         }
 
         pr.setReviewedBy(admin);
@@ -638,5 +655,68 @@ public class PaymentReleaseService {
 
     public List<PaymentProofImage> getBuyerProofImages(PaymentRelease pr) {
         return getProofImagesByType(pr, ProofType.BUYER);
+    }
+
+    // ---- HISTORY METHODS ----
+
+    private void saveSellerHistory(PaymentRelease pr, String reason, User admin) {
+        PaymentSubmissionHistory h = new PaymentSubmissionHistory();
+        h.setPaymentRelease(pr);
+        h.setProofType(ProofType.SELLER);
+        h.setSubmittedAt(pr.getSellerSubmittedAt());
+        h.setCorrectionRequestedAt(LocalDateTime.now());
+        h.setRejectionReason(reason);
+        h.setReviewedBy(admin);
+        h.setSellerShippingMethod(pr.getSellerShippingMethod());
+        h.setSellerTrackingNumber(pr.getSellerTrackingNumber());
+        h.setSellerCourierName(pr.getSellerCourierName());
+        h.setSellerShipmentDate(pr.getSellerShipmentDate());
+        h.setSellerNote(pr.getSellerNote());
+        h.setSellerProofPath(pr.getSellerProofPath());
+
+        // Copy proof images
+        List<PaymentProofImage> currentImages = getSellerProofImages(pr);
+        paymentSubmissionHistoryRepository.save(h); // save first to get id
+        int order = 0;
+        for (PaymentProofImage img : currentImages) {
+            PaymentSubmissionHistoryImage hi = new PaymentSubmissionHistoryImage(h, img.getUrl(), order++);
+            h.getImages().add(hi);
+        }
+        paymentSubmissionHistoryRepository.save(h);
+    }
+
+    private void saveBuyerHistory(PaymentRelease pr, String reason, User admin) {
+        PaymentSubmissionHistory h = new PaymentSubmissionHistory();
+        h.setPaymentRelease(pr);
+        h.setProofType(ProofType.BUYER);
+        h.setSubmittedAt(pr.getBuyerSubmittedAt());
+        h.setCorrectionRequestedAt(LocalDateTime.now());
+        h.setRejectionReason(reason);
+        h.setReviewedBy(admin);
+        h.setBuyerReceivedConfirmation(pr.getBuyerReceivedConfirmation());
+        h.setBuyerReceivedDate(pr.getBuyerReceivedDate());
+        h.setBuyerNote(pr.getBuyerNote());
+        h.setBuyerProofPath(pr.getBuyerProofPath());
+
+        List<PaymentProofImage> currentImages = getBuyerProofImages(pr);
+        paymentSubmissionHistoryRepository.save(h);
+        int order = 0;
+        for (PaymentProofImage img : currentImages) {
+            PaymentSubmissionHistoryImage hi = new PaymentSubmissionHistoryImage(h, img.getUrl(), order++);
+            h.getImages().add(hi);
+        }
+        paymentSubmissionHistoryRepository.save(h);
+    }
+
+    public List<PaymentSubmissionHistory> getSubmissionHistory(PaymentRelease pr) {
+        return paymentSubmissionHistoryRepository.findByPaymentReleaseOrderByCreatedAtDesc(pr);
+    }
+
+    public List<PaymentSubmissionHistory> getSellerHistory(PaymentRelease pr) {
+        return paymentSubmissionHistoryRepository.findByPaymentReleaseAndProofTypeOrderByCreatedAtDesc(pr, ProofType.SELLER);
+    }
+
+    public List<PaymentSubmissionHistory> getBuyerHistory(PaymentRelease pr) {
+        return paymentSubmissionHistoryRepository.findByPaymentReleaseAndProofTypeOrderByCreatedAtDesc(pr, ProofType.BUYER);
     }
 }
