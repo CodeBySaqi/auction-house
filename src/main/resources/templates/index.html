@@ -35,8 +35,8 @@
                             <p th:style="'font-size: clamp(9px, 1.2vw, 18px); margin-bottom: clamp(8px, 1.5vw, 24px); color:' + ${slide.subtitleColor}"
                                th:text="${slide.subtitle}">Slide subtitle</p>
                             <a th:href="${slide.buttonUrl}" th:text="${slide.buttonText}"
-                               th:style="'font-size: clamp(8px, 1vw, 16px); padding: clamp(6px, 1vw, 12px) clamp(12px, 2vw, 32px); background:' + ${slide.buttonColor}"
-                               class="inline-block rounded-full font-semibold transition-colors shadow-lg text-white hover:opacity-90">
+                               th:style="'font-size: clamp(8px, 1vw, 16px); padding: clamp(6px, 1vw, 12px) clamp(12px, 2vw, 32px); background:' + ${slide.buttonColor} + '; color:' + ${slide.buttonTextColor}"
+                               class="inline-block rounded-full font-semibold transition-colors shadow-lg hover:opacity-90">
                                 Button
                             </a>
                         </div>
@@ -224,16 +224,17 @@ document.addEventListener('DOMContentLoaded', function() {
         slidesContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
         currentSlideEl.textContent = currentSlide + 1;
         
-        // Update dots
+        // Update dots — set inline width (a w-8 class can't override the
+        // element's inline width:clamp() style, so the active dot never grew)
         dots.forEach((dot, index) => {
             if (index === currentSlide) {
                 dot.classList.remove('bg-white/50');
                 dot.classList.add('bg-white');
-                dot.classList.add('w-8');
+                dot.style.width = 'clamp(22px, 2.6vw, 32px)';
             } else {
                 dot.classList.remove('bg-white');
                 dot.classList.add('bg-white/50');
-                dot.classList.remove('w-8');
+                dot.style.width = 'clamp(8px, 1.2vw, 12px)';
             }
         });
     }
@@ -249,7 +250,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function startAutoPlay() {
-        autoPlayInterval = setInterval(nextSlide, 120000);
+        if (autoPlayInterval) clearInterval(autoPlayInterval);
+        autoPlayInterval = setInterval(nextSlide, 120000); // 2 minutes
     }
 
     function stopAutoPlay() {

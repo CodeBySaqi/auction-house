@@ -8,7 +8,16 @@ public enum AuctionCategory {
     ART("Fine Art"),
     WATCHES("Luxury Watches"),
     JEWELRY("Jewelry & Gems"),
-    COLLECTIBLES("Collectibles");
+    COLLECTIBLES("Collectibles"),
+    REAL_ESTATE("Real Estate & Property"),
+    ELECTRONICS("Electronics & Gadgets"),
+    FURNITURE("Furniture & Home"),
+    INSTRUMENTS("Musical Instruments"),
+    SPORTS("Sports & Fitness"),
+    INDUSTRIAL("Industrial & Machinery"),
+    AGRICULTURE("Agricultural Equipment"),
+    LIVESTOCK("Livestock & Animals"),
+    SOLAR_POWER("Solar & Power Equipment");
 
     private final String displayName;
 

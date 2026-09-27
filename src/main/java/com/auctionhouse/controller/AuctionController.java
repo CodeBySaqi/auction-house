@@ -7,6 +7,15 @@ import com.auctionhouse.model.ArtAuction;
 import com.auctionhouse.model.Bid;
 import com.auctionhouse.model.CarAuction;
 import com.auctionhouse.model.CollectibleAuction;
+import com.auctionhouse.model.ElectronicsAuction;
+import com.auctionhouse.model.FurnitureAuction;
+import com.auctionhouse.model.InstrumentAuction;
+import com.auctionhouse.model.SportsAuction;
+import com.auctionhouse.model.IndustrialAuction;
+import com.auctionhouse.model.AgricultureAuction;
+import com.auctionhouse.model.LivestockAuction;
+import com.auctionhouse.model.RealEstateAuction;
+import com.auctionhouse.model.SolarPowerAuction;
 import com.auctionhouse.model.JewelryAuction;
 import com.auctionhouse.model.User;
 import com.auctionhouse.model.WatchAuction;
@@ -130,6 +139,7 @@ public class AuctionController {
                                 @RequestParam(required = false) String imageUrl,
                                 @RequestParam(required = false) MultipartFile auctionImage,
                                 @RequestParam int durationMinutes,
+                                javax.servlet.http.HttpServletRequest request,
                                 // Car fields
                                 @RequestParam(required = false) String carMake,
                                 @RequestParam(required = false) String carModel,
@@ -237,6 +247,99 @@ public class AuctionController {
                     auction = aa;
                     break;
                 }
+                case REAL_ESTATE: {
+                    RealEstateAuction re = new RealEstateAuction();
+                    re.setPropertyType(safeStr(request.getParameter("rePropertyType"), "Not specified"));
+                    re.setBedrooms(parseIntParam(request, "reBedrooms"));
+                    re.setBathrooms(parseIntParam(request, "reBathrooms"));
+                    re.setAreaSqft(parseIntParam(request, "reAreaSqft"));
+                    re.setLocation(safeStr(request.getParameter("reLocation"), "Not specified"));
+                    re.setYearBuilt(parseIntParam(request, "reYearBuilt"));
+                    auction = re;
+                    break;
+                }
+                case ELECTRONICS: {
+                    ElectronicsAuction el = new ElectronicsAuction();
+                    el.setBrand(safeStr(request.getParameter("elBrand"), "Unknown"));
+                    el.setModel(safeStr(request.getParameter("elModel"), "Unknown"));
+                    el.setCondition(safeStr(request.getParameter("elCondition"), "As described"));
+                    el.setWarrantyMonths(parseIntParam(request, "elWarrantyMonths"));
+                    el.setIncludedItems(safeStr(request.getParameter("elIncludedItems"), ""));
+                    auction = el;
+                    break;
+                }
+                case FURNITURE: {
+                    FurnitureAuction fu = new FurnitureAuction();
+                    fu.setMaterial(safeStr(request.getParameter("fuMaterial"), "Not specified"));
+                    fu.setDimensions(safeStr(request.getParameter("fuDimensions"), "Not specified"));
+                    fu.setCondition(safeStr(request.getParameter("fuCondition"), "As described"));
+                    fu.setStyle(safeStr(request.getParameter("fuStyle"), "Not specified"));
+                    fu.setColor(safeStr(request.getParameter("fuColor"), "Not specified"));
+                    auction = fu;
+                    break;
+                }
+                case INSTRUMENTS: {
+                    InstrumentAuction in = new InstrumentAuction();
+                    in.setInstrumentType(safeStr(request.getParameter("inInstrumentType"), "Not specified"));
+                    in.setBrand(safeStr(request.getParameter("inBrand"), "Unknown"));
+                    in.setModel(safeStr(request.getParameter("inModel"), "Unknown"));
+                    in.setYearMade(parseIntParam(request, "inYearMade"));
+                    in.setCondition(safeStr(request.getParameter("inCondition"), "As described"));
+                    auction = in;
+                    break;
+                }
+                case SPORTS: {
+                    SportsAuction sp = new SportsAuction();
+                    sp.setEquipmentType(safeStr(request.getParameter("spEquipmentType"), "Not specified"));
+                    sp.setBrand(safeStr(request.getParameter("spBrand"), "Unknown"));
+                    sp.setCondition(safeStr(request.getParameter("spCondition"), "As described"));
+                    sp.setSizeSpec(safeStr(request.getParameter("spSize"), ""));
+                    sp.setIncludedItems(safeStr(request.getParameter("spIncludedItems"), ""));
+                    auction = sp;
+                    break;
+                }
+                case INDUSTRIAL: {
+                    IndustrialAuction ind = new IndustrialAuction();
+                    ind.setMachineType(safeStr(request.getParameter("idMachineType"), "Not specified"));
+                    ind.setManufacturer(safeStr(request.getParameter("idManufacturer"), "Unknown"));
+                    ind.setModel(safeStr(request.getParameter("idModel"), "Unknown"));
+                    ind.setYearMade(parseIntParam(request, "idYearMade"));
+                    ind.setHoursUsed(parseIntParam(request, "idHoursUsed"));
+                    ind.setPowerSource(safeStr(request.getParameter("idPowerSource"), "Not specified"));
+                    auction = ind;
+                    break;
+                }
+                case AGRICULTURE: {
+                    AgricultureAuction ag = new AgricultureAuction();
+                    ag.setEquipmentType(safeStr(request.getParameter("agEquipmentType"), "Not specified"));
+                    ag.setBrand(safeStr(request.getParameter("agBrand"), "Unknown"));
+                    ag.setModel(safeStr(request.getParameter("agModel"), "Unknown"));
+                    ag.setYearMade(parseIntParam(request, "agYearMade"));
+                    ag.setHoursUsed(parseIntParam(request, "agHoursUsed"));
+                    auction = ag;
+                    break;
+                }
+                case LIVESTOCK: {
+                    LivestockAuction lv = new LivestockAuction();
+                    lv.setAnimalType(safeStr(request.getParameter("lvAnimalType"), "Not specified"));
+                    lv.setBreed(safeStr(request.getParameter("lvBreed"), "Not specified"));
+                    lv.setAgeMonths(parseIntParam(request, "lvAgeMonths"));
+                    lv.setWeightKg(parseIntParam(request, "lvWeightKg"));
+                    lv.setHealthStatus(safeStr(request.getParameter("lvHealthStatus"), "As described"));
+                    lv.setVaccinated("true".equals(request.getParameter("lvVaccinated")));
+                    auction = lv;
+                    break;
+                }
+                case SOLAR_POWER: {
+                    SolarPowerAuction sl = new SolarPowerAuction();
+                    sl.setItemType(safeStr(request.getParameter("slItemType"), "Not specified"));
+                    sl.setCapacityWatts(parseIntParam(request, "slCapacityWatts"));
+                    sl.setBrand(safeStr(request.getParameter("slBrand"), "Unknown"));
+                    sl.setCondition(safeStr(request.getParameter("slCondition"), "As described"));
+                    sl.setIncludedItems(safeStr(request.getParameter("slIncludedItems"), ""));
+                    auction = sl;
+                    break;
+                }
                 case COLLECTIBLES:
                 default: {
                     CollectibleAuction ca = new CollectibleAuction();
@@ -271,5 +374,16 @@ public class AuctionController {
 
     private static String safeStr(String value, String fallback) {
         return (value != null && !value.trim().isEmpty()) ? value.trim() : fallback;
+    }
+
+    /** Safely read an integer request parameter; returns 0 when absent or non-numeric. */
+    private static int parseIntParam(javax.servlet.http.HttpServletRequest request, String name) {
+        String val = request.getParameter(name);
+        if (val == null || val.trim().isEmpty()) return 0;
+        try {
+            return Integer.parseInt(val.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 }

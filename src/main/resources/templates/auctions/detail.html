@@ -120,6 +120,18 @@
                     <h3 class="font-gsans font-medium text-green-800">Winner</h3>
                     <p class="text-lg font-medium text-green-900" th:text="${auction.highestBidder.username}">User</p>
                     <p class="text-sm text-green-700" th:text="'$' + ${#numbers.formatDecimal(auction.currentHighestBid, 1, 'COMMA', 2, 'POINT')}">$0</p>
+                    <!--/* Contact Seller: visible ONLY to the signed-in winner of the closed auction
+                         (not to other bidders, not to guests, and not to the seller themselves).
+                         Opens a chat with the seller directly. */-->
+                    <form th:if="${currentUser != null and auction.createdBy != null
+                                  and currentUser.id == auction.highestBidder.id
+                                  and currentUser.id != auction.createdBy.id}"
+                          th:action="@{'/messages/start/' + ${auction.createdBy.username}}" method="post" class="mt-4">
+                        <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 bg-g-green text-white font-medium rounded-full hover:opacity-90 text-sm transition-all shadow-g-sm">
+                            <span class="material-icons-outlined text-lg">forum</span>
+                            Contact Seller
+                        </button>
+                    </form>
                 </div>
 
                 <div th:if="${auction.status.name() == 'CLOSED' && auction.highestBidder == null}" class="bg-g-bg rounded-2xl p-5 text-center mb-6 border border-g-border">

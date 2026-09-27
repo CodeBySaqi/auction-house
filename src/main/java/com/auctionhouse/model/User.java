@@ -42,6 +42,29 @@ public class User {
     @org.hibernate.annotations.ColumnDefault("true")
     private boolean active = true;
 
+    // ===== Contact details =====
+    @Column(name = "phone", length = 25)
+    private String phone;
+
+    @Column(name = "alt_phone", length = 25)
+    private String altPhone;
+
+    // ===== Address =====
+    @Column(name = "street_address", length = 200)
+    private String streetAddress;
+
+    @Column(name = "city", length = 100)
+    private String city;
+
+    @Column(name = "state_province", length = 100)
+    private String stateProvince;
+
+    @Column(name = "postal_code", length = 20)
+    private String postalCode;
+
+    @Column(name = "country", length = 100)
+    private String country;
+
     @OneToMany(mappedBy = "bidder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Bid> bids = new ArrayList<>();
 
@@ -87,6 +110,24 @@ public class User {
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+
+    // ===== Contact details =====
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public String getAltPhone() { return altPhone; }
+    public void setAltPhone(String altPhone) { this.altPhone = altPhone; }
+
+    // ===== Address =====
+    public String getStreetAddress() { return streetAddress; }
+    public void setStreetAddress(String streetAddress) { this.streetAddress = streetAddress; }
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+    public String getStateProvince() { return stateProvince; }
+    public void setStateProvince(String stateProvince) { this.stateProvince = stateProvince; }
+    public String getPostalCode() { return postalCode; }
+    public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
+    public String getCountry() { return country; }
+    public void setCountry(String country) { this.country = country; }
 
     public List<Bid> getBids() { return bids; }
     public void setBids(List<Bid> bids) { this.bids = bids; }

@@ -87,8 +87,20 @@
                             <p class="text-[10px] text-g-text-secondary mt-1">Upload takes priority over URL</p>
                         </div>
                         <div class="sm:col-span-2">
+                            <label class="block text-xs font-medium text-g-text mb-1">Image Shape</label>
+                            <select name="imageShape" class="w-full px-3 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                                <option value="rounded-[40%_60%_70%_30%/40%_50%_60%_50%]">Blob (default)</option>
+                                <option value="rounded-[60%_40%_30%_70%/60%_30%_70%_40%]">Blob 2</option>
+                                <option value="rounded-[70%_30%_50%_50%/40%_60%_40%_60%]">Blob 3</option>
+                                <option value="rounded-[2rem]">Rounded</option>
+                                <option value="rounded-full">Circle</option>
+                                <option value="rounded-none">Square</option>
+                            </select>
+                        </div>
+                        <div class="sm:col-span-2">
                             <label class="block text-xs font-medium text-g-text mb-1">Background Gradient</label>
                             <input type="text" name="backgroundGradient" class="w-full px-3 py-2.5 bg-g-bg border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all font-mono text-xs" placeholder="linear-gradient(135deg, #fce7f3, #fbcfe8)">
+                            <p class="text-[10px] text-g-text-secondary mt-1">Optional — leave empty to use the solid BG color. If set, the gradient is shown instead of the solid color.</p>
                         </div>
                         <div class="flex gap-3">
                             <div class="flex-1">
@@ -202,8 +214,20 @@
                                             <p class="text-[10px] text-g-text-secondary mt-0.5">Upload takes priority. Leave empty to keep current.</p>
                                         </div>
                                         <div class="sm:col-span-2">
+                                            <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Image Shape</label>
+                                            <select name="imageShape" class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs focus:outline-none focus:border-g-blue transition-all">
+                                                <option value="rounded-[40%_60%_70%_30%/40%_50%_60%_50%]" th:selected="${slide.imageShape == 'rounded-[40%_60%_70%_30%/40%_50%_60%_50%]'}">Blob (default)</option>
+                                                <option value="rounded-[60%_40%_30%_70%/60%_30%_70%_40%]" th:selected="${slide.imageShape == 'rounded-[60%_40%_30%_70%/60%_30%_70%_40%]'}">Blob 2</option>
+                                                <option value="rounded-[70%_30%_50%_50%/40%_60%_40%_60%]" th:selected="${slide.imageShape == 'rounded-[70%_30%_50%_50%/40%_60%_40%_60%]'}">Blob 3</option>
+                                                <option value="rounded-[2rem]" th:selected="${slide.imageShape == 'rounded-[2rem]'}">Rounded</option>
+                                                <option value="rounded-full" th:selected="${slide.imageShape == 'rounded-full'}">Circle</option>
+                                                <option value="rounded-none" th:selected="${slide.imageShape == 'rounded-none'}">Square</option>
+                                            </select>
+                                        </div>
+                                        <div class="sm:col-span-2">
                                             <label class="block text-[10px] font-medium text-g-text-secondary mb-0.5">Gradient</label>
                                             <input type="text" name="backgroundGradient" th:value="${slide.backgroundGradient}" class="w-full px-2.5 py-2 bg-g-bg border border-g-border rounded-lg text-xs font-mono focus:outline-none focus:border-g-blue transition-all" placeholder="linear-gradient(...)">
+                                            <p class="text-[10px] text-g-text-secondary mt-0.5">Leave empty to use the solid BG color. If set, the gradient is shown instead.</p>
                                         </div>
                                         <div class="flex gap-2">
                                             <div class="flex-1">

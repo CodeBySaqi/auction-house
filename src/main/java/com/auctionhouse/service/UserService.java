@@ -187,6 +187,42 @@ public class UserService implements UserDetailsService {
     }
 
     /**
+     * Update the user's contact details and address (profile edit page).
+     * All fields optional; phone fields are length/pattern validated server-side.
+     */
+    @Transactional
+    public void updateContactDetails(Long userId, String phone, String altPhone,
+                                      String streetAddress, String city, String stateProvince,
+                                      String postalCode, String country) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+
+        java.util.regex.Pattern phonePattern = java.util.regex.Pattern.compile("^\\+?[0-9\\s\\-()]{5,25}$");
+
+        user.setPhone(cleanField(phone, 25, phonePattern, "Phone number can only contain digits, spaces, parentheses, dashes and an optional leading + (5–25 characters)."));
+        user.setAltPhone(cleanField(altPhone, 25, phonePattern, "Alternate phone number can only contain digits, spaces, parentheses, dashes and an optional leading + (5–25 characters)."));
+        user.setStreetAddress(cleanField(streetAddress, 200, null, null));
+        user.setCity(cleanField(city, 100, null, null));
+        user.setStateProvince(cleanField(stateProvince, 100, null, null));
+        user.setPostalCode(cleanField(postalCode, 20, null, null));
+        user.setCountry(cleanField(country, 100, null, null));
+
+        userRepository.save(user);
+    }
+
+    /** Trim + length-limit an optional text field; validate against an optional pattern. */
+    private String cleanField(String value, int maxLen, java.util.regex.Pattern pattern, String patternError) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) return null;
+        if (trimmed.length() > maxLen) trimmed = trimmed.substring(0, maxLen);
+        if (pattern != null && !pattern.matcher(trimmed).matches()) {
+            throw new IllegalArgumentException(patternError);
+        }
+        return trimmed;
+    }
+
+    /**
      * Get the currently authenticated user from SecurityContext.
      */
     public User getCurrentUser(String username) {

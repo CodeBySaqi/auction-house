@@ -96,13 +96,13 @@ public class AdminSliderController {
         slide.setSubtitle(subtitle != null ? subtitle.trim() : "");
         slide.setButtonText(buttonText != null ? buttonText.trim() : "Learn More");
         slide.setButtonUrl(buttonUrl != null ? buttonUrl.trim() : "/auctions");
-        slide.setButtonColor(buttonColor);
-        slide.setBackgroundColor(backgroundColor);
-        slide.setBackgroundGradient(backgroundGradient != null && !backgroundGradient.trim().isEmpty() ? backgroundGradient.trim() : null);
-        slide.setTextColor(textColor);
-        slide.setSubtitleColor(subtitleColor);
+        slide.setButtonColor(safeColor(buttonColor, "#3b82f6"));
+        slide.setBackgroundColor(safeColor(backgroundColor, "#ffffff"));
+        slide.setBackgroundGradient(safeGradient(backgroundGradient));
+        slide.setTextColor(safeColor(textColor, "#1f2937"));
+        slide.setSubtitleColor(safeColor(subtitleColor, "#4b5563"));
         slide.setImageUrl(finalImageUrl);
-        slide.setImageShape(imageShape);
+        slide.setImageShape(safeShape(imageShape));
         slide.setSortOrder(sortOrder);
         slide.setActive(active);
         slideRepository.save(slide);
@@ -141,12 +141,12 @@ public class AdminSliderController {
         slide.setSubtitle(subtitle != null ? subtitle.trim() : "");
         slide.setButtonText(buttonText != null ? buttonText.trim() : "Learn More");
         slide.setButtonUrl(buttonUrl != null ? buttonUrl.trim() : "/auctions");
-        slide.setButtonColor(buttonColor);
-        slide.setBackgroundColor(backgroundColor);
-        slide.setBackgroundGradient(backgroundGradient != null && !backgroundGradient.trim().isEmpty() ? backgroundGradient.trim() : null);
-        slide.setTextColor(textColor);
-        slide.setSubtitleColor(subtitleColor);
-        slide.setImageShape(imageShape);
+        slide.setButtonColor(safeColor(buttonColor, "#3b82f6"));
+        slide.setBackgroundColor(safeColor(backgroundColor, "#ffffff"));
+        slide.setBackgroundGradient(safeGradient(backgroundGradient));
+        slide.setTextColor(safeColor(textColor, "#1f2937"));
+        slide.setSubtitleColor(safeColor(subtitleColor, "#4b5563"));
+        slide.setImageShape(safeShape(imageShape));
         slide.setSortOrder(sortOrder);
         slide.setActive(active);
 
@@ -181,6 +181,40 @@ public class AdminSliderController {
                 "Deleted hero slide '" + slideTitle + "' from the homepage carousel");
         ra.addFlashAttribute("success", "Slide deleted.");
         return "redirect:/admin/slides";
+    }
+
+    /** Only allow well-formed hex colors; anything else falls back to the default. */
+    private static String safeColor(String value, String fallback) {
+        return (value != null && value.trim().matches("^#[0-9a-fA-F]{6}$")) ? value.trim() : fallback;
+    }
+
+    /**
+     * Only allow linear-gradient values built from safe characters. Anything
+     * else (empty, malformed, or containing CSS-breaking/injecting chars like
+     * quotes, semicolons, url(...), expression(...)) is discarded -> null,
+     * so the slide falls back to the solid background color.
+     */
+    private static String safeGradient(String value) {
+        if (value == null || value.trim().isEmpty()) return null;
+        String v = value.trim();
+        if (v.length() > 300) return null;
+        return v.matches("^linear-gradient\\([0-9a-zA-Z#, %.\\-]+\\)$") ? v : null;
+    }
+
+    /** Whitelist the known image-shape classes; anything else falls back to the default blob. */
+    private static String safeShape(String value) {
+        if (value == null) return "rounded-[40%_60%_70%_30%/40%_50%_60%_50%]";
+        switch (value) {
+            case "rounded-[40%_60%_70%_30%/40%_50%_60%_50%]":
+            case "rounded-[60%_40%_30%_70%/60%_30%_70%_40%]":
+            case "rounded-[70%_30%_50%_50%/40%_60%_40%_60%]":
+            case "rounded-[2rem]":
+            case "rounded-full":
+            case "rounded-none":
+                return value;
+            default:
+                return "rounded-[40%_60%_70%_30%/40%_50%_60%_50%]";
+        }
     }
 
     @PostMapping("/toggle/{id}")

@@ -118,12 +118,32 @@ public class ProfileController {
                                  @RequestParam(required = false) String currentPassword,
                                  @RequestParam(required = false) String newPassword,
                                  @RequestParam(required = false) String confirmNewPassword,
+                                 @RequestParam(required = false) String phone,
+                                 @RequestParam(required = false) String altPhone,
+                                 @RequestParam(required = false) String streetAddress,
+                                 @RequestParam(required = false) String city,
+                                 @RequestParam(required = false) String stateProvince,
+                                 @RequestParam(required = false) String postalCode,
+                                 @RequestParam(required = false) String country,
+                                 @RequestParam(required = false) String contactSection,
                                  @AuthenticationPrincipal UserDetails userDetails,
                                  RedirectAttributes redirectAttributes) {
         try {
             User user = userService.getCurrentUser(userDetails.getUsername());
             userService.updateUserProfile(user.getId(), username, email,
                     currentPassword, newPassword, confirmNewPassword);
+            // Contact details + address — only save when the ACCOUNT form (which
+            // contains these fields) was submitted. The password form posts to the
+            // same endpoint without them; treating absent as "clear" would wipe data.
+            if (contactSection != null) {
+                try {
+                    userService.updateContactDetails(user.getId(), phone, altPhone,
+                            streetAddress, city, stateProvince, postalCode, country);
+                } catch (IllegalArgumentException e) {
+                    redirectAttributes.addFlashAttribute("error", e.getMessage());
+                    return "redirect:/profile/edit";
+                }
+            }
             redirectAttributes.addFlashAttribute("success", "Profile updated successfully.");
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());

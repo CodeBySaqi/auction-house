@@ -58,6 +58,7 @@
             <span class="material-icons-outlined text-g-text-secondary">settings</span> Account settings
         </h2>
         <form th:action="@{/profile/update}" method="post">
+            <input type="hidden" name="contactSection" value="submitted">
             <div class="space-y-5">
                 <!-- User ID + Member Since -->
                 <div class="grid sm:grid-cols-2 gap-5">
@@ -107,6 +108,73 @@
                 <div>
                     <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Wallet balance</label>
                     <input type="text" th:value="'$' + ${#numbers.formatDecimal(user.walletBalance, 1, 'COMMA', 2, 'POINT')}" disabled class="w-full px-4 py-3 bg-g-bg border border-g-border rounded-xl text-sm font-medium text-g-text">
+                </div>
+
+                <!-- Contact Details -->
+                <div class="border-t border-g-border pt-5">
+                    <h3 class="font-gsans font-medium text-g-text mb-4 flex items-center gap-2">
+                        <span class="material-icons-outlined text-g-blue">call</span> Contact details
+                    </h3>
+                    <div class="grid sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Phone number</label>
+                            <div class="relative">
+                                <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">smartphone</span>
+                                <input type="tel" name="phone" id="phoneInput" th:value="${user.phone}" maxlength="25"
+                                       placeholder="+92 300 1234567"
+                                       class="w-full pl-11 pr-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Alternate phone <span class="normal-case">(optional)</span></label>
+                            <div class="relative">
+                                <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">add_call</span>
+                                <input type="tel" name="altPhone" id="altPhoneInput" th:value="${user.altPhone}" maxlength="25"
+                                       placeholder="+92 321 7654321"
+                                       class="w-full pl-11 pr-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address -->
+                <div class="border-t border-g-border pt-5">
+                    <h3 class="font-gsans font-medium text-g-text mb-4 flex items-center gap-2">
+                        <span class="material-icons-outlined text-g-blue">home</span> Address
+                    </h3>
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Street address</label>
+                            <div class="relative">
+                                <span class="material-icons-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-g-text-secondary text-lg">location_on</span>
+                                <input type="text" name="streetAddress" th:value="${user.streetAddress}" maxlength="200"
+                                       placeholder="House 12, Street 5, Gulgasht Colony"
+                                       class="w-full pl-11 pr-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+                            </div>
+                        </div>
+                        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                            <div>
+                                <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">City</label>
+                                <input type="text" name="city" th:value="${user.city}" maxlength="100" placeholder="Multan"
+                                       class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">State / Province</label>
+                                <input type="text" name="stateProvince" th:value="${user.stateProvince}" maxlength="100" placeholder="Punjab"
+                                       class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Postal code</label>
+                                <input type="text" name="postalCode" th:value="${user.postalCode}" maxlength="20" placeholder="60000"
+                                       class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-g-text-secondary uppercase tracking-wider mb-1.5">Country</label>
+                                <input type="text" name="country" th:value="${user.country}" maxlength="100" placeholder="Pakistan"
+                                       class="w-full px-4 py-3 bg-white border border-g-border rounded-xl text-sm text-g-text placeholder-g-text-secondary focus:outline-none focus:border-g-blue focus:ring-2 focus:ring-g-blue/20 transition-all">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

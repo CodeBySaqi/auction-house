@@ -97,4 +97,33 @@ public class Slide {
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+
+    /**
+     * Returns white or near-black text color for the CTA button based on the
+     * luminance of buttonColor — fixes the hardcoded white text becoming
+     * unreadable when an admin picks a light button color.
+     */
+    public String getButtonTextColor() {
+        int[] rgb = parseHex(buttonColor);
+        if (rgb == null) return "#ffffff";
+        double luminance = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+        return luminance > 160 ? "#1f2937" : "#ffffff";
+    }
+
+    private int[] parseHex(String hex) {
+        if (hex == null) return null;
+        String h = hex.trim();
+        if (h.startsWith("#")) h = h.substring(1);
+        if (h.length() == 3) {
+            h = "" + h.charAt(0) + h.charAt(0) + h.charAt(1) + h.charAt(1) + h.charAt(2) + h.charAt(2);
+        }
+        if (h.length() != 6) return null;
+        try {
+            return new int[]{ Integer.parseInt(h.substring(0, 2), 16),
+                              Integer.parseInt(h.substring(2, 4), 16),
+                              Integer.parseInt(h.substring(4, 6), 16) };
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
 }

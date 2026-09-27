@@ -287,6 +287,335 @@
                 <p class="text-xs text-g-text-secondary mt-1.5">Shorter auctions = more urgency = higher bids!</p>
             </div>
 
+
+            <!-- REAL ESTATE -->
+            <fieldset id="fields-REAL_ESTATE" class="type-fields hidden space-y-4 p-5 bg-sky-50/50 rounded-2xl border border-sky-100">
+                <legend class="text-sm font-medium text-sky-700 px-2">Real Estate Details</legend>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Property Type</label>
+                        <select name="rePropertyType" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="">Select</option>
+                            <option>House</option>
+                            <option>Plot / Land</option>
+                            <option>Apartment / Flat</option>
+                            <option>Farmhouse</option>
+                            <option>Commercial / Shop</option>
+                            <option>Office</option>
+                            <option>Warehouse</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Location</label>
+                        <input type="text" name="reLocation" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Gulgasht Colony, Multan">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Bedrooms</label>
+                        <input type="number" name="reBedrooms" min="0" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 4">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Bathrooms</label>
+                        <input type="number" name="reBathrooms" min="0" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 3">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Area (sq ft)</label>
+                        <input type="number" name="reAreaSqft" min="0" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 2700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Year Built</label>
+                        <input type="number" name="reYearBuilt" min="1800" max="2100" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 2019">
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- ELECTRONICS -->
+            <fieldset id="fields-ELECTRONICS" class="type-fields hidden space-y-4 p-5 bg-cyan-50/50 rounded-2xl border border-cyan-100">
+                <legend class="text-sm font-medium text-cyan-700 px-2">Electronics Details</legend>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Brand</label>
+                        <input type="text" name="elBrand" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Samsung">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Model</label>
+                        <input type="text" name="elModel" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Galaxy S24 Ultra">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Condition</label>
+                        <select name="elCondition" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="">Select</option>
+                            <option>Brand New</option>
+                            <option>Like New</option>
+                            <option>Good</option>
+                            <option>Fair</option>
+                            <option>For Parts / Not Working</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Warranty (months remaining)</label>
+                        <input type="number" name="elWarrantyMonths" min="0" max="120" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 6">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-g-text mb-1">Included Items</label>
+                        <input type="text" name="elIncludedItems" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Box, charger, original invoice">
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- FURNITURE -->
+            <fieldset id="fields-FURNITURE" class="type-fields hidden space-y-4 p-5 bg-orange-50/50 rounded-2xl border border-orange-100">
+                <legend class="text-sm font-medium text-orange-700 px-2">Furniture Details</legend>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Material</label>
+                        <input type="text" name="fuMaterial" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Sheesham wood">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Dimensions</label>
+                        <input type="text" name="fuDimensions" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 200 x 90 x 75 cm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Condition</label>
+                        <select name="fuCondition" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="">Select</option>
+                            <option>New</option>
+                            <option>Like New</option>
+                            <option>Gently Used</option>
+                            <option>Used</option>
+                            <option>Needs Repair</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Style</label>
+                        <input type="text" name="fuStyle" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Modern, Classic, Carved">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Color / Finish</label>
+                        <input type="text" name="fuColor" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Walnut brown">
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- INSTRUMENTS -->
+            <fieldset id="fields-INSTRUMENTS" class="type-fields hidden space-y-4 p-5 bg-violet-50/50 rounded-2xl border border-violet-100">
+                <legend class="text-sm font-medium text-violet-700 px-2">Musical Instrument Details</legend>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Instrument Type</label>
+                        <input type="text" name="inInstrumentType" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Guitar, Tabla, Piano">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Brand</label>
+                        <input type="text" name="inBrand" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Yamaha">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Model</label>
+                        <input type="text" name="inModel" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. F310">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Year Made</label>
+                        <input type="number" name="inYearMade" min="1800" max="2100" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 2018">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Condition</label>
+                        <select name="inCondition" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="">Select</option>
+                            <option>New</option>
+                            <option>Like New</option>
+                            <option>Good</option>
+                            <option>Fair</option>
+                            <option>Vintage / Collector</option>
+                        </select>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- SPORTS -->
+            <fieldset id="fields-SPORTS" class="type-fields hidden space-y-4 p-5 bg-lime-50/50 rounded-2xl border border-lime-100">
+                <legend class="text-sm font-medium text-lime-700 px-2">Sports & Fitness Details</legend>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Equipment Type</label>
+                        <input type="text" name="spEquipmentType" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Treadmill, Cricket kit, Dumbbells">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Brand</label>
+                        <input type="text" name="spBrand" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Nike, SG">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Condition</label>
+                        <select name="spCondition" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="">Select</option>
+                            <option>New</option>
+                            <option>Like New</option>
+                            <option>Good</option>
+                            <option>Fair</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Size / Weight Class</label>
+                        <input type="text" name="spSize" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Size 7, 20 kg">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-g-text mb-1">Included Accessories</label>
+                        <input type="text" name="spIncludedItems" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Carrying bag, gloves">
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- INDUSTRIAL -->
+            <fieldset id="fields-INDUSTRIAL" class="type-fields hidden space-y-4 p-5 bg-slate-50/50 rounded-2xl border border-slate-200">
+                <legend class="text-sm font-medium text-slate-700 px-2">Industrial Machinery Details</legend>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Machine Type</label>
+                        <input type="text" name="idMachineType" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Lathe, CNC machine">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Manufacturer</label>
+                        <input type="text" name="idManufacturer" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Siemens">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Model</label>
+                        <input type="text" name="idModel" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. SINUMERIK 808D">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Year Made</label>
+                        <input type="number" name="idYearMade" min="1900" max="2100" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 2015">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Hours Used</label>
+                        <input type="number" name="idHoursUsed" min="0" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 1200">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Power Source</label>
+                        <select name="idPowerSource" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="">Select</option>
+                            <option>Electric (3-phase)</option>
+                            <option>Electric (single-phase)</option>
+                            <option>Diesel</option>
+                            <option>Petrol</option>
+                            <option>Gas</option>
+                            <option>Hydraulic</option>
+                            <option>Manual</option>
+                        </select>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- AGRICULTURE -->
+            <fieldset id="fields-AGRICULTURE" class="type-fields hidden space-y-4 p-5 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+                <legend class="text-sm font-medium text-emerald-700 px-2">Agricultural Equipment Details</legend>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Equipment Type</label>
+                        <input type="text" name="agEquipmentType" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Tractor, Harvester, Trolley">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Brand</label>
+                        <input type="text" name="agBrand" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Massey Ferguson, New Holland">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Model</label>
+                        <input type="text" name="agModel" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. MF 385">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Year Made</label>
+                        <input type="number" name="agYearMade" min="1950" max="2100" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 2016">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Hours Used</label>
+                        <input type="number" name="agHoursUsed" min="0" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 3500">
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- LIVESTOCK -->
+            <fieldset id="fields-LIVESTOCK" class="type-fields hidden space-y-4 p-5 bg-yellow-50/50 rounded-2xl border border-yellow-200">
+                <legend class="text-sm font-medium text-yellow-700 px-2">Livestock Details</legend>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Animal Type</label>
+                        <select name="lvAnimalType" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="">Select</option>
+                            <option>Cattle</option>
+                            <option>Buffalo</option>
+                            <option>Goat</option>
+                            <option>Sheep</option>
+                            <option>Camel</option>
+                            <option>Horse</option>
+                            <option>Poultry</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Breed</label>
+                        <input type="text" name="lvBreed" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Cholistani, Sahiwal">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Age (months)</label>
+                        <input type="number" name="lvAgeMonths" min="0" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 24">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Weight (kg)</label>
+                        <input type="number" name="lvWeightKg" min="0" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 320">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Health Status</label>
+                        <input type="text" name="lvHealthStatus" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Vet-checked, healthy">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Vaccinated</label>
+                        <select name="lvVaccinated" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- SOLAR POWER -->
+            <fieldset id="fields-SOLAR_POWER" class="type-fields hidden space-y-4 p-5 bg-amber-50/50 rounded-2xl border border-amber-100">
+                <legend class="text-sm font-medium text-amber-700 px-2">Solar & Power Equipment Details</legend>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Item Type</label>
+                        <select name="slItemType" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="">Select</option>
+                            <option>Solar Panel</option>
+                            <option>Solar Inverter</option>
+                            <option>Generator</option>
+                            <option>UPS</option>
+                            <option>Battery</option>
+                            <option>Complete Solar System</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Capacity (watts)</label>
+                        <input type="number" name="slCapacityWatts" min="0" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. 550">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Brand</label>
+                        <input type="text" name="slBrand" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Longi, Inverex, Honda">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-g-text mb-1">Condition</label>
+                        <select name="slCondition" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all">
+                            <option value="">Select</option>
+                            <option>Brand New</option>
+                            <option>Like New</option>
+                            <option>Good</option>
+                            <option>Fair</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-g-text mb-1">Included Items</label>
+                        <input type="text" name="slIncludedItems" class="type-input w-full px-3 py-2.5 bg-white border border-g-border rounded-lg text-sm focus:outline-none focus:border-g-blue transition-all" placeholder="e.g. Mounting frame, cables">
+                    </div>
+                </div>
+            </fieldset>
+
             <!-- Submit -->
             <div class="pt-4 border-t border-g-border flex flex-wrap gap-3">
                 <button type="submit" id="launchBtn" class="inline-flex items-center gap-2 px-8 py-3.5 bg-g-blue text-white font-medium rounded-full hover:bg-g-blue-hover text-sm transition-colors shadow-g-sm">
