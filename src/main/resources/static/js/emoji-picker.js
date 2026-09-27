@@ -39,11 +39,11 @@
     function createPicker(inputEl) {
         var wrapper = document.createElement('div');
         wrapper.className = 'emoji-picker-popup';
-        // position:fixed — getBoundingClientRect() returns viewport coords, so the
-        // popup anchors correctly at ANY scroll position (absolute positioning
-        // breaks once the page is scrolled, e.g. the chat below the long
-        // delivery-details forms, which made the picker appear off-screen).
-        wrapper.style.cssText = 'position:fixed;z-index:9999;background:white;border:1px solid #dadce0;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.15);padding:8px;width:280px;max-height:220px;overflow-y:auto;display:grid;grid-template-columns:repeat(8,1fr);gap:2px;';
+        // position:absolute INSIDE the emoji button's .emoji-anchor wrapper:
+        // the popup is structurally anchored to the button (bottom:calc(100% + 8px)
+        // = 8px above the button), so it can never detach onto the page/body and
+        // it follows the button through any scroll position with zero coordinate math.
+        wrapper.style.cssText = 'position:absolute;z-index:9999;background:white;border:1px solid #dadce0;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.15);padding:8px;width:280px;max-height:220px;overflow-y:auto;display:grid;grid-template-columns:repeat(8,1fr);gap:2px;';
 
         EMOJIS.forEach(function(emoji) {
             var btn = document.createElement('button');
@@ -84,6 +84,9 @@
         }
     }
 
+    var PICKER_W = 280;  // popup width (see .emoji-picker-popup cssText)
+    var PICKER_H = 250;  // max-height 220 + padding/border/8px gap estimate
+
     function togglePicker(inputEl, anchorEl) {
         if (activePicker) {
             closePicker();
@@ -91,22 +94,50 @@
         }
 
         var picker = createPicker(inputEl);
-        document.body.appendChild(picker);
 
-        // Position above the anchor button
+        // Append INSIDE the button's relative wrapper -> the popup shares the
+        // button's positioning context. bottom:calc(100% + 8px) puts it 8px
+        // above the button; right:0 aligns their right edges. Because it lives
+        // in the wrapper, it stays anchored through scrolling automatically.
+        var anchorWrap = anchorEl.closest('.emoji-anchor');
+        anchorWrap.appendChild(picker);
+
+        // getBoundingClientRect() is used ONLY to pick the open direction/side
+        // (never for coordinates), so the popup respects the viewport edges:
         var rect = anchorEl.getBoundingClientRect();
-        picker.style.left = Math.max(8, rect.left - 120) + 'px';
-        picker.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
-        picker.style.top = 'auto';
+        var fitsAbove = rect.top >= PICKER_H;
+        var fitsBelow = (rect.bottom + PICKER_H) <= window.innerHeight;
+        var fitsLeft  = rect.right >= (PICKER_W + 8);   // room to extend leftwards
+        var fitsRight = (rect.left + PICKER_W + 8) <= window.innerWidth;
 
-        // Close picker on scroll/resize so it never drifts away from its anchor
-        window.addEventListener('scroll', closePicker, { once: true, passive: true });
-        window.addEventListener('resize', closePicker, { once: true, passive: true });
+        if (!fitsAbove && fitsBelow) {
+            // Not enough room above the button -> open below it instead
+            picker.style.bottom = 'auto';
+            picker.style.top = 'calc(100% + 8px)';
+        } else {
+            picker.style.bottom = 'calc(100% + 8px)';
+            picker.style.top = 'auto';
+        }
+
+        if (fitsLeft || !fitsRight) {
+            picker.style.right = '0px';
+            picker.style.left = 'auto';
+        } else {
+            // Button is too close to the left viewport edge: extend rightwards
+            picker.style.right = 'auto';
+            picker.style.left = '0px';
+        }
 
         activePicker = picker;
     }
 
     function createEmojiButton(inputEl) {
+        // Wrapper gives the picker a proper positioning context and keeps the
+        // button and popup together as one unit (no page-level positioning).
+        var wrap = document.createElement('span');
+        wrap.className = 'emoji-anchor';
+        wrap.style.cssText = 'position:relative;display:inline-flex;flex-shrink:0;';
+
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'emoji-trigger-btn';
@@ -120,7 +151,9 @@
             e.stopPropagation();
             togglePicker(inputEl, btn);
         };
-        return btn;
+
+        wrap.appendChild(btn);
+        return wrap;
     }
 
     // Public API
@@ -151,9 +184,12 @@
         });
     }
 
-    // Close picker on outside click
+    // Close picker on outside click (clicks on the button/picker/wrapper are ignored)
     document.addEventListener('click', function(e) {
-        if (activePicker && !activePicker.contains(e.target) && !e.target.closest('.emoji-trigger-btn')) {
+        if (activePicker
+                && !activePicker.contains(e.target)
+                && !e.target.closest('.emoji-trigger-btn')
+                && !e.target.closest('.emoji-anchor')) {
             closePicker();
         }
     });
