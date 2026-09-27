@@ -1,6 +1,7 @@
 package com.auctionhouse.controller;
 
 import com.auctionhouse.model.*;
+import com.auctionhouse.repository.AdminAuditLogRepository;
 import com.auctionhouse.repository.BidRepository;
 import com.auctionhouse.repository.BroadcastRepository;
 import com.auctionhouse.repository.UserRepository;
@@ -59,6 +60,7 @@ public class AdminController {
     private final ChatService chatService;
     private final BroadcastRepository broadcastRepository;
     private final AuditService auditService;
+    private final AdminAuditLogRepository adminAuditLogRepository;
 
     @Autowired
     public AdminController(UserService userService,
@@ -71,7 +73,8 @@ public class AdminController {
                            FileStorageService fileStorageService,
                            ChatService chatService,
                            BroadcastRepository broadcastRepository,
-                           AuditService auditService) {
+                           AuditService auditService,
+                           AdminAuditLogRepository adminAuditLogRepository) {
         this.userService = userService;
         this.auctionService = auctionService;
         this.bidRepository = bidRepository;
@@ -83,6 +86,7 @@ public class AdminController {
         this.chatService = chatService;
         this.broadcastRepository = broadcastRepository;
         this.auditService = auditService;
+        this.adminAuditLogRepository = adminAuditLogRepository;
     }
 
     /* ==================== NEW ADMIN CONSOLE ==================== */
@@ -546,6 +550,43 @@ public class AdminController {
         return "admin-users";
     }
 
+    @GetMapping("/users/{id}")
+    public String userDetail(@PathVariable Long id, Model model, Principal principal, RedirectAttributes ra) {
+        User admin = requireAdmin(principal);
+        Optional<User> opt = userService.findById(id);
+        if (!opt.isPresent()) {
+            ra.addFlashAttribute("errorMessage", "User not found.");
+            return "redirect:/admin/users";
+        }
+        User targetUser = opt.get();
+
+        model.addAttribute("admin", admin);
+        model.addAttribute("targetUser", targetUser);
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
+        addSidebarAttributes(model);
+        addFormatters(model);
+
+        long bidCount = bidRepository.countByBidderId(id);
+        List<Auction> createdAuctions = auctionService.getAuctionsByCreator(targetUser);
+        long auctionsCreated = createdAuctions.size();
+        long wonCount = auctionService.getAllAuctions().stream()
+                .filter(a -> a.getStatus() == AuctionStatus.CLOSED && a.getHighestBidder() != null && a.getHighestBidder().getId().equals(id))
+                .count();
+        List<Bid> recentBids = bidRepository.findByBidderIdOrderByTimestampDesc(id).stream().limit(10).collect(Collectors.toList());
+
+        model.addAttribute("bidCount", bidCount);
+        model.addAttribute("auctionsCreated", auctionsCreated);
+        model.addAttribute("wonCount", wonCount);
+        model.addAttribute("recentBids", recentBids);
+        try {
+            model.addAttribute("auditLogs", adminAuditLogRepository.findByTargetUserIdOrderByCreatedAtDesc(id));
+        } catch (Exception e) {
+            model.addAttribute("auditLogs", Collections.emptyList());
+        }
+
+        return "admin/user-detail";
+    }
+
     @PostMapping("/users/create")
     public String createUser(@RequestParam String username,
                              @RequestParam String email,
@@ -585,22 +626,22 @@ public class AdminController {
 
     @PostMapping("/users/role/{id}")
     public String changeUserRole(@PathVariable Long id, @RequestParam String role,
+                                 @RequestParam(required = false) String fromDetail,
                                  Principal principal, RedirectAttributes ra) {
+        String redirect = (fromDetail != null) ? "redirect:/admin/users/" + id : "redirect:/admin/users";
         try {
             User user = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
             if (user.getUsername().equals(principal.getName())) {
                 ra.addFlashAttribute("errorMessage", "You cannot change your own role.");
-                return "redirect:/admin/users";
+                return redirect;
             }
-            // SECURITY: ADMIN cannot assign SUPER_ADMIN role
             if ("ROLE_SUPER_ADMIN".equals(role)) {
                 ra.addFlashAttribute("errorMessage", "Only Super Admins can assign the SUPER_ADMIN role.");
-                return "redirect:/admin/users";
+                return redirect;
             }
-            // SECURITY: ADMIN cannot modify SUPER_ADMIN accounts
             if ("ROLE_SUPER_ADMIN".equals(user.getRole())) {
                 ra.addFlashAttribute("errorMessage", "Cannot modify a Super Admin account.");
-                return "redirect:/admin/users";
+                return redirect;
             }
             String oldRole = user.getRole().replace("ROLE_", "");
             String oldRoleFull = user.getRole();
@@ -612,21 +653,23 @@ public class AdminController {
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Failed to change role: " + e.getMessage());
         }
-        return "redirect:/admin/users";
+        return redirect;
     }
 
     @PostMapping("/users/toggle/{id}")
-    public String toggleUserStatus(@PathVariable Long id, Principal principal, RedirectAttributes ra) {
+    public String toggleUserStatus(@PathVariable Long id,
+                                   @RequestParam(required = false) String fromDetail,
+                                   Principal principal, RedirectAttributes ra) {
+        String redirect = (fromDetail != null) ? "redirect:/admin/users/" + id : "redirect:/admin/users";
         try {
             User user = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
-            // SECURITY: Cannot deactivate SUPER_ADMIN accounts
             if ("ROLE_SUPER_ADMIN".equals(user.getRole())) {
                 ra.addFlashAttribute("errorMessage", "Cannot deactivate a Super Admin account.");
-                return "redirect:/admin/users";
+                return redirect;
             }
             if ("ROLE_ADMIN".equals(user.getRole())) {
                 ra.addFlashAttribute("errorMessage", "Administrators cannot be deactivated from here.");
-                return "redirect:/admin/users";
+                return redirect;
             }
             String toggleAction; String toggleWhy;
             if (!user.isActive()) {
@@ -643,11 +686,14 @@ public class AdminController {
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Failed to update user: " + e.getMessage());
         }
-        return "redirect:/admin/users";
+        return redirect;
     }
 
     @PostMapping("/users/balance/{id}")
-    public String adjustBalance(@PathVariable Long id, @RequestParam double amount, Principal principal, RedirectAttributes ra) {
+    public String adjustBalance(@PathVariable Long id, @RequestParam double amount,
+                                @RequestParam(required = false) String fromDetail,
+                                Principal principal, RedirectAttributes ra) {
+        String redirect = (fromDetail != null) ? "redirect:/admin/users/" + id : "redirect:/admin/users";
         try {
             User user = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
             double newBalance = user.getWalletBalance() + amount;
@@ -655,7 +701,7 @@ public class AdminController {
                 ra.addFlashAttribute("errorMessage", "Cannot reduce balance below $0.00. Current: $" 
                         + String.format("%,.2f", user.getWalletBalance()) + ", attempted deduction: $" 
                         + String.format("%,.2f", Math.abs(amount)) + ".");
-                return "redirect:/admin/users";
+                return redirect;
             }
             user.setWalletBalance(newBalance);
             userService.updateProfile(user);
@@ -666,16 +712,18 @@ public class AdminController {
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Failed to update balance: " + e.getMessage());
         }
-        return "redirect:/admin/users";
+        return redirect;
     }
 
     @PostMapping("/users/delete/{id}")
-    public String deleteUser(@PathVariable Long id, Principal principal, RedirectAttributes ra) {
+    public String deleteUser(@PathVariable Long id,
+                             @RequestParam(required = false) String fromDetail,
+                             Principal principal, RedirectAttributes ra) {
         try {
             User user = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
             if (user.getUsername().equals(principal.getName())) {
                 ra.addFlashAttribute("errorMessage", "You cannot delete your own account.");
-                return "redirect:/admin/users";
+                return (fromDetail != null) ? "redirect:/admin/users/" + id : "redirect:/admin/users";
             }
             userService.deleteById(id);
             auditService.log(requireAdmin(principal), "USER_DELETED", id, user.getUsername(),
@@ -683,6 +731,9 @@ public class AdminController {
             ra.addFlashAttribute("successMessage", "Deleted \"" + user.getUsername() + "\".");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Failed to delete user: " + e.getMessage());
+            if (fromDetail != null) {
+                return "redirect:/admin/users/" + id;
+            }
         }
         return "redirect:/admin/users";
     }

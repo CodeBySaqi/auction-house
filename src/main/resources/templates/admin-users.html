@@ -181,6 +181,9 @@
                                     </td>
                                     <td class="px-4 py-4 text-right">
                                         <div class="flex items-center justify-end gap-1">
+                                            <a th:href="@{'/admin/users/' + ${user.id}}" class="p-2 rounded-lg text-g-blue hover:bg-blue-50 transition-colors" title="View Full Profile">
+                                                <span class="material-icons-outlined text-lg">visibility</span>
+                                            </a>
                                             <form th:if="${user.role != 'ROLE_ADMIN'}" th:action="@{'/admin/users/role/' + ${user.id}}" method="post" class="inline">
                                                 <select name="role" onchange="this.form.submit()" class="p-2 rounded-lg text-g-text-secondary hover:bg-g-hover transition-colors text-xs border-0 bg-transparent cursor-pointer">
                                                     <option value="">Change Role</option>

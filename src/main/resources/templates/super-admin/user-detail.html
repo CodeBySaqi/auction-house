@@ -60,13 +60,18 @@
         <!-- User Info -->
         <div class="bg-white rounded-2xl border border-g-border p-6 mb-6">
             <div class="flex items-center gap-4 mb-6">
-                <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-medium"
-                     th:classappend="${targetUser.role == 'ROLE_SUPER_ADMIN'} ? 'bg-purple-600' : (${targetUser.role == 'ROLE_ADMIN'} ? 'bg-amber-500' : 'bg-g-blue')"
-                     th:text="${#strings.substring(targetUser.username, 0, 2).toUpperCase()}">AB</div>
+                <div class="relative">
+                    <div th:if="${targetUser.hasProfilePic()}" class="w-16 h-16 rounded-2xl overflow-hidden border border-g-border">
+                        <img th:src="${targetUser.profilePicPath}" alt="Profile" class="w-full h-full object-cover">
+                    </div>
+                    <div th:unless="${targetUser.hasProfilePic()}" class="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-medium"
+                         th:classappend="${targetUser.role == 'ROLE_SUPER_ADMIN'} ? 'bg-purple-600' : (${targetUser.role == 'ROLE_ADMIN'} ? 'bg-amber-500' : 'bg-g-blue')"
+                         th:text="${#strings.substring(targetUser.username, 0, 2).toUpperCase()}">AB</div>
+                </div>
                 <div>
                     <h1 class="font-gsans text-2xl font-medium text-g-text" th:text="${targetUser.username}">Username</h1>
                     <p class="text-sm text-g-text-secondary" th:text="${targetUser.email}">email</p>
-                    <p class="text-xs text-g-text-secondary mt-1">Joined <span th:text="${#temporals.format(targetUser.createdAt, 'MMM dd, yyyy')}">Date</span></p>
+                    <p class="text-xs text-g-text-secondary mt-1">Joined <span th:text="${targetUser.createdAt != null ? #temporals.format(targetUser.createdAt, 'MMM dd, yyyy HH:mm') : 'Unknown'}">Date</span> • ID #<span th:text="${targetUser.id}">1</span></p>
                 </div>
                 <div class="ml-auto">
                     <span th:if="${targetUser.active}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-g-green text-sm font-semibold rounded-full">
@@ -94,6 +99,65 @@
                 <div class="bg-g-bg rounded-xl p-4">
                     <p class="text-xs text-g-text-secondary">Bids Placed</p>
                     <p class="text-sm font-medium text-g-text mt-1 tabular-nums" th:text="${targetUser.bids != null} ? ${#lists.size(targetUser.bids)} : 0">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Profile Info (Contact + Address) -->
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white rounded-2xl border border-g-border overflow-hidden">
+                <div class="px-6 py-4 border-b border-g-border flex items-center gap-2">
+                    <span class="material-icons-outlined text-g-blue">contact_phone</span>
+                    <h3 class="font-gsans text-base font-medium text-g-text">Contact Details</h3>
+                </div>
+                <div class="p-6 space-y-3">
+                    <div class="flex justify-between py-2 border-b border-g-border/50">
+                        <span class="text-xs text-g-text-secondary">Email</span>
+                        <span class="text-sm font-medium text-g-text" th:text="${targetUser.email}">email</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-g-border/50">
+                        <span class="text-xs text-g-text-secondary">Primary Phone</span>
+                        <span class="text-sm font-medium text-g-text" th:text="${targetUser.phone != null ? targetUser.phone : 'Not provided'}" th:classappend="${targetUser.phone == null} ? 'text-g-text-secondary italic' : ''">Not provided</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-g-border/50">
+                        <span class="text-xs text-g-text-secondary">Alternate Phone</span>
+                        <span class="text-sm font-medium text-g-text" th:text="${targetUser.altPhone != null ? targetUser.altPhone : 'Not provided'}" th:classappend="${targetUser.altPhone == null} ? 'text-g-text-secondary italic' : ''">Not provided</span>
+                    </div>
+                    <div class="flex justify-between py-2">
+                        <span class="text-xs text-g-text-secondary">Username</span>
+                        <span class="text-sm font-medium text-g-text" th:text="${targetUser.username}">username</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-g-border overflow-hidden">
+                <div class="px-6 py-4 border-b border-g-border flex items-center gap-2">
+                    <span class="material-icons-outlined text-g-green">location_on</span>
+                    <h3 class="font-gsans text-base font-medium text-g-text">Address Information</h3>
+                </div>
+                <div class="p-6 space-y-3">
+                    <div class="py-2 border-b border-g-border/50">
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary mb-1">Street Address</p>
+                        <p class="text-sm font-medium text-g-text" th:text="${targetUser.streetAddress != null ? targetUser.streetAddress : 'Not provided'}" th:classappend="${targetUser.streetAddress == null} ? 'text-g-text-secondary italic' : ''">Not provided</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary mb-1">City</p>
+                            <p class="text-sm font-medium text-g-text" th:text="${targetUser.city != null ? targetUser.city : 'Not provided'}" th:classappend="${targetUser.city == null} ? 'text-g-text-secondary italic' : ''">Not provided</p>
+                        </div>
+                        <div>
+                            <p class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary mb-1">State / Province</p>
+                            <p class="text-sm font-medium text-g-text" th:text="${targetUser.stateProvince != null ? targetUser.stateProvince : 'Not provided'}" th:classappend="${targetUser.stateProvince == null} ? 'text-g-text-secondary italic' : ''">Not provided</p>
+                        </div>
+                        <div>
+                            <p class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary mb-1">Postal Code</p>
+                            <p class="text-sm font-medium text-g-text" th:text="${targetUser.postalCode != null ? targetUser.postalCode : 'Not provided'}" th:classappend="${targetUser.postalCode == null} ? 'text-g-text-secondary italic' : ''">Not provided</p>
+                        </div>
+                        <div>
+                            <p class="text-[11px] font-semibold uppercase tracking-wider text-g-text-secondary mb-1">Country</p>
+                            <p class="text-sm font-medium text-g-text" th:text="${targetUser.country != null ? targetUser.country : 'Not provided'}" th:classappend="${targetUser.country == null} ? 'text-g-text-secondary italic' : ''">Not provided</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
