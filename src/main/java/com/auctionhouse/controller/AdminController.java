@@ -1314,7 +1314,8 @@ public class AdminController {
      */
     @GetMapping("/chat")
     public String chatMonitorList(Model model, Principal principal,
-                                   @RequestParam(required = false) String q) {
+                                   @RequestParam(required = false) String q,
+                                   @RequestParam(defaultValue = "0") int page) {
         User admin = requireAdmin(principal);
         model.addAttribute("admin", admin);
         model.addAttribute("unreadCount", notificationService.getUnreadCount(admin.getId()));
@@ -1330,12 +1331,27 @@ public class AdminController {
                                     && c.getAuction().getTitle().toLowerCase().contains(needle)))
                     .toList();
         }
-        model.addAttribute("conversations", conversations);
+
+        // Pagination - 10 per page
+        int pageSize = 10;
+        int totalConversations = conversations.size();
+        int totalPages = (int) Math.ceil((double) totalConversations / pageSize);
+        if (page < 0) page = 0;
+        if (totalPages > 0 && page >= totalPages) page = totalPages - 1;
+        int fromIndex = page * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalConversations);
+        var pagedConversations = (fromIndex < totalConversations) ? conversations.subList(fromIndex, toIndex) : java.util.Collections.<Conversation>emptyList();
+
+        model.addAttribute("conversations", pagedConversations);
         model.addAttribute("q", q);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("totalConversations", totalConversations);
+        model.addAttribute("pageSize", pageSize);
 
         // Per-row display data
         java.util.Map<Long, Long> msgCounts = new java.util.HashMap<>();
-        for (var c : conversations) {
+        for (var c : pagedConversations) {
             msgCounts.put(c.getId(), chatService.getMessageCount(c.getId()));
         }
         model.addAttribute("msgCounts", msgCounts);

@@ -47,6 +47,7 @@ public class AdminPaymentController {
      */
     @GetMapping
     public String listPaymentReleases(@RequestParam(required = false) String filter,
+                                       @RequestParam(defaultValue = "0") int page,
                                        Model model) {
         List<PaymentRelease> paymentReleases;
         
@@ -59,9 +60,31 @@ public class AdminPaymentController {
             paymentReleases = paymentReleaseService.getAllPaymentReleases();
         }
 
-        model.addAttribute("paymentReleases", paymentReleases);
+        // Sort newest first
+        paymentReleases.sort((a, b) -> {
+            if (a.getCreatedAt() == null && b.getCreatedAt() == null) return 0;
+            if (a.getCreatedAt() == null) return 1;
+            if (b.getCreatedAt() == null) return -1;
+            return b.getCreatedAt().compareTo(a.getCreatedAt());
+        });
+
+        // Pagination - 10 per page to avoid unlimited scroll
+        int pageSize = 10;
+        int totalCount = paymentReleases.size();
+        int totalPages = (int) Math.ceil((double) totalCount / pageSize);
+        if (page < 0) page = 0;
+        if (totalPages > 0 && page >= totalPages) page = totalPages - 1;
+        int fromIndex = page * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalCount);
+        List<PaymentRelease> paged = (fromIndex < totalCount) ? paymentReleases.subList(fromIndex, toIndex) : java.util.Collections.emptyList();
+
+        model.addAttribute("paymentReleases", paged);
         model.addAttribute("currentFilter", filter != null ? filter : "all");
         model.addAttribute("pendingCount", paymentReleaseService.countPendingReview());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("totalCount", totalCount);
+        model.addAttribute("pageSize", pageSize);
 
         // Commission totals
         model.addAttribute("totalCommission", paymentReleaseService.getTotalCommission());
