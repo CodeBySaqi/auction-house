@@ -58,6 +58,11 @@
         .tabular-nums { font-variant-numeric: tabular-nums; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #dadce0; border-radius: 4px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #bdc1c6; }
+        .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #dadce0 transparent; }
         .chart-bar { transition: all 0.3s ease; }
         .chart-bar:hover { opacity: 0.8; }
         @keyframes pulse-dot {
@@ -235,17 +240,20 @@
                     </div>
                 </div>
 
-                <!-- Category Breakdown -->
-                <div class="bg-white rounded-2xl border border-g-border p-6">
-                    <h2 class="font-gsans text-base font-medium text-g-text mb-4">Categories</h2>
-                    <div class="space-y-4">
-                        <div th:each="cat : ${categoryStats}">
+                <!-- Category Breakdown - Scrollable -->
+                <div class="bg-white rounded-2xl border border-g-border p-6 flex flex-col max-h-[380px] lg:max-h-[320px]">
+                    <h2 class="font-gsans text-base font-medium text-g-text mb-4 flex-shrink-0 flex items-center justify-between">
+                        <span>Categories</span>
+                        <span class="text-xs font-normal text-g-text-secondary bg-g-bg px-2.5 py-1 rounded-full" th:text="${#lists.size(categoryStats)} + ' total'">14 total</span>
+                    </h2>
+                    <div class="space-y-4 overflow-y-auto pr-2 flex-1 scrollbar-thin -mr-2">
+                        <div th:each="cat : ${categoryStats}" class="pr-2">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-medium text-g-text" th:text="${cat.name}">Cars</span>
-                                <span class="text-sm font-medium text-g-text tabular-nums" th:text="${cat.count}">45</span>
+                                <span class="text-sm font-medium text-g-text truncate" th:text="${cat.name}">Cars</span>
+                                <span class="text-sm font-medium text-g-text tabular-nums ml-2" th:text="${cat.count}">45</span>
                             </div>
                             <div class="w-full h-2 bg-g-bg rounded-full overflow-hidden">
-                                <div class="h-full rounded-full" th:classappend="${cat.color}" th:style="'width: ' + ${cat.percent} + '%'"></div>
+                                <div class="h-full rounded-full transition-all" th:classappend="${cat.color}" th:style="'width: ' + ${cat.percent} + '%'"></div>
                             </div>
                         </div>
                     </div>
