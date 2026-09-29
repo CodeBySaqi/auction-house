@@ -240,13 +240,14 @@
                     </div>
                 </div>
 
-                <!-- Category Breakdown - Scrollable -->
-                <div class="bg-white rounded-2xl border border-g-border p-6 flex flex-col max-h-[380px] lg:max-h-[320px]">
+                <!-- Category Breakdown - 4 visible + scrollable -->
+                <div class="bg-white rounded-2xl border border-g-border p-6 flex flex-col">
                     <h2 class="font-gsans text-base font-medium text-g-text mb-4 flex-shrink-0 flex items-center justify-between">
                         <span>Categories</span>
                         <span class="text-xs font-normal text-g-text-secondary bg-g-bg px-2.5 py-1 rounded-full" th:text="${#lists.size(categoryStats)} + ' total'">14 total</span>
                     </h2>
-                    <div class="space-y-4 overflow-y-auto pr-2 flex-1 scrollbar-thin -mr-2">
+                    <!-- Only 4 categories visible upfront, rest scrollable -->
+                    <div class="space-y-4 overflow-y-auto pr-2 scrollbar-thin -mr-2 max-h-[224px] lg:max-h-[224px]">
                         <div th:each="cat : ${categoryStats}" class="pr-2">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-sm font-medium text-g-text truncate" th:text="${cat.name}">Cars</span>
@@ -257,6 +258,10 @@
                             </div>
                         </div>
                     </div>
+                    <p th:if="${#lists.size(categoryStats) > 4}" class="text-[11px] text-g-text-secondary mt-3 flex items-center gap-1 flex-shrink-0">
+                        <span class="material-icons-outlined text-xs">unfold_more</span>
+                        Scroll to see <span th:text="${#lists.size(categoryStats) - 4}">10</span> more
+                    </p>
                 </div>
             </div>
 
