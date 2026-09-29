@@ -313,7 +313,8 @@ public class AdminController {
     public String manageAuctions(Model model, Principal principal,
                                  @RequestParam(required = false) String status,
                                  @RequestParam(required = false) String search,
-                                 @RequestParam(required = false) String category) {
+                                 @RequestParam(required = false) String category,
+                                 @RequestParam(defaultValue = "0") int page) {
         User admin = requireAdmin(principal);
         model.addAttribute("admin", admin);
         addSidebarAttributes(model);
@@ -341,7 +342,21 @@ public class AdminController {
         }
         auctions.sort(Comparator.comparing(Auction::getCreatedAt).reversed());
 
-        model.addAttribute("auctions", auctions);
+        // Pagination - 10 per page to avoid unlimited scroll
+        int pageSize = 10;
+        int totalAuctions = auctions.size();
+        int totalPages = (int) Math.ceil((double) totalAuctions / pageSize);
+        if (page < 0) page = 0;
+        if (totalPages > 0 && page >= totalPages) page = totalPages - 1;
+        int fromIndex = page * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalAuctions);
+        List<Auction> pagedAuctions = (fromIndex < totalAuctions) ? auctions.subList(fromIndex, toIndex) : Collections.emptyList();
+
+        model.addAttribute("auctions", pagedAuctions);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("totalAuctionsCount", totalAuctions);
+        model.addAttribute("pageSize", pageSize);
         model.addAttribute("currentStatus", status != null ? status : "ALL");
         model.addAttribute("currentCategory", category != null ? category : "ALL");
         model.addAttribute("currentSearch", search != null ? search : "");
@@ -510,7 +525,8 @@ public class AdminController {
     @GetMapping("/users")
     public String manageUsers(Model model, Principal principal,
                               @RequestParam(required = false) String search,
-                              @RequestParam(required = false) String role) {
+                              @RequestParam(required = false) String role,
+                              @RequestParam(defaultValue = "0") int page) {
         User admin = requireAdmin(principal);
         model.addAttribute("admin", admin);
         addSidebarAttributes(model);
@@ -536,10 +552,24 @@ public class AdminController {
             if (row[0] != null) bidsPerUser.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
         }
 
-        model.addAttribute("users", users);
+        // Pagination - 10 per page to avoid unlimited scroll
+        int pageSize = 10;
+        int totalUsersFiltered = users.size();
+        int totalPages = (int) Math.ceil((double) totalUsersFiltered / pageSize);
+        if (page < 0) page = 0;
+        if (totalPages > 0 && page >= totalPages) page = totalPages - 1;
+        int fromIndex = page * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalUsersFiltered);
+        List<User> pagedUsers = (fromIndex < totalUsersFiltered) ? users.subList(fromIndex, toIndex) : Collections.emptyList();
+
+        model.addAttribute("users", pagedUsers);
         model.addAttribute("bidsPerUser", bidsPerUser);
         model.addAttribute("currentSearch", search != null ? search : "");
         model.addAttribute("currentRole", role != null ? role : "ALL");
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("totalUsersFiltered", totalUsersFiltered);
+        model.addAttribute("pageSize", pageSize);
         model.addAttribute("adminCount", userRepository.countByRole("ROLE_ADMIN"));
         model.addAttribute("bannedCount", userRepository.countByActive(false));
         model.addAttribute("userCount", userRepository.countByRole("ROLE_USER"));

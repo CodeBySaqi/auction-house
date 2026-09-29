@@ -207,10 +207,49 @@
                         </table>
                     </div>
 
-                    <!-- User Count -->
-                    <div class="px-6 py-4 border-t border-g-border">
+                    <!-- Pagination -->
+                    <div class="px-6 py-4 border-t border-g-border flex flex-col sm:flex-row items-center justify-between gap-3">
                         <div class="text-sm text-g-text-secondary">
-                            Showing <span class="font-medium text-g-text" th:text="${users.size()}">5</span> users
+                            Showing <span class="font-medium text-g-text" th:text="${users.size()}">5</span> of
+                            <span class="font-medium text-g-text" th:text="${totalUsersFiltered != null ? totalUsersFiltered : users.size()}">100</span> users
+                            <span th:if="${totalPages != null and totalPages > 1}" class="ml-2">• Page <span class="font-medium text-g-text" th:text="${currentPage + 1}">1</span> of <span class="font-medium text-g-text" th:text="${totalPages}">10</span></span>
+                        </div>
+                        <div class="flex items-center gap-1" th:if="${totalPages != null and totalPages > 1}">
+                            <!-- Prev Arrow -->
+                            <a th:if="${currentPage > 0}"
+                               th:href="@{/admin/users(page=${currentPage - 1}, search=${currentSearch}, role=${currentRole})}"
+                               class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-g-border bg-white text-g-text-secondary hover:bg-g-hover hover:text-g-text transition-colors"
+                               title="Previous page">
+                                <span class="material-icons-outlined text-lg">chevron_left</span>
+                            </a>
+                            <span th:if="${currentPage == 0}" class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-g-border bg-g-bg text-g-text-secondary/50 cursor-not-allowed">
+                                <span class="material-icons-outlined text-lg">chevron_left</span>
+                            </span>
+
+                            <!-- Page Numbers -->
+                            <div class="flex items-center gap-1 mx-1">
+                                <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                                          th:if="${i >= currentPage - 2 and i <= currentPage + 2}">
+                                    <a th:if="${i != currentPage}"
+                                       th:href="@{/admin/users(page=${i}, search=${currentSearch}, role=${currentRole})}"
+                                       class="inline-flex items-center justify-center w-9 h-9 rounded-full text-sm font-medium bg-white border border-g-border text-g-text-secondary hover:bg-g-hover hover:text-g-text transition-colors"
+                                       th:text="${i + 1}">1</a>
+                                    <span th:if="${i == currentPage}"
+                                          class="inline-flex items-center justify-center w-9 h-9 rounded-full text-sm font-medium bg-g-blue text-white shadow-g-sm"
+                                          th:text="${i + 1}">1</span>
+                                </th:block>
+                            </div>
+
+                            <!-- Next Arrow -->
+                            <a th:if="${currentPage < totalPages - 1}"
+                               th:href="@{/admin/users(page=${currentPage + 1}, search=${currentSearch}, role=${currentRole})}"
+                               class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-g-border bg-white text-g-text-secondary hover:bg-g-hover hover:text-g-text transition-colors"
+                               title="Next page">
+                                <span class="material-icons-outlined text-lg">chevron_right</span>
+                            </a>
+                            <span th:if="${currentPage >= totalPages - 1}" class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-g-border bg-g-bg text-g-text-secondary/50 cursor-not-allowed">
+                                <span class="material-icons-outlined text-lg">chevron_right</span>
+                            </span>
                         </div>
                     </div>
                 </div>
