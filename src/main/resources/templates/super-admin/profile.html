@@ -24,7 +24,12 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
+                    <a th:href="@{/}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="View Site"><span class="material-icons-outlined">home</span></a>
                     <a th:href="@{/super-admin}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Dashboard"><span class="material-icons-outlined">dashboard</span></a>
+                    <div class="w-9 h-9 rounded-full overflow-hidden bg-purple-600 flex items-center justify-center ring-2 ring-purple-200">
+                        <img th:if="${currentUser != null and currentUser.hasProfilePic()}" th:src="${currentUser.profilePicPath.startsWith('http') ? currentUser.profilePicPath : '/uploads/' + currentUser.profilePicPath}" class="w-full h-full object-cover" alt="Profile">
+                        <span th:if="${currentUser == null or !currentUser.hasProfilePic()}" class="text-white font-medium text-sm" th:text="${currentUser != null ? currentUser.username.substring(0,1).toUpperCase() : 'S'}">S</span>
+                    </div>
                     <form th:action="@{/logout}" method="post" class="m-0">
                         <button type="submit" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Logout">
                             <span class="material-icons-outlined">logout</span>

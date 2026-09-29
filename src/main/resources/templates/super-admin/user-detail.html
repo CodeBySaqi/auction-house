@@ -25,7 +25,10 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <a th:href="@{/super-admin/users}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors"><span class="material-icons-outlined">arrow_back</span></a>
-                    <a th:href="@{/super-admin/profile}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="My Profile"><span class="material-icons-outlined">manage_accounts</span></a>
+                    <a th:href="@{/super-admin/profile}" class="w-9 h-9 rounded-full overflow-hidden bg-purple-600 flex items-center justify-center hover:shadow-md transition-shadow" title="My Profile">
+                        <img th:if="${currentUser != null and currentUser.hasProfilePic()}" th:src="${currentUser.profilePicPath.startsWith('http') ? currentUser.profilePicPath : '/uploads/' + currentUser.profilePicPath}" class="w-full h-full object-cover" alt="Profile">
+                        <span th:if="${currentUser == null or !currentUser.hasProfilePic()}" class="text-white font-medium text-sm" th:text="${currentUser != null ? currentUser.username.substring(0,1).toUpperCase() : 'S'}">S</span>
+                    </a>
                     <a th:href="@{/super-admin}" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors"><span class="material-icons-outlined">dashboard</span></a>
                     <form th:action="@{/logout}" method="post" class="m-0">
                         <button type="submit" class="p-2 rounded-full text-g-text-secondary hover:bg-g-hover transition-colors" title="Logout">
@@ -62,7 +65,7 @@
             <div class="flex items-center gap-4 mb-6">
                 <div class="relative">
                     <div th:if="${targetUser.hasProfilePic()}" class="w-16 h-16 rounded-2xl overflow-hidden border border-g-border">
-                        <img th:src="${targetUser.profilePicPath}" alt="Profile" class="w-full h-full object-cover">
+                        <img th:src="${targetUser.profilePicPath.startsWith('http') ? targetUser.profilePicPath : '/uploads/' + targetUser.profilePicPath}" alt="Profile" class="w-full h-full object-cover">
                     </div>
                     <div th:unless="${targetUser.hasProfilePic()}" class="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-medium"
                          th:classappend="${targetUser.role == 'ROLE_SUPER_ADMIN'} ? 'bg-purple-600' : (${targetUser.role == 'ROLE_ADMIN'} ? 'bg-amber-500' : 'bg-g-blue')"

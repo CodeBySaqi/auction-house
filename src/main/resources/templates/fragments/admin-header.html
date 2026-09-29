@@ -62,13 +62,28 @@
 
                 <!-- Profile Dropdown -->
                 <div class="relative">
-                    <button onclick="toggleProfileDropdown()" class="w-9 h-9 rounded-full bg-g-blue flex items-center justify-center text-white font-medium text-sm hover:shadow-g-sm transition-shadow cursor-pointer">
-                        <span th:text="${currentUser != null ? currentUser.username.substring(0,1).toUpperCase() : 'A'}">A</span>
+                    <button onclick="toggleProfileDropdown()" class="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden hover:shadow-g-sm transition-shadow cursor-pointer bg-g-blue">
+                        <img th:if="${currentUser != null and currentUser.hasProfilePic()}"
+                             th:src="${currentUser.profilePicPath.startsWith('http') ? currentUser.profilePicPath : '/uploads/' + currentUser.profilePicPath}"
+                             class="w-full h-full object-cover" alt="Profile">
+                        <span th:if="${currentUser == null or !currentUser.hasProfilePic()}"
+                              class="text-white font-medium text-sm"
+                              th:text="${currentUser != null ? currentUser.username.substring(0,1).toUpperCase() : 'A'}">A</span>
                     </button>
                     <div id="profileDropdown" class="hidden absolute right-0 top-12 w-56 bg-white border border-g-border rounded-2xl shadow-g-lg z-50 py-2">
-                        <div class="px-4 py-3 border-b border-g-border mb-1">
-                            <p class="text-sm font-medium text-g-text" th:text="${currentUser != null ? currentUser.username : 'Admin'}">Admin User</p>
-                            <p class="text-xs text-g-text-secondary truncate" th:text="${currentUser != null ? currentUser.email : ''}">admin@auctionhouse.com</p>
+                        <div class="px-4 py-3 border-b border-g-border mb-1 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full overflow-hidden bg-g-blue flex items-center justify-center flex-shrink-0">
+                                <img th:if="${currentUser != null and currentUser.hasProfilePic()}"
+                                     th:src="${currentUser.profilePicPath.startsWith('http') ? currentUser.profilePicPath : '/uploads/' + currentUser.profilePicPath}"
+                                     class="w-full h-full object-cover" alt="Profile">
+                                <span th:if="${currentUser == null or !currentUser.hasProfilePic()}"
+                                      class="text-white font-medium text-sm"
+                                      th:text="${currentUser != null ? currentUser.username.substring(0,1).toUpperCase() : 'A'}">A</span>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-g-text truncate" th:text="${currentUser != null ? currentUser.username : 'Admin'}">Admin User</p>
+                                <p class="text-xs text-g-text-secondary truncate" th:text="${currentUser != null ? currentUser.email : ''}">admin@auctionhouse.com</p>
+                            </div>
                         </div>
                         <a th:href="@{/profile/edit}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-g-text hover:bg-g-hover transition-colors">
                             <span class="material-icons-outlined text-lg text-g-text-secondary">person</span>

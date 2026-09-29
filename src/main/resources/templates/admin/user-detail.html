@@ -71,7 +71,7 @@
                 <div class="flex flex-col sm:flex-row items-start gap-5">
                     <div class="relative">
                         <div th:if="${targetUser.hasProfilePic()}" class="w-20 h-20 rounded-2xl overflow-hidden border border-g-border">
-                            <img th:src="${targetUser.profilePicPath}" alt="Profile" class="w-full h-full object-cover">
+                            <img th:src="${targetUser.profilePicPath.startsWith('http') ? targetUser.profilePicPath : '/uploads/' + targetUser.profilePicPath}" alt="Profile" class="w-full h-full object-cover">
                         </div>
                         <div th:unless="${targetUser.hasProfilePic()}" class="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl font-medium"
                              th:classappend="${targetUser.role == 'ROLE_ADMIN'} ? 'bg-gradient-to-br from-purple-400 to-purple-600' : (${targetUser.role == 'ROLE_SUPER_ADMIN'} ? 'bg-gradient-to-br from-amber-400 to-amber-600' : 'bg-gradient-to-br from-blue-400 to-blue-600')"
